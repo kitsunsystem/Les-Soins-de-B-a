@@ -28,12 +28,15 @@ Tableau de bord Cloudflare → **Workers & Pages** → **Créer** → **Importer
 | Commande de build | `npx opennextjs-cloudflare build` |
 | Commande de déploiement | `npx opennextjs-cloudflare deploy` |
 
-Au premier déploiement, la base **D1 `les-soins-de-bea` est créée automatiquement**, et le site crée lui-même
-ses tables au premier accès (migrations embarquées) : aucune commande de base de données à lancer.
+Commande de déploiement des autres branches (prévisualisation) : `npx opennextjs-cloudflare upload`.
 
-> Si le déploiement signale que la base D1 est introuvable : *Stockage et bases de données → D1 → Créer*,
-> nommer la base `les-soins-de-bea`, puis ajouter son identifiant dans `wrangler.jsonc`
-> (`"database_id": "…"` dans `d1_databases`).
+**Base de données** : au premier déploiement, la base **D1 `les-soins-de-bea` est créée automatiquement**, et
+le site crée lui-même ses tables au premier accès (migrations embarquées) : aucune commande à lancer.
+
+> Recommandé (RGPD) : créer la base **avant** le premier déploiement pour choisir son emplacement —
+> *Stockage et bases de données → D1 → Créer*, nom exactement `les-soins-de-bea`, emplacement Europe de
+> l'Ouest (ou juridiction UE). Le déploiement s'y connecte automatiquement grâce à son nom, sans identifiant
+> à recopier.
 
 ### 2. Variables et secrets
 
