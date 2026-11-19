@@ -3,14 +3,8 @@
 import Link from "next/link";
 import { useState } from "react";
 import { CheckCircle2, Loader2, Send } from "lucide-react";
+import { contactSubjects } from "@/lib/content";
 
-export const contactSubjects = {
-  rdv: "Prise de rendez-vous",
-  question: "Question sur un soin",
-  cadeau: "Carte cadeau",
-  formation: "Formation",
-  autre: "Autre",
-} as const;
 
 export function ContactForm({ defaultSubject, defaultMessage }: { defaultSubject: string; defaultMessage: string }) {
   const [state, setState] = useState<"idle" | "sending" | "sent">("idle");
@@ -63,13 +57,13 @@ export function ContactForm({ defaultSubject, defaultMessage }: { defaultSubject
       <div className="grid gap-5 sm:grid-cols-2">
         <div>
           <label htmlFor="c-name" className="label">
-            Nom / Prénom <span className="text-rose-deep">*</span>
+            Nom / Prénom <span className="text-forest">*</span>
           </label>
           <input id="c-name" name="name" required minLength={2} maxLength={120} autoComplete="name" className="field" />
         </div>
         <div>
           <label htmlFor="c-email" className="label">
-            Email <span className="text-rose-deep">*</span>
+            Email <span className="text-forest">*</span>
           </label>
           <input id="c-email" name="email" type="email" required autoComplete="email" className="field" />
         </div>
@@ -92,7 +86,7 @@ export function ContactForm({ defaultSubject, defaultMessage }: { defaultSubject
       </div>
       <div>
         <label htmlFor="c-message" className="label">
-          Message <span className="text-rose-deep">*</span>
+          Message <span className="text-forest">*</span>
         </label>
         <textarea
           id="c-message"
@@ -110,17 +104,17 @@ export function ContactForm({ defaultSubject, defaultMessage }: { defaultSubject
         <input id="c-website" name="website" tabIndex={-1} autoComplete="off" />
       </div>
       <label className="flex items-start gap-3 text-sm text-ink-soft">
-        <input type="checkbox" name="consent" required className="mt-1 size-4 accent-rose-deep" />
+        <input type="checkbox" name="consent" required className="mt-1 size-4 accent-forest" />
         <span>
           J&apos;accepte que mes informations soient utilisées uniquement pour me recontacter (
-          <Link href="/confidentialite" className="underline hover:text-rose-deep">
+          <Link href="/confidentialite" className="underline hover:text-forest">
             politique de confidentialité
           </Link>
           ).
         </span>
       </label>
       {error && (
-        <p role="alert" className="rounded-xl bg-rose-soft px-4 py-3 text-sm text-rose-darker">
+        <p role="alert" className="alert-error">
           {error}
         </p>
       )}

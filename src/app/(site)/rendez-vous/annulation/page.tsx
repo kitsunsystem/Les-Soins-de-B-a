@@ -22,14 +22,14 @@ export default async function AnnulationPage({ searchParams }: PageProps<"/rende
     <section className="py-16 md:py-24">
       <div className="container-page max-w-xl">
         <div className="card p-8 text-center md:p-10">
-          <CalendarX2 className="mx-auto size-12 text-rose-deep" aria-hidden strokeWidth={1.25} />
+          <CalendarX2 className="mx-auto size-12 text-forest" aria-hidden strokeWidth={1.25} />
           <h1 className="mt-4 text-4xl">Annuler un rendez-vous</h1>
           <Ornament className="mt-5" />
 
           {!appt ? (
             <p className="mt-6 text-ink-soft">
               Ce lien d&apos;annulation n&apos;est pas valide. Pour toute question, appelez le{" "}
-              <a className="text-rose-deep underline" href={site.phoneHref}>
+              <a className="text-forest underline" href={site.phoneHref}>
                 {site.phone}
               </a>
               .
@@ -43,7 +43,7 @@ export default async function AnnulationPage({ searchParams }: PageProps<"/rende
               </div>
 
               {erreur && (
-                <p role="alert" className="mt-5 rounded-xl bg-rose-soft px-4 py-3 text-sm text-rose-darker">
+                <p role="alert" className="mt-5 alert-error">
                   {erreur}
                 </p>
               )}
@@ -67,7 +67,7 @@ export default async function AnnulationPage({ searchParams }: PageProps<"/rende
                 <p className="mt-6 text-ink-soft">
                   Le rendez-vous est dans moins de {CLIENT_CANCEL_LIMIT_HOURS} h : merci d&apos;appeler directement
                   le{" "}
-                  <a className="text-rose-deep underline" href={site.phoneHref}>
+                  <a className="text-forest underline" href={site.phoneHref}>
                     {site.phone}
                   </a>
                   .

@@ -18,5 +18,5 @@ export function LegalPage({ title, updated, children }: { title: string; updated
 
 /** Marque visiblement une information à compléter par la praticienne. */
 export function Todo({ children }: { children: ReactNode }) {
-  return <mark className="rounded bg-rose-soft px-1 text-rose-darker">[{children}]</mark>;
+  return <mark className="rounded bg-sage-soft px-1 text-forest-dark">[{children}]</mark>;
 }

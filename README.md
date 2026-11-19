@@ -8,6 +8,10 @@ refait à partir de l'ancienne version Lovable, avec en plus :
   refus, annulation, rappel la veille, notification à Béa à chaque demande.
 - **Espace admin** (`/admin`, protégé par mot de passe) : calendrier des disponibilités et des rendez-vous,
   confirmation/refus en un clic, jours fermés, congés, créneaux bloqués, horaires habituels, réglages.
+- **CRM clients** (dans l'admin uniquement) : une fiche par personne, créée et complétée automatiquement à
+  chaque réservation, rendez-vous ajouté ou message de contact (retrouvée par email ou téléphone) ;
+  historique complet (rendez-vous passés et à venir, annulations, absences, messages), notes privées,
+  date de naissance, statistiques, recherche, export Excel/CSV, suppression RGPD.
 - **Annulation en ligne** par le client (lien dans l'email, jusqu'à 24 h avant).
 - Formulaire de contact (envoyé par Brevo), pages légales, SEO (métadonnées, sitemap, données structurées),
   responsive, accessible, sans cookie de suivi.
@@ -106,6 +110,10 @@ Après une modification de `src/lib/db/schema.ts` : `npm run db:generate` (crée
   habituels* annule l'exception.
 - **Ajouter un rendez-vous ou bloquer un créneau** : pour un rendez-vous pris par téléphone, ou une
   indisponibilité ponctuelle (le créneau disparaît de la réservation en ligne).
+- **Clients** : liste de toutes les personnes avec leurs séances, dernière visite et prochain rendez-vous ;
+  recherche par nom, email ou téléphone ; export Excel. Chaque fiche montre l'historique complet, les soins
+  préférés, le montant estimé, et permet d'écrire des **notes privées** (préférences, grossesse,
+  précautions…), d'ajouter un rendez-vous, de marquer une **absence** ou de supprimer la fiche (RGPD).
 - **Horaires & réglages** : horaires de chaque jour de la semaine (plusieurs plages possibles), fermeture
   d'une période (congés), intervalle entre créneaux, pause entre deux soins, délai minimum de réservation,
   horizon de réservation, confirmation automatique, suspension de la réservation, message d'information.
@@ -124,6 +132,14 @@ Email public, SIRET, adresse professionnelle, code APE, assureur RC Pro, médiat
 domaine définitif. Les horaires par défaut (lun.–ven. 9h–12h30 / 14h–19h, sam. 9h–13h) sont à ajuster dans
 l'admin.
 
+## Identité visuelle
+
+- Palette : vert eucalyptus (calme, nature), terracotta (chaleur, toucher), lin et or ; une couleur par
+  univers de soins (sauge, ambre, poudre, lavande) — définie dans `src/app/globals.css` (`@theme`).
+- Typographies auto-hébergées : **Fraunces** « soft » (titres, serif organique et chaleureux) et
+  **Nunito Sans** (texte, douce et très lisible).
+- Emblème : lotus surmonté d'un point de lumière (`src/components/brand.tsx`).
+
 ## Technique
 
 Next.js 16 (App Router) · React 19 · Tailwind CSS 4 · OpenNext pour Cloudflare Workers · Cloudflare D1
@@ -133,4 +149,6 @@ Next.js 16 (App Router) · React 19 · Tailwind CSS 4 · OpenNext pour Cloudflar
 - Anti double réservation : le créneau est inséré par une requête SQL unique et atomique qui échoue si un
   autre rendez-vous chevauche (testé avec 10 réservations simultanées : 1 acceptée, 9 refusées).
 - Les pages publiques sont pré-générées et servies depuis les assets statiques du Worker.
+- CRM : tables `clients` et `contact_messages`, rattachement automatique (email en minuscules, téléphone
+  normalisé au format national).
 - `worker.ts` ajoute au Worker d'OpenNext une tâche planifiée quotidienne (rappels, `triggers.crons`).

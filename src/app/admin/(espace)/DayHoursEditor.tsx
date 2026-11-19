@@ -57,7 +57,7 @@ export function DayHoursEditor({
         {override ? "Horaires spécifiques à ce jour." : `Horaires habituels du ${weekdayLabel}.`}
       </p>
 
-      {msg?.ok && !editing && <p className="mt-2 text-xs text-[#3f5a48]">{msg.ok}</p>}
+      {msg?.ok && !editing && <p className="mt-2 text-xs text-forest">{msg.ok}</p>}
 
       {!editing ? (
         <div className="mt-3 flex flex-wrap gap-2">
@@ -84,12 +84,12 @@ export function DayHoursEditor({
               Revenir aux horaires habituels
             </button>
           )}
-          {pending && <Loader2 className="size-4 animate-spin self-center text-rose-deep" aria-label="Enregistrement" />}
+          {pending && <Loader2 className="size-4 animate-spin self-center text-forest" aria-label="Enregistrement" />}
         </div>
       ) : (
         <div className="mt-4 space-y-4 rounded-xl border border-line bg-sand/40 p-4">
           <label className="flex items-center gap-2">
-            <input type="checkbox" checked={closed} onChange={(e) => setClosed(e.target.checked)} className="size-4 accent-rose-deep" />
+            <input type="checkbox" checked={closed} onChange={(e) => setClosed(e.target.checked)} className="size-4 accent-forest" />
             Jour fermé (congés, indisponibilité…)
           </label>
           {!closed && <RangesEditor ranges={ranges} onChange={setRanges} idPrefix={`day-${date}`} />}
@@ -100,7 +100,7 @@ export function DayHoursEditor({
             <input id="day-note" value={note} onChange={(e) => setNote(e.target.value)} maxLength={200} className="field !py-1.5 text-sm" placeholder="Ex. formation, congés…" />
           </div>
           {msg?.error && (
-            <p role="alert" className="text-xs text-rose-darker">
+            <p role="alert" className="text-xs text-clay-dark">
               {msg.error}
             </p>
           )}

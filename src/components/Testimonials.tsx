@@ -2,7 +2,7 @@
 
 import Image from "next/image";
 import { useEffect, useRef, useState } from "react";
-import { BookOpen, X } from "lucide-react";
+import { BookOpen, Quote, X } from "lucide-react";
 import type { Testimonial } from "@/lib/content";
 
 /** Cartes de témoignages + affichage de la page manuscrite du livre d'or. */
@@ -19,22 +19,26 @@ export function Testimonials({ items, showBook = true }: { items: Testimonial[];
 
   return (
     <>
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <div className="columns-1 gap-6 md:columns-2 lg:columns-3 [&>*]:mb-6">
         {items.map((t) => (
-          <figure key={t.name} className="card flex flex-col p-7">
-            <p className="tracking-[0.2em] text-gold" aria-label="5 étoiles sur 5">
+          <figure key={t.name} className="card relative break-inside-avoid p-7">
+            <Quote className="absolute right-6 top-6 size-8 text-sage-soft" aria-hidden />
+            <span className="tracking-[0.15em] text-gold" aria-label="5 étoiles sur 5">
               ★★★★★
-            </p>
-            <blockquote className="mt-4 flex-1 font-serif text-[1.2rem] leading-relaxed text-ink italic">
-              « {t.text} »
-            </blockquote>
-            <figcaption className="mt-5 flex items-center justify-between gap-3">
-              <span className="font-script text-2xl text-rose-deep">— {t.name}</span>
+            </span>
+            <blockquote className="mt-4 font-serif text-[1.15rem] leading-relaxed text-ink italic">« {t.text} »</blockquote>
+            <figcaption className="mt-6 flex items-center justify-between gap-3 border-t border-line pt-4">
+              <span className="flex items-center gap-3">
+                <span className="grid size-9 place-items-center rounded-full bg-clay-soft font-serif text-clay-dark">
+                  {t.name.charAt(0)}
+                </span>
+                <span className="font-bold text-ink">{t.name}</span>
+              </span>
               {showBook && (
                 <button
                   type="button"
                   onClick={() => setCurrent(t)}
-                  className="flex items-center gap-1.5 text-xs text-ink-soft underline-offset-4 hover:text-rose-deep hover:underline"
+                  className="flex items-center gap-1.5 text-xs font-semibold text-forest underline-offset-4 hover:underline"
                 >
                   <BookOpen className="size-3.5" aria-hidden />
                   Voir l&apos;original
@@ -51,7 +55,7 @@ export function Testimonials({ items, showBook = true }: { items: Testimonial[];
         onClick={(e) => {
           if (e.target === e.currentTarget) setCurrent(null);
         }}
-        className="m-auto max-h-[92dvh] w-[min(92vw,900px)] rounded-2xl bg-card p-0 backdrop:bg-ink/60 backdrop:backdrop-blur-sm"
+        className="m-auto max-h-[92dvh] w-[min(92vw,900px)] rounded-3xl bg-card p-0 backdrop:bg-ink/60 backdrop:backdrop-blur-sm"
         aria-label={current ? `Livre d'or — message de ${current.name}` : undefined}
       >
         {current && (

@@ -24,7 +24,7 @@ export default function AProposPage() {
       <PageHero
         eyebrow="À propos"
         title="Béatrice"
-        intro={<p className="font-serif text-2xl italic text-rose-deep">« Accompagner chacun vers son équilibre, c&apos;est ma vocation. »</p>}
+        intro={<p className="font-serif text-2xl italic text-forest">« Accompagner chacun vers son équilibre, c&apos;est ma vocation. »</p>}
       />
 
       <section className="py-16 md:py-24">
@@ -63,7 +63,7 @@ export default function AProposPage() {
                 souhaitent un espace d&apos;écoute autour des questions existentielles, toujours dans la
                 bienveillance et le respect de chacun.
               </p>
-              <p className="border-l-2 border-rose pl-5 font-serif text-xl text-ink italic">
+              <p className="border-l-2 border-sage pl-5 font-serif text-xl text-ink italic">
                 Mon souhait : vous offrir un espace de confiance où le corps se détend, où l&apos;énergie circule,
                 et où chacun trouve son apaisement.
               </p>
@@ -84,7 +84,7 @@ export default function AProposPage() {
           <ol className="mx-auto mt-12 grid max-w-4xl gap-4 sm:grid-cols-2">
             {parcours.map((f, i) => (
               <Reveal as="li" key={f.title} delay={i * 60} className="card flex items-start gap-4 p-5">
-                <span className="grid size-10 shrink-0 place-items-center rounded-full bg-rose-soft text-rose-deep">
+                <span className="grid size-10 shrink-0 place-items-center rounded-full bg-sage-soft text-forest">
                   <GraduationCap className="size-5" aria-hidden strokeWidth={1.5} />
                 </span>
                 <span>

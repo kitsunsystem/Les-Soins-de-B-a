@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CalendarHeart, Clock, Mail, MapPin, Phone } from "lucide-react";
-import { ContactForm, contactSubjects } from "@/components/ContactForm";
+import { ContactForm } from "@/components/ContactForm";
 import { PageHero } from "@/components/ui";
-import { getService } from "@/lib/content";
+import { contactSubjects, getService } from "@/lib/content";
 import { site } from "@/lib/site";
 
 export const metadata: Metadata = {
@@ -32,7 +32,7 @@ export default async function ContactPage({ searchParams }: PageProps<"/contact"
           <ContactForm defaultSubject={subject} defaultMessage={message} />
 
           <aside className="space-y-5">
-            <div className="rounded-[1.25rem] bg-rose-soft p-6">
+            <div className="rounded-[1.25rem] bg-sage-soft p-6">
               <p className="font-serif text-2xl">Réserver directement</p>
               <p className="mt-2 text-sm text-ink-soft">
                 Pour un soin classique, choisissez votre créneau en ligne : c&apos;est plus rapide.
@@ -45,7 +45,7 @@ export default async function ContactPage({ searchParams }: PageProps<"/contact"
             <div className="card space-y-5 p-6 text-sm">
               <p className="font-serif text-2xl">Mes coordonnées</p>
               <p className="flex gap-3">
-                <MapPin className="mt-0.5 size-5 shrink-0 text-rose-deep" aria-hidden />
+                <MapPin className="mt-0.5 size-5 shrink-0 text-forest" aria-hidden />
                 <span>
                   Cabinet à {site.city}
                   <br />
@@ -53,21 +53,21 @@ export default async function ContactPage({ searchParams }: PageProps<"/contact"
                 </span>
               </p>
               <p className="flex gap-3">
-                <Phone className="mt-0.5 size-5 shrink-0 text-rose-deep" aria-hidden />
-                <a href={site.phoneHref} className="hover:text-rose-deep">
+                <Phone className="mt-0.5 size-5 shrink-0 text-forest" aria-hidden />
+                <a href={site.phoneHref} className="hover:text-forest">
                   {site.phone}
                 </a>
               </p>
               {site.email && (
                 <p className="flex gap-3">
-                  <Mail className="mt-0.5 size-5 shrink-0 text-rose-deep" aria-hidden />
-                  <a href={`mailto:${site.email}`} className="hover:text-rose-deep">
+                  <Mail className="mt-0.5 size-5 shrink-0 text-forest" aria-hidden />
+                  <a href={`mailto:${site.email}`} className="hover:text-forest">
                     {site.email}
                   </a>
                 </p>
               )}
               <p className="flex gap-3">
-                <Clock className="mt-0.5 size-5 shrink-0 text-rose-deep" aria-hidden />
+                <Clock className="mt-0.5 size-5 shrink-0 text-forest" aria-hidden />
                 <span>Sur rendez-vous uniquement</span>
               </p>
             </div>

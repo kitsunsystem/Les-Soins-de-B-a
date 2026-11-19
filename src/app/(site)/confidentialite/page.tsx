@@ -26,6 +26,10 @@ export default function ConfidentialitePage() {
         </li>
       </ul>
       <p>
+        Ces informations sont regroupées dans une fiche client (historique des rendez-vous et des messages, notes de
+        suivi) consultable uniquement par la praticienne, dans un espace protégé par mot de passe.
+      </p>
+      <p>
         Merci de ne transmettre que les informations de santé utiles à l&apos;adaptation de la séance (grossesse,
         contre-indication…). Elles sont traitées de manière strictement confidentielle.
       </p>

@@ -13,6 +13,7 @@ import {
   MailCheck,
 } from "lucide-react";
 import { categories, getService, services, type Service } from "@/lib/content";
+import { CategoryBadge } from "./services";
 import { site } from "@/lib/site";
 import { addDays, daysOfMonth, formatDateStr, formatMonth, parisDateStr, shiftMonth, weekdayOf } from "@/lib/time";
 
@@ -132,7 +133,7 @@ export function BookingWizard({ initialServiceId }: { initialServiceId?: string 
       {step < 4 && <Steps step={step} />}
 
       {error && step !== 3 && (
-        <p role="alert" className="mx-auto mt-6 max-w-3xl rounded-xl bg-rose-soft px-4 py-3 text-center text-sm text-rose-darker">
+        <p role="alert" className="alert-error mx-auto mt-6 max-w-3xl text-center">
           {error}
         </p>
       )}
@@ -145,8 +146,9 @@ export function BookingWizard({ initialServiceId }: { initialServiceId?: string 
             if (!list.length) return null;
             return (
               <fieldset key={c.id}>
-                <legend className="font-serif text-3xl">
-                  <span aria-hidden>{c.emoji}</span> {c.name}
+                <legend className="flex items-center gap-3 font-serif text-[1.8rem]">
+                  <CategoryBadge category={c} className="size-11" />
+                  {c.name}
                 </legend>
                 <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
                   {list.map((s) => (
@@ -154,8 +156,8 @@ export function BookingWizard({ initialServiceId }: { initialServiceId?: string 
                       key={s.id}
                       type="button"
                       onClick={() => chooseService(s)}
-                      className={`card flex flex-col items-start p-5 text-left transition-all hover:-translate-y-0.5 hover:border-rose-deep hover:shadow-soft ${
-                        serviceId === s.id ? "border-rose-deep ring-2 ring-rose-deep/20" : ""
+                      className={`card flex flex-col items-start p-5 text-left transition-all hover:-translate-y-0.5 hover:border-forest hover:shadow-soft ${
+                        serviceId === s.id ? "border-forest ring-2 ring-forest/20" : ""
                       }`}
                     >
                       <span className="font-serif text-xl leading-snug">{s.name}</span>
@@ -164,7 +166,7 @@ export function BookingWizard({ initialServiceId }: { initialServiceId?: string 
                           <Clock className="size-3.5" aria-hidden />
                           {s.durationLabel}
                         </span>
-                        <span className="font-serif text-lg text-rose-deep">{s.price}</span>
+                        <span className="font-serif text-lg text-clay">{s.price}</span>
                       </span>
                     </button>
                   ))}
@@ -176,11 +178,11 @@ export function BookingWizard({ initialServiceId }: { initialServiceId?: string 
             <p className="font-medium text-ink">Sur demande uniquement</p>
             <p className="mt-1">
               {onRequest.map((s) => s.name).join(" · ")} : ces prestations se préparent ensemble.{" "}
-              <Link href="/contact?objet=rdv" className="text-rose-deep underline">
+              <Link href="/contact?objet=rdv" className="text-forest underline">
                 Contactez-moi
               </Link>{" "}
               ou appelez le{" "}
-              <a href={site.phoneHref} className="text-rose-deep underline">
+              <a href={site.phoneHref} className="text-forest underline">
                 {site.phone}
               </a>
               .
@@ -264,19 +266,19 @@ export function BookingWizard({ initialServiceId }: { initialServiceId?: string 
             <div className="grid gap-5 sm:grid-cols-2">
               <div className="sm:col-span-2">
                 <label htmlFor="b-name" className="label">
-                  Nom et prénom <span className="text-rose-deep">*</span>
+                  Nom et prénom <span className="text-forest">*</span>
                 </label>
                 <input id="b-name" name="name" required minLength={2} maxLength={120} autoComplete="name" className="field" />
               </div>
               <div>
                 <label htmlFor="b-email" className="label">
-                  Email <span className="text-rose-deep">*</span>
+                  Email <span className="text-forest">*</span>
                 </label>
                 <input id="b-email" name="email" type="email" required autoComplete="email" className="field" />
               </div>
               <div>
                 <label htmlFor="b-phone" className="label">
-                  Téléphone <span className="text-rose-deep">*</span>
+                  Téléphone <span className="text-forest">*</span>
                 </label>
                 <input
                   id="b-phone"
@@ -307,21 +309,21 @@ export function BookingWizard({ initialServiceId }: { initialServiceId?: string 
               <input id="b-website" name="website" tabIndex={-1} autoComplete="off" />
             </div>
             <label className="flex items-start gap-3 text-sm text-ink-soft">
-              <input type="checkbox" name="consent" required className="mt-1 size-4 accent-rose-deep" />
+              <input type="checkbox" name="consent" required className="mt-1 size-4 accent-forest" />
               <span>
                 J&apos;accepte que mes informations soient utilisées uniquement pour gérer ce rendez-vous (
-                <Link href="/confidentialite" target="_blank" className="underline hover:text-rose-deep">
+                <Link href="/confidentialite" target="_blank" className="underline hover:text-forest">
                   confidentialité
                 </Link>
                 ) et j&apos;ai pris connaissance des{" "}
-                <Link href="/cgv" target="_blank" className="underline hover:text-rose-deep">
+                <Link href="/cgv" target="_blank" className="underline hover:text-forest">
                   conditions générales
                 </Link>
                 .
               </span>
             </label>
             {error && (
-              <p role="alert" className="rounded-xl bg-rose-soft px-4 py-3 text-sm text-rose-darker">
+              <p role="alert" className="alert-error">
                 {error}
               </p>
             )}
@@ -386,7 +388,7 @@ function Steps({ step }: { step: Step }) {
           <li key={l} className="flex flex-1 items-center gap-2" aria-current={current ? "step" : undefined}>
             <span
               className={`grid size-8 shrink-0 place-items-center rounded-full text-sm font-medium ${
-                current ? "bg-rose-deep text-white" : done ? "bg-sage text-white" : "bg-card text-ink-soft ring-1 ring-line"
+                current ? "bg-forest text-white" : done ? "bg-sage text-white" : "bg-card text-ink-soft ring-1 ring-line"
               }`}
             >
               {done ? "✓" : n}
@@ -492,9 +494,9 @@ function MonthCalendar({
                 aria-label={`${formatDateStr(d)}${available ? `, ${days[d].length} créneaux` : ", complet ou fermé"}`}
                 className={`relative aspect-square rounded-xl text-sm transition-colors ${
                   isSel
-                    ? "bg-rose-deep font-medium text-white"
+                    ? "bg-forest font-medium text-white"
                     : available
-                      ? "bg-rose-soft/70 font-medium text-ink hover:bg-rose hover:text-white"
+                      ? "bg-sage-soft/70 font-medium text-ink hover:bg-sage hover:text-white"
                       : "text-ink-soft/40"
                 } ${d === today && !isSel ? "ring-1 ring-gold" : ""}`}
               >
@@ -505,7 +507,7 @@ function MonthCalendar({
         </div>
         {loading && (
           <div className="absolute inset-0 grid place-items-center rounded-xl bg-card/70">
-            <Loader2 className="size-6 animate-spin text-rose-deep" aria-label="Chargement des disponibilités" />
+            <Loader2 className="size-6 animate-spin text-forest" aria-label="Chargement des disponibilités" />
           </div>
         )}
       </div>
@@ -515,7 +517,7 @@ function MonthCalendar({
           {month < lastMonth && (
             <>
               {" "}
-              <button type="button" onClick={() => onMonth(shiftMonth(month, 1))} className="text-rose-deep underline">
+              <button type="button" onClick={() => onMonth(shiftMonth(month, 1))} className="text-forest underline">
                 Voir le mois suivant
               </button>
             </>
@@ -541,8 +543,8 @@ function TimePicker({
     return (
       <div className="card grid place-items-center p-8 text-center text-ink-soft">
         <div>
-          <CalendarCheck className="mx-auto size-10 text-rose" aria-hidden strokeWidth={1.25} />
-          <p className="mt-3">Choisissez un jour en rose dans le calendrier pour voir les horaires disponibles.</p>
+          <CalendarCheck className="mx-auto size-10 text-sage" aria-hidden strokeWidth={1.25} />
+          <p className="mt-3">Choisissez un jour en vert dans le calendrier pour voir les horaires disponibles.</p>
         </div>
       </div>
     );
@@ -569,8 +571,8 @@ function TimePicker({
                   aria-pressed={selected === t}
                   className={`rounded-xl border px-2 py-2.5 text-sm transition-colors ${
                     selected === t
-                      ? "border-rose-deep bg-rose-deep font-medium text-white"
-                      : "border-line bg-white hover:border-rose-deep hover:text-rose-deep"
+                      ? "border-forest bg-forest font-medium text-white"
+                      : "border-line bg-white hover:border-forest hover:text-forest"
                   }`}
                 >
                   {t.replace(":", "h")}
@@ -586,15 +588,15 @@ function TimePicker({
 
 function Recap({ service, date, time }: { service: Service; date: string; time: string }) {
   return (
-    <aside className="h-fit rounded-[1.25rem] bg-rose-soft p-6 text-sm lg:sticky lg:top-28">
+    <aside className="h-fit rounded-[1.25rem] bg-sage-soft p-6 text-sm lg:sticky lg:top-28">
       <p className="text-xs uppercase tracking-widest text-ink-soft">Récapitulatif</p>
       <p className="mt-2 font-serif text-2xl">{service.name}</p>
       <p className="mt-3 first-letter:uppercase">{formatDateStr(date, { year: "numeric" })}</p>
       <p>
         à {time.replace(":", "h")} · {service.durationLabel}
       </p>
-      <p className="mt-3 font-serif text-2xl text-rose-deep">{service.price}</p>
-      <p className="mt-4 border-t border-rose/40 pt-4 text-xs text-ink-soft">
+      <p className="mt-3 font-serif text-2xl text-clay">{service.price}</p>
+      <p className="mt-4 border-t border-sage/40 pt-4 text-xs text-ink-soft">
         Cabinet à {site.city} — l&apos;adresse exacte vous est communiquée à la confirmation. Règlement sur place :{" "}
         {site.payment.toLowerCase()}.
       </p>

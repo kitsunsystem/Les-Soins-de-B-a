@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { saveContactMessage } from "@/lib/clients";
 import { mailContact } from "@/lib/emails";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 import { contactSchema, firstError } from "@/lib/validation";
@@ -12,6 +13,12 @@ export async function POST(request: Request) {
   const parsed = contactSchema.safeParse(await request.json().catch(() => null));
   if (!parsed.success) {
     return NextResponse.json({ error: firstError(parsed.error) }, { status: 400 });
+  }
+  // Historique dans la fiche client (CRM) ; un échec ne doit pas bloquer l'envoi du message.
+  try {
+    await saveContactMessage(parsed.data);
+  } catch (e) {
+    console.error("[contact] enregistrement CRM impossible", e);
   }
   const sent = await mailContact(parsed.data);
   if (!sent && process.env.BREVO_API_KEY) {

@@ -45,7 +45,7 @@ export function WeeklyHoursEditor({ initial }: { initial: WeeklyHour[] }) {
                       [wd]: e.target.checked ? [{ start: "09:00", end: "12:30" }, { start: "14:00", end: "19:00" }] : [],
                     }))
                   }
-                  className="size-4 accent-rose-deep"
+                  className="size-4 accent-forest"
                 />
                 {weekdayNames[wd]}
               </label>
@@ -63,9 +63,9 @@ export function WeeklyHoursEditor({ initial }: { initial: WeeklyHour[] }) {
           {pending && <Loader2 className="size-4 animate-spin" aria-hidden />}
           Enregistrer les horaires
         </button>
-        {msg?.ok && <span className="text-sm text-[#3f5a48]">{msg.ok}</span>}
+        {msg?.ok && <span className="text-sm text-forest">{msg.ok}</span>}
         {msg?.error && (
-          <span role="alert" className="text-sm text-rose-darker">
+          <span role="alert" className="text-sm text-clay-dark">
             {msg.error}
           </span>
         )}

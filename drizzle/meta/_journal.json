@@ -15,6 +15,20 @@
       "when": 1795109801289,
       "tag": "0001_seed",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1795126897560,
+      "tag": "0002_crm",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1795126898196,
+      "tag": "0003_crm_backfill",
+      "breakpoints": true
     }
   ]
 }

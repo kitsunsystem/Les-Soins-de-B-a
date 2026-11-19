@@ -23,7 +23,7 @@ export function LoginForm() {
         />
       </div>
       {state?.error && (
-        <p role="alert" className="rounded-xl bg-rose-soft px-3 py-2 text-sm text-rose-darker">
+        <p role="alert" className="alert-error">
           {state.error}
         </p>
       )}

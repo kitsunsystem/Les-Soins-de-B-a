@@ -32,7 +32,55 @@ export const dateOverrides = sqliteTable("date_overrides", {
   note: text("note").notNull().default(""),
 });
 
-export type AppointmentStatus = "pending" | "confirmed" | "declined" | "cancelled";
+/** Fiche client (CRM) : une par personne, retrouvée par email ou téléphone. */
+export const clients = sqliteTable(
+  "clients",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    name: text("name").notNull(),
+    /** Toujours en minuscules. */
+    email: text("email").notNull().default(""),
+    phone: text("phone").notNull().default(""),
+    /** Téléphone normalisé (chiffres seulement, format 0X…) pour retrouver la fiche. */
+    phoneKey: text("phone_key").notNull().default(""),
+    /** AAAA-MM-JJ, facultatif. */
+    birthdate: text("birthdate").notNull().default(""),
+    /** Notes privées de Béa (préférences, précautions…). */
+    notes: text("notes").notNull().default(""),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .notNull()
+      .$defaultFn(() => new Date()),
+    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+      .notNull()
+      .$defaultFn(() => new Date()),
+  },
+  (t) => [index("clients_email_idx").on(t.email), index("clients_phone_key_idx").on(t.phoneKey)],
+);
+
+/** Messages reçus via le formulaire de contact (historique de la fiche client). */
+export const contactMessages = sqliteTable(
+  "contact_messages",
+  {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    clientId: text("client_id"),
+    name: text("name").notNull(),
+    email: text("email").notNull(),
+    phone: text("phone").notNull().default(""),
+    subject: text("subject").notNull(),
+    message: text("message").notNull(),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .notNull()
+      .$defaultFn(() => new Date()),
+  },
+  (t) => [index("contact_messages_client_idx").on(t.clientId)],
+);
+
+/** « no_show » = rendez-vous confirmé mais client absent. */
+export type AppointmentStatus = "pending" | "confirmed" | "declined" | "cancelled" | "no_show";
 
 export const appointments = sqliteTable(
   "appointments",
@@ -40,6 +88,8 @@ export const appointments = sqliteTable(
     id: text("id")
       .primaryKey()
       .$defaultFn(() => crypto.randomUUID()),
+    /** Fiche client liée (null pour un créneau bloqué). */
+    clientId: text("client_id"),
     serviceId: text("service_id").notNull(),
     serviceName: text("service_name").notNull(),
     durationMinutes: integer("duration_minutes").notNull(),
@@ -62,8 +112,14 @@ export const appointments = sqliteTable(
       .notNull()
       .$defaultFn(() => new Date()),
   },
-  (t) => [index("appointments_starts_at_idx").on(t.startsAt), index("appointments_status_idx").on(t.status)],
+  (t) => [
+    index("appointments_starts_at_idx").on(t.startsAt),
+    index("appointments_status_idx").on(t.status),
+    index("appointments_client_idx").on(t.clientId),
+  ],
 );
 
+export type Client = typeof clients.$inferSelect;
+export type ContactMessage = typeof contactMessages.$inferSelect;
 export type Appointment = typeof appointments.$inferSelect;
 export type Settings = typeof settings.$inferSelect;

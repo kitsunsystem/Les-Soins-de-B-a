@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import type { Range, WeeklyHour } from "@/lib/availability";
 import { checkPassword, createSession, destroySession, requireAdmin } from "@/lib/auth";
+import { createClient, deleteClient, updateClient } from "@/lib/clients";
 import {
   cancelAppointmentByAdmin,
   closePeriod,
@@ -13,6 +14,8 @@ import {
   createManualAppointment,
   declineAppointment,
   deleteOverride,
+  markAttended,
+  markNoShow,
   replaceWeeklyHours,
   setOverride,
   updateSettings,
@@ -67,6 +70,18 @@ export async function cancelAction(formData: FormData) {
   revalidatePath("/admin", "layout");
 }
 
+export async function noShowAction(formData: FormData) {
+  await requireAdmin();
+  await markNoShow(str(formData, "id"));
+  revalidatePath("/admin", "layout");
+}
+
+export async function attendedAction(formData: FormData) {
+  await requireAdmin();
+  await markAttended(str(formData, "id"));
+  revalidatePath("/admin", "layout");
+}
+
 const manualSchema = z.object({
   date: z.string().refine(isDateStr),
   time: z.string().refine(isTimeStr, "Heure invalide"),
@@ -77,6 +92,7 @@ const manualSchema = z.object({
   clientPhone: z.string().trim().max(30),
   note: z.string().trim().max(1000),
   notify: z.boolean(),
+  clientId: z.string().max(64).optional(),
 });
 
 export async function addAppointmentAction(_: ActionState, formData: FormData): Promise<ActionState> {
@@ -91,6 +107,7 @@ export async function addAppointmentAction(_: ActionState, formData: FormData): 
     clientPhone: str(formData, "clientPhone"),
     note: str(formData, "note"),
     notify: formData.get("notify") === "on",
+    clientId: str(formData, "clientId") || undefined,
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Données invalides" };
   await createManualAppointment(parsed.data);
@@ -196,4 +213,51 @@ export async function saveSettingsAction(_: ActionState, formData: FormData): Pr
   await updateSettings(parsed.data);
   revalidatePath("/admin", "layout");
   return { ok: "Réglages enregistrés." };
+}
+
+// ——— Fiches clients (CRM) ———
+
+const clientSchema = z.object({
+  name: z.string().trim().min(2, "Indiquez au moins le nom.").max(120),
+  email: z.union([z.literal(""), z.email("Email invalide")]),
+  phone: z.string().trim().max(30),
+  birthdate: z.union([z.literal(""), z.string().refine(isDateStr, "Date de naissance invalide")]),
+  notes: z.string().max(5000),
+});
+
+function clientFields(formData: FormData) {
+  return clientSchema.safeParse({
+    name: str(formData, "name"),
+    email: str(formData, "email").toLowerCase(),
+    phone: str(formData, "phone"),
+    birthdate: str(formData, "birthdate"),
+    notes: String(formData.get("notes") ?? "").trim(),
+  });
+}
+
+export async function createClientAction(_: ActionState, formData: FormData): Promise<ActionState> {
+  await requireAdmin();
+  const parsed = clientFields(formData);
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Données invalides" };
+  const id = await createClient(parsed.data);
+  revalidatePath("/admin/clients");
+  redirect(`/admin/clients/${id}`);
+}
+
+export async function updateClientAction(_: ActionState, formData: FormData): Promise<ActionState> {
+  await requireAdmin();
+  const id = str(formData, "id");
+  const parsed = clientFields(formData);
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Données invalides" };
+  await updateClient(id, parsed.data);
+  revalidatePath("/admin", "layout");
+  return { ok: "Fiche enregistrée." };
+}
+
+export async function deleteClientAction(formData: FormData) {
+  await requireAdmin();
+  if (formData.get("confirm") !== "on") return;
+  await deleteClient(str(formData, "id"));
+  revalidatePath("/admin", "layout");
+  redirect("/admin/clients");
 }

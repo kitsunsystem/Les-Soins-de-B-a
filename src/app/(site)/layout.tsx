@@ -1,5 +1,5 @@
 import { Footer } from "@/components/Footer";
-import { Header } from "@/components/Header";
+import { Header, TopBar } from "@/components/Header";
 import { site } from "@/lib/site";
 
 const jsonLd = {
@@ -22,6 +22,7 @@ export default function SiteLayout({ children }: { children: React.ReactNode }) 
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
+      <TopBar />
       <Header />
       <main id="contenu" className="flex-1">
         {children}

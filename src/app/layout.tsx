@@ -1,11 +1,7 @@
 import type { Metadata, Viewport } from "next";
-import "@fontsource/cormorant-garamond/400.css";
-import "@fontsource/cormorant-garamond/500.css";
-import "@fontsource/cormorant-garamond/400-italic.css";
-import "@fontsource/montserrat/400.css";
-import "@fontsource/montserrat/500.css";
-import "@fontsource/montserrat/600.css";
-import "@fontsource/dancing-script/500.css";
+import "@fontsource-variable/fraunces/soft.css";
+import "@fontsource-variable/fraunces/soft-italic.css";
+import "@fontsource-variable/nunito-sans/wght.css";
 import "./globals.css";
 import { site } from "@/lib/site";
 
@@ -32,7 +28,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f8f2ec",
+  themeColor: "#f8f4ee",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

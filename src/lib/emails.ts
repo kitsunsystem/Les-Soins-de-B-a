@@ -11,7 +11,7 @@ const esc = (s: string) =>
 
 const nl2br = (s: string) => esc(s).replace(/\r?\n/g, "<br>");
 
-const C = { bg: "#f7f1ea", card: "#fffdf9", text: "#4a3a2e", muted: "#7a6a5c", rose: "#a8655c", line: "#eadfd3" };
+const C = { bg: "#f8f4ee", card: "#fffdf9", text: "#26352e", muted: "#56655d", rose: "#345445", clay: "#b4694a", line: "#e6ddd0" };
 
 function layout(base: string, title: string, body: string) {
   return `<!doctype html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><title>${esc(title)}</title></head>
@@ -20,7 +20,7 @@ function layout(base: string, title: string, body: string) {
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;background:${C.card};border-radius:16px;border:1px solid ${C.line};">
 <tr><td style="padding:32px 32px 8px;text-align:center;">
 <div style="font-family:Georgia,'Times New Roman',serif;font-size:26px;color:${C.text};">${esc(site.name)}</div>
-<div style="font-size:12px;letter-spacing:2px;text-transform:uppercase;color:${C.rose};margin-top:6px;">${esc(site.tagline)}</div>
+<div style="font-size:12px;letter-spacing:2px;text-transform:uppercase;color:${C.clay};margin-top:6px;">${esc(site.tagline)}</div>
 </td></tr>
 <tr><td style="padding:16px 32px 32px;font-size:15px;line-height:1.6;">${body}</td></tr>
 <tr><td style="padding:20px 32px;border-top:1px solid ${C.line};font-size:12px;color:${C.muted};text-align:center;line-height:1.6;">

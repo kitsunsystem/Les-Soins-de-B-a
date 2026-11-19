@@ -46,7 +46,7 @@ export function RangesEditor({
           <button
             type="button"
             onClick={() => onChange(ranges.filter((_, j) => j !== i))}
-            className="grid size-9 place-items-center rounded-full text-ink-soft hover:bg-rose-soft hover:text-rose-darker"
+            className="grid size-9 place-items-center rounded-full text-ink-soft hover:bg-sage-soft hover:text-forest-dark"
             aria-label="Supprimer cette plage"
           >
             <Trash2 className="size-4" />
@@ -59,7 +59,7 @@ export function RangesEditor({
           const last = ranges.at(-1);
           onChange([...ranges, last ? { start: last.end, end: last.end < "18:00" ? "19:00" : "21:00" } : { start: "09:00", end: "12:00" }]);
         }}
-        className="flex items-center gap-1.5 text-xs font-medium text-rose-deep hover:underline"
+        className="flex items-center gap-1.5 text-xs font-medium text-forest hover:underline"
       >
         <Plus className="size-3.5" aria-hidden />
         Ajouter une plage

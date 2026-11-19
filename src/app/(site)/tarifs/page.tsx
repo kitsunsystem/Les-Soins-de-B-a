@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { Gift } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
-import { CategoryIcon } from "@/components/services";
+import { CategoryBadge } from "@/components/services";
 import { CtaBand, Disclaimer, PageHero } from "@/components/ui";
 import { categories, servicesByCategory } from "@/lib/content";
 import { site } from "@/lib/site";
@@ -27,9 +27,7 @@ export default function TarifsPage() {
           {categories.map((c, i) => (
             <Reveal key={c.id} delay={(i % 2) * 80} className="card p-7 md:p-8">
               <h2 className="flex items-center gap-3 text-3xl">
-                <span className="grid size-11 place-items-center rounded-full bg-rose-soft text-rose-deep">
-                  <CategoryIcon icon={c.icon} className="size-5" />
-                </span>
+                <CategoryBadge category={c} className="size-12" />
                 {c.name}
               </h2>
               <table className="mt-6 w-full text-sm">
@@ -46,7 +44,7 @@ export default function TarifsPage() {
                     <tr key={s.id} className="border-b border-line/70 last:border-0">
                       <th scope="row" className="py-3 pr-3 text-left font-normal">
                         {s.durationMinutes ? (
-                          <Link href={`/rendez-vous?soin=${s.id}`} className="hover:text-rose-deep">
+                          <Link href={`/rendez-vous?soin=${s.id}`} className="hover:text-forest">
                             {s.name}
                           </Link>
                         ) : (
@@ -54,7 +52,7 @@ export default function TarifsPage() {
                         )}
                       </th>
                       <td className="whitespace-nowrap py-3 pr-3 text-right text-ink-soft">{s.durationLabel}</td>
-                      <td className="whitespace-nowrap py-3 text-right font-serif text-xl text-rose-deep">{s.price}</td>
+                      <td className="whitespace-nowrap py-3 text-right font-serif text-xl text-clay">{s.price}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -66,15 +64,15 @@ export default function TarifsPage() {
             <h2 className="text-3xl">Formations</h2>
             <p className="mt-4 flex justify-between border-b border-line/70 pb-3 text-sm">
               <span>Magnétisme · Flamme Violette II</span>
-              <span className="font-serif text-xl text-rose-deep">sur demande</span>
+              <span className="font-serif text-xl text-clay">sur demande</span>
             </p>
             <Link href="/formations" className="link-arrow mt-5 inline-block text-sm">
               Découvrir les formations →
             </Link>
           </Reveal>
 
-          <Reveal delay={80} className="relative overflow-hidden rounded-[1.25rem] bg-rose-soft p-7 md:p-8">
-            <Gift className="absolute -right-4 -top-4 size-28 text-rose/40" aria-hidden strokeWidth={1} />
+          <Reveal delay={80} className="relative overflow-hidden rounded-[1.5rem] bg-clay-soft p-7 md:p-8">
+            <Gift className="absolute -right-4 -top-4 size-28 text-clay/25" aria-hidden strokeWidth={1} />
             <h2 className="relative text-3xl">Cartes & bons cadeaux</h2>
             <p className="relative mt-4 text-sm text-ink-soft">
               Offrez du bien-être : cartes et bons cadeaux disponibles, montant libre. Une attention précieuse pour

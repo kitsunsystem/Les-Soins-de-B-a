@@ -28,7 +28,7 @@ export default function FormationsPage() {
             const Icon = icons[i % icons.length];
             return (
               <Reveal key={f.title} delay={i * 100} className="card flex flex-col p-8 text-center">
-                <span className="mx-auto grid size-16 place-items-center rounded-full bg-rose-soft text-rose-deep">
+                <span className="mx-auto grid size-16 place-items-center rounded-full bg-sage-soft text-forest">
                   <Icon className="size-7" aria-hidden strokeWidth={1.5} />
                 </span>
                 <h2 className="mt-5 text-3xl">{f.title}</h2>

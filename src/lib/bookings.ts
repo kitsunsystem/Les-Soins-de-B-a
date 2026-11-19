@@ -10,6 +10,7 @@ import {
   type Range,
   type WeeklyHour,
 } from "./availability";
+import { findOrCreateClient } from "./clients";
 import { getService } from "./content";
 import { getDb, type DB } from "./db";
 import { appointments, dateOverrides, settings, weeklyHours, type Appointment, type Settings } from "./db/schema";
@@ -170,6 +171,14 @@ export async function createBooking(input: BookingInput): Promise<Appointment> {
     )`);
   if (!result.meta.changes) throw new BookingError(taken);
 
+  // Rattache le rendez-vous à la fiche client (créée si nécessaire).
+  try {
+    const clientId = await findOrCreateClient({ name: input.name, email: input.email, phone: input.phone }, db);
+    if (clientId) await db.update(appointments).set({ clientId }).where(eq(appointments.id, id));
+  } catch (e) {
+    console.error("[crm] rattachement client impossible", e);
+  }
+
   const [appt] = await db.select().from(appointments).where(eq(appointments.id, id));
   await Promise.allSettled([mailBookingReceived(appt), mailBookingAdmin(appt)]);
   return appt;
@@ -244,13 +253,19 @@ export async function createManualAppointment(input: {
   clientPhone: string;
   note: string;
   notify: boolean;
+  clientId?: string;
 }) {
   const service = getService(input.serviceId);
   const startsAt = parisToUtc(input.date, input.time);
   const db = await getDb();
+  const clientId = service
+    ? (input.clientId ??
+      (await findOrCreateClient({ name: input.clientName, email: input.clientEmail, phone: input.clientPhone }, db)))
+    : null;
   const [row] = await db
     .insert(appointments)
     .values({
+      clientId,
       serviceId: service?.id ?? "blocage",
       serviceName: service?.name ?? "Créneau bloqué",
       durationMinutes: input.durationMinutes,
@@ -267,6 +282,16 @@ export async function createManualAppointment(input: {
     .returning();
   if (row && input.notify && row.clientEmail) await mailBookingConfirmed(row);
   return row;
+}
+
+/** Rendez-vous passé auquel le client ne s'est pas présenté. */
+export async function markNoShow(id: string) {
+  return updateStatus(id, "no_show");
+}
+
+/** Annule un « absent » posé par erreur. */
+export async function markAttended(id: string) {
+  return updateStatus(id, "confirmed");
 }
 
 export async function getByToken(token: string) {

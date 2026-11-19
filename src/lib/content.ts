@@ -24,6 +24,8 @@ export type Category = {
   icon: "leaf" | "sparkles" | "baby" | "eye";
   summary: string;
   intro: string;
+  /** « Idéal pour… » : ce que l'on vient chercher dans cet univers. */
+  idealFor: string;
 };
 
 export const categories: Category[] = [
@@ -35,6 +37,7 @@ export const categories: Category[] = [
     summary: "Réflexologie, massages, soins sur mesure",
     intro:
       "Des soins manuels pour libérer les tensions, relancer la circulation et reconnecter votre corps à sa sérénité.",
+    idealFor: "se détendre en profondeur, relâcher les tensions, retrouver de la légèreté",
   },
   {
     id: "energetique",
@@ -44,6 +47,7 @@ export const categories: Category[] = [
     summary: "Magnétisme, soins énergétiques, à distance",
     intro:
       "Le magnétisme est le fil conducteur de ma pratique. Je l'intègre dans chacun de mes soins, et il peut aussi être proposé de manière ciblée.",
+    idealFor: "se recentrer, apaiser le mental, retrouver un équilibre intérieur",
   },
   {
     id: "femmes-bebes",
@@ -53,6 +57,7 @@ export const categories: Category[] = [
     summary: "Massage prénatal, atelier maman-bébé",
     intro:
       "Un accompagnement tout en douceur pour les futures et jeunes mamans, et leurs tout-petits.",
+    idealFor: "vivre sa grossesse en douceur, créer un lien tendre avec bébé",
   },
   {
     id: "guidance",
@@ -62,6 +67,7 @@ export const categories: Category[] = [
     summary: "Oracle, tarot, médiumnité",
     intro:
       "Des séances de guidance pour celles et ceux qui cherchent des réponses, du sens, ou souhaitent retrouver le lien avec un être cher.",
+    idealFor: "éclairer un questionnement, traverser un deuil, trouver du sens",
   },
 ];
 
@@ -239,6 +245,18 @@ export const services: Service[] = [
     price: "sur devis",
   },
 ];
+
+/** Objets proposés dans le formulaire de contact (clé utilisable dans l'URL : /contact?objet=cadeau). */
+export const contactSubjects = {
+  rdv: "Prise de rendez-vous",
+  question: "Question sur un soin",
+  cadeau: "Carte cadeau",
+  formation: "Formation",
+  autre: "Autre",
+} as const;
+
+/** Soins mis en avant sur l'accueil. */
+export const popularServiceIds = ["reflexologie-plantaire", "massage-relaxant", "soin-complet", "massage-prenatal"];
 
 export const bookableServices = services.filter((s) => s.durationMinutes !== null);
 

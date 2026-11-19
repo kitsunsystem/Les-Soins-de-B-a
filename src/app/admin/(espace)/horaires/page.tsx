@@ -50,7 +50,7 @@ export default async function HorairesPage() {
               {overrides.map((o) => (
                 <li key={o.date} className="flex items-center justify-between gap-3 px-4 py-2.5">
                   <span>
-                    <a href={`/admin?jour=${o.date}`} className="font-medium first-letter:uppercase hover:text-rose-deep">
+                    <a href={`/admin?jour=${o.date}`} className="font-medium first-letter:uppercase hover:text-forest">
                       {formatDateStr(o.date, { year: "numeric" })}
                     </a>
                     <span className="block text-xs text-ink-soft">
@@ -60,7 +60,7 @@ export default async function HorairesPage() {
                   </span>
                   <form action={deleteOverrideAction}>
                     <input type="hidden" name="date" value={o.date} />
-                    <button type="submit" className="text-xs text-ink-soft underline hover:text-rose-deep">
+                    <button type="submit" className="text-xs text-ink-soft underline hover:text-forest">
                       Retirer
                     </button>
                   </form>
@@ -85,7 +85,7 @@ export default async function HorairesPage() {
                 {c.ok ? (
                   <CheckCircle2 className="mt-0.5 size-4 shrink-0 text-sage" aria-label="OK" />
                 ) : (
-                  <XCircle className="mt-0.5 size-4 shrink-0 text-rose-deep" aria-label="À configurer" />
+                  <XCircle className="mt-0.5 size-4 shrink-0 text-forest" aria-label="À configurer" />
                 )}
                 <span>
                   {c.label}

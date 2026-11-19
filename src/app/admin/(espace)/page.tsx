@@ -4,6 +4,7 @@ import { rangesForDate, type DateOverride } from "@/lib/availability";
 import { requireAdmin } from "@/lib/auth";
 import { getOverrides, getWeeklyHours, listAppointments, listPending } from "@/lib/bookings";
 import { brevoConfigured } from "@/lib/brevo";
+import { clientOptions } from "@/lib/clients";
 import {
   addDays,
   daysOfMonth,
@@ -33,11 +34,12 @@ export default async function AgendaPage({ searchParams }: PageProps<"/admin">) 
   const mois = isMonthStr(sp.mois) ? sp.mois : jour.slice(0, 7);
 
   const days = daysOfMonth(mois);
-  const [weekly, overrides, appts, pending] = await Promise.all([
+  const [weekly, overrides, appts, pending, clients] = await Promise.all([
     getWeeklyHours(),
     getOverrides(days[0], days.at(-1)!),
     listAppointments(parisToUtc(days[0], "00:00"), parisToUtc(addDays(days.at(-1)!, 1), "00:00")),
     listPending(),
+    clientOptions(),
   ]);
   const overrideMap = new Map<string, DateOverride>(overrides.map((o) => [o.date, o]));
   const byDay = new Map<string, typeof appts>();
@@ -73,9 +75,9 @@ export default async function AgendaPage({ searchParams }: PageProps<"/admin">) 
       {pending.length > 0 && (
         <section className="card p-5 md:p-6" aria-labelledby="titre-attente">
           <h2 id="titre-attente" className="flex items-center gap-2 text-2xl">
-            <Inbox className="size-5 text-rose-deep" aria-hidden />
+            <Inbox className="size-5 text-forest" aria-hidden />
             Demandes en attente
-            <span className="rounded-full bg-rose-deep px-2.5 py-0.5 font-sans text-xs text-white">{pending.length}</span>
+            <span className="rounded-full bg-forest px-2.5 py-0.5 font-sans text-xs text-white">{pending.length}</span>
           </h2>
           <div className="mt-4 grid gap-3 lg:grid-cols-2">
             {pending.map((a) => (
@@ -95,7 +97,7 @@ export default async function AgendaPage({ searchParams }: PageProps<"/admin">) 
             <div className="text-center">
               <h1 className="text-3xl">{formatMonth(mois)}</h1>
               {mois !== today.slice(0, 7) && (
-                <Link href={link(today.slice(0, 7), today)} className="text-xs text-rose-deep underline">
+                <Link href={link(today.slice(0, 7), today)} className="text-xs text-forest underline">
                   Revenir à aujourd&apos;hui
                 </Link>
               )}
@@ -131,10 +133,10 @@ export default async function AgendaPage({ searchParams }: PageProps<"/admin">) 
                   aria-current={selected ? "date" : undefined}
                   className={`flex min-h-20 flex-col rounded-xl border p-1.5 text-left text-xs transition-colors md:min-h-24 md:p-2 ${
                     selected
-                      ? "border-rose-deep bg-rose-soft"
+                      ? "border-forest bg-sage-soft"
                       : closed
                         ? "border-transparent bg-[repeating-linear-gradient(135deg,transparent_0_6px,rgb(232_220_207/0.5)_6px_7px)] hover:border-line"
-                        : "border-line bg-white hover:border-rose"
+                        : "border-line bg-white hover:border-sage"
                   } ${past ? "opacity-55" : ""}`}
                 >
                   <span className="flex items-center justify-between">
@@ -183,7 +185,7 @@ export default async function AgendaPage({ searchParams }: PageProps<"/admin">) 
 
           <div className="card p-5 md:p-6">
             <h3 className="flex items-center gap-2 text-2xl">
-              <Clock className="size-5 text-rose-deep" aria-hidden />
+              <Clock className="size-5 text-forest" aria-hidden />
               Rendez-vous du jour
             </h3>
             {dayAppts.length === 0 ? (
@@ -195,7 +197,7 @@ export default async function AgendaPage({ searchParams }: PageProps<"/admin">) 
                 ))}
               </div>
             )}
-            <AddAppointmentForm date={jour} defaultTime={dayAppts.length ? parisTimeStr(dayAppts.at(-1)!.endsAt) : "09:00"} />
+            <AddAppointmentForm date={jour} clients={clients} defaultTime={dayAppts.length ? parisTimeStr(dayAppts.at(-1)!.endsAt) : "09:00"} />
           </div>
         </section>
       </div>

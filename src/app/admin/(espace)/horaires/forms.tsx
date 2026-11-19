@@ -32,7 +32,7 @@ export function ClosePeriodForm({ today }: { today: string }) {
         Fermer
       </button>
       {(state?.ok || state?.error) && (
-        <p role={state.error ? "alert" : "status"} className={`text-sm sm:col-span-4 ${state.error ? "text-rose-darker" : "text-[#3f5a48]"}`}>
+        <p role={state.error ? "alert" : "status"} className={`text-sm sm:col-span-4 ${state.error ? "text-clay-dark" : "text-forest"}`}>
           {state.error ?? state.ok}
         </p>
       )}
@@ -45,14 +45,14 @@ export function SettingsForm({ settings }: { settings: Settings }) {
   return (
     <form action={action} className="mt-5 space-y-4 text-sm">
       <label className="flex items-start gap-3 rounded-xl border border-line bg-white p-3">
-        <input type="checkbox" name="bookingEnabled" defaultChecked={settings.bookingEnabled} className="mt-1 size-4 accent-rose-deep" />
+        <input type="checkbox" name="bookingEnabled" defaultChecked={settings.bookingEnabled} className="mt-1 size-4 accent-forest" />
         <span>
           <span className="font-medium">Réservation en ligne activée</span>
           <span className="block text-xs text-ink-soft">Décochez pour suspendre temporairement les réservations.</span>
         </span>
       </label>
       <label className="flex items-start gap-3 rounded-xl border border-line bg-white p-3">
-        <input type="checkbox" name="autoConfirm" defaultChecked={settings.autoConfirm} className="mt-1 size-4 accent-rose-deep" />
+        <input type="checkbox" name="autoConfirm" defaultChecked={settings.autoConfirm} className="mt-1 size-4 accent-forest" />
         <span>
           <span className="font-medium">Confirmation automatique</span>
           <span className="block text-xs text-ink-soft">
@@ -121,7 +121,7 @@ export function SettingsForm({ settings }: { settings: Settings }) {
           Enregistrer les réglages
         </button>
         {(state?.ok || state?.error) && (
-          <span role={state.error ? "alert" : "status"} className={state.error ? "text-rose-darker" : "text-[#3f5a48]"}>
+          <span role={state.error ? "alert" : "status"} className={state.error ? "text-clay-dark" : "text-forest"}>
             {state.error ?? state.ok}
           </span>
         )}

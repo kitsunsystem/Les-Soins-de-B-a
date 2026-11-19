@@ -32,7 +32,7 @@ export default function FaqPage() {
               <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-6 py-5 font-serif text-xl">
                 {f.q}
                 <Plus
-                  className="size-5 shrink-0 text-rose-deep transition-transform duration-300 group-open:rotate-45"
+                  className="size-5 shrink-0 text-forest transition-transform duration-300 group-open:rotate-45"
                   aria-hidden
                 />
               </summary>
