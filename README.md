@@ -125,6 +125,16 @@ Après une modification de `src/lib/db/schema.ts` : `npm run db:generate` (crée
 - `src/lib/site.ts` : téléphone, email, réseaux sociaux, domaine.
 - `public/images/` : photos (format WebP).
 
+## Vidéo de présentation
+
+Le dossier `video/` contient une vidéo publicitaire d'environ une minute (Remotion, 1920 × 1080) dans le style
+du site. Elle reprend automatiquement les soins, tarifs, témoignages et coordonnées de `src/lib/`. Projet
+indépendant du site (ses dépendances ne sont pas installées ni déployées avec lui) : voir `video/README.md`.
+
+```bash
+cd video && npm install && npm run render   # → video/out/les-soins-de-bea.mp4
+```
+
 ## À compléter avant la mise en ligne
 
 Email public, SIRET, adresse professionnelle, code APE, assureur RC Pro, médiateur de la consommation

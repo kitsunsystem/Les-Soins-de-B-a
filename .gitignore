@@ -40,6 +40,10 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
+# Vidéo de présentation (Remotion) : dépendances et rendus
+/video/node_modules
+/video/out
+
 # Cloudflare (OpenNext, Wrangler, secrets locaux)
 /.open-next
 /.wrangler
