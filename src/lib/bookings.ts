@@ -121,57 +121,56 @@ export class BookingError extends Error {}
 
 const newToken = () => randomBytes(24).toString("base64url");
 
-/** Crée une demande de rendez-vous en ligne (vérifie à nouveau le créneau, sous verrou). */
+/**
+ * Crée une demande de rendez-vous en ligne.
+ * Le créneau est vérifié, puis inséré par une requête unique et atomique qui échoue si un autre
+ * rendez-vous chevauche entre-temps (D1 exécute les écritures une par une) : pas de double réservation.
+ */
 export async function createBooking(input: BookingInput): Promise<Appointment> {
   const service = getService(input.serviceId);
   if (!service?.durationMinutes) throw new BookingError("Ce soin se réserve sur demande : contactez-moi directement.");
   const duration = service.durationMinutes;
   const db = await getDb();
 
-  const appt = await db.transaction(async (tx) => {
-    await tx.execute(sql`select pg_advisory_xact_lock(424242)`);
-    const s = await getSettings(tx as unknown as DB);
-    if (!s.bookingEnabled) throw new BookingError("La réservation en ligne est momentanément suspendue.");
-    const weekly = await getWeeklyHours(tx as unknown as DB);
-    const overrides = await getOverrides(input.date, input.date, tx as unknown as DB);
-    const startsAt = parisToUtc(input.date, input.time);
-    const endsAt = new Date(startsAt.getTime() + duration * 60_000);
-    const busy = await getBusy(
-      new Date(startsAt.getTime() - 24 * 3600_000),
-      new Date(endsAt.getTime() + 24 * 3600_000),
-      tx as unknown as DB,
-    );
-    const slots = slotsForDate({
-      date: input.date,
-      duration,
-      ranges: rangesForDate(input.date, weekly, new Map(overrides.map((o) => [o.date, o]))),
-      busy,
-      rules: rulesOf(s),
-      now: new Date(),
-    });
-    if (!slots.some((x) => x.time === input.time)) {
-      throw new BookingError("Ce créneau vient d'être réservé ou n'est plus disponible. Merci d'en choisir un autre.");
-    }
-    const [row] = await tx
-      .insert(appointments)
-      .values({
-        serviceId: service.id,
-        serviceName: service.name,
-        durationMinutes: duration,
-        startsAt,
-        endsAt,
-        status: s.autoConfirm ? "confirmed" : "pending",
-        clientName: input.name,
-        clientEmail: input.email,
-        clientPhone: input.phone,
-        message: input.message,
-        source: "online",
-        cancelToken: newToken(),
-      })
-      .returning();
-    return row;
+  const s = await getSettings(db);
+  if (!s.bookingEnabled) throw new BookingError("La réservation en ligne est momentanément suspendue.");
+  const [weekly, overrides] = await Promise.all([getWeeklyHours(db), getOverrides(input.date, input.date, db)]);
+  const startsAt = parisToUtc(input.date, input.time);
+  const endsAt = new Date(startsAt.getTime() + duration * 60_000);
+  const busy = await getBusy(
+    new Date(startsAt.getTime() - 24 * 3600_000),
+    new Date(endsAt.getTime() + 24 * 3600_000),
+    db,
+  );
+  const slots = slotsForDate({
+    date: input.date,
+    duration,
+    ranges: rangesForDate(input.date, weekly, new Map(overrides.map((o) => [o.date, o]))),
+    busy,
+    rules: rulesOf(s),
+    now: new Date(),
   });
+  const taken = "Ce créneau vient d'être réservé ou n'est plus disponible. Merci d'en choisir un autre.";
+  if (!slots.some((x) => x.time === input.time)) throw new BookingError(taken);
 
+  const id = crypto.randomUUID();
+  const now = Date.now();
+  const buffer = s.bufferMinutes * 60_000;
+  const result = await db.run(sql`
+    INSERT INTO appointments (id, service_id, service_name, duration_minutes, starts_at, ends_at, status,
+      client_name, client_email, client_phone, message, source, cancel_token, admin_note, created_at, updated_at)
+    SELECT ${id}, ${service.id}, ${service.name}, ${duration}, ${startsAt.getTime()}, ${endsAt.getTime()},
+      ${s.autoConfirm ? "confirmed" : "pending"}, ${input.name}, ${input.email}, ${input.phone}, ${input.message},
+      'online', ${newToken()}, '', ${now}, ${now}
+    WHERE NOT EXISTS (
+      SELECT 1 FROM appointments
+      WHERE status IN ('pending', 'confirmed')
+        AND starts_at < ${endsAt.getTime() + buffer}
+        AND ends_at > ${startsAt.getTime() - buffer}
+    )`);
+  if (!result.meta.changes) throw new BookingError(taken);
+
+  const [appt] = await db.select().from(appointments).where(eq(appointments.id, id));
   await Promise.allSettled([mailBookingReceived(appt), mailBookingAdmin(appt)]);
   return appt;
 }
@@ -297,13 +296,21 @@ export async function cancelByClient(token: string) {
 
 // ——— Disponibilités ———
 
+/** D1 limite le nombre de paramètres par requête : on découpe les insertions multiples. */
+function chunk<T>(list: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < list.length; i += size) out.push(list.slice(i, i + size));
+  return out;
+}
+
 export async function replaceWeeklyHours(rows: WeeklyHour[]) {
   const db = await getDb();
-  await db.transaction(async (tx) => {
-    await tx.delete(weeklyHours);
-    const clean = rows.flatMap((r) => sortRanges([r]).map((x) => ({ weekday: r.weekday, ...x })));
-    if (clean.length) await tx.insert(weeklyHours).values(clean);
-  });
+  const clean = rows.flatMap((r) => sortRanges([r]).map((x) => ({ weekday: r.weekday, ...x })));
+  // Un batch D1 est transactionnel : suppression et réinsertion ensemble.
+  await db.batch([
+    db.delete(weeklyHours),
+    ...chunk(clean, 25).map((c) => db.insert(weeklyHours).values(c)),
+  ]);
 }
 
 export async function setOverride(date: string, closed: boolean, ranges: Range[], note: string) {
@@ -324,13 +331,16 @@ export async function closePeriod(from: string, to: string, note: string) {
     values.push({ date: d, closed: true, ranges: [], note });
   }
   if (!values.length) return 0;
-  await db
-    .insert(dateOverrides)
-    .values(values)
-    .onConflictDoUpdate({
-      target: dateOverrides.date,
-      set: { closed: true, ranges: [], note: sql`excluded.note` },
-    });
+  const [first, ...rest] = chunk(values, 20).map((c) =>
+    db
+      .insert(dateOverrides)
+      .values(c)
+      .onConflictDoUpdate({
+        target: dateOverrides.date,
+        set: { closed: true, ranges: sql`'[]'`, note: sql`excluded.note` },
+      }),
+  );
+  await db.batch([first, ...rest]);
   return values.length;
 }
 

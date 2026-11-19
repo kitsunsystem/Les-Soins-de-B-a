@@ -12,8 +12,8 @@ const MAX_AGE = 60 * 60 * 24 * 14; // 14 jours
 function secret(): string {
   const s = process.env.SESSION_SECRET;
   if (s && s.length >= 32) return s;
-  if (process.env.NODE_ENV === "production" && process.env.VERCEL) {
-    throw new Error("SESSION_SECRET manquant ou trop court (32 caractères minimum).");
+  if (process.env.NODE_ENV === "production") {
+    throw new Error("SESSION_SECRET manquant ou trop court (32 caractères minimum) : à définir dans les secrets du Worker.");
   }
   return "dev-secret-a-remplacer-en-production-0123456789";
 }

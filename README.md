@@ -12,49 +12,86 @@ refait à partir de l'ancienne version Lovable, avec en plus :
 - Formulaire de contact (envoyé par Brevo), pages légales, SEO (métadonnées, sitemap, données structurées),
   responsive, accessible, sans cookie de suivi.
 
-## Démarrer en local
+Hébergement : **Cloudflare Workers** (via [OpenNext](https://opennext.js.org/cloudflare)) + base **Cloudflare D1**.
+Tout tient dans l'offre gratuite de Cloudflare pour un site de cette taille.
+
+## Mise en ligne sur Cloudflare
+
+### 1. Créer le Worker depuis GitHub
+
+Tableau de bord Cloudflare → **Workers & Pages** → **Créer** → **Importer un dépôt** → choisir
+`Les-Soins-de-B-a` et la branche à déployer, puis :
+
+| Réglage | Valeur |
+| --- | --- |
+| Nom du projet | `les-soins-de-bea` (doit correspondre à `name` dans `wrangler.jsonc`) |
+| Commande de build | `npx opennextjs-cloudflare build` |
+| Commande de déploiement | `npx opennextjs-cloudflare deploy` |
+
+Au premier déploiement, la base **D1 `les-soins-de-bea` est créée automatiquement**, et le site crée lui-même
+ses tables au premier accès (migrations embarquées) : aucune commande de base de données à lancer.
+
+> Si le déploiement signale que la base D1 est introuvable : *Stockage et bases de données → D1 → Créer*,
+> nommer la base `les-soins-de-bea`, puis ajouter son identifiant dans `wrangler.jsonc`
+> (`"database_id": "…"` dans `d1_databases`).
+
+### 2. Variables et secrets
+
+Worker `les-soins-de-bea` → **Paramètres → Variables et secrets** :
+
+| Nom | Type | Valeur |
+| --- | --- | --- |
+| `SITE_URL` | Texte | URL publique, ex. `https://www.lessoinsdebea.fr` (liens dans les emails) |
+| `ADMIN_EMAIL` | Texte | Adresse de Béa qui reçoit les demandes et les messages |
+| `BREVO_SENDER_EMAIL` | Texte | Adresse d'expédition vérifiée dans Brevo |
+| `BREVO_SENDER_NAME` | Texte | `Les Soins de Béa` |
+| `ADMIN_PASSWORD` | Secret | Mot de passe de l'espace admin |
+| `SESSION_SECRET` | Secret | Chaîne aléatoire ≥ 32 caractères (`openssl rand -base64 32`) |
+| `BREVO_API_KEY` | Secret | Clé API Brevo |
+| `CRON_SECRET` | Secret | Chaîne aléatoire : active les rappels envoyés la veille |
+
+Les variables saisies ici sont conservées lors des déploiements (`keep_vars` dans `wrangler.jsonc`).
+
+### 3. Brevo
+
+Sur https://app.brevo.com :
+
+- *Expéditeurs, domaines & IP dédiées* → ajouter et vérifier l'adresse d'expédition (idéalement authentifier
+  le domaine du site : DKIM/DMARC, pour éviter les spams) ;
+- *SMTP & API → Clés API* → créer une clé API ;
+- si les emails ne partent pas, vérifier *Sécurité → IP autorisées* : les IP de Cloudflare changent, il faut
+  désactiver le blocage des IP inconnues.
+
+### 4. Nom de domaine
+
+Worker → **Paramètres → Domaines et routes → Ajouter → Domaine personnalisé** (le domaine doit être géré par
+Cloudflare), puis mettre à jour `SITE_URL` et la valeur par défaut `url` dans `src/lib/site.ts`.
+
+La page *Horaires & réglages* de l'admin affiche l'état de la configuration (emails, adresse du site, rappels).
+
+### Déployer depuis un ordinateur (alternative)
+
+```bash
+npx wrangler login
+npm run deploy
+npx wrangler secret put ADMIN_PASSWORD   # idem pour SESSION_SECRET, BREVO_API_KEY, CRON_SECRET
+```
+
+## Développement local
 
 ```bash
 npm install
-cp .env.example .env.local   # puis renseigner au minimum ADMIN_PASSWORD
-npm run dev
+cp .dev.vars.example .dev.vars     # utilisé par `npm run preview`
+cp .dev.vars.example .env.local    # utilisé par `npm run dev`
+npm run dev                         # http://localhost:3000 — admin : /admin
 ```
 
-- Site : http://localhost:3000 — Admin : http://localhost:3000/admin
-- Sans `DATABASE_URL`, une base PostgreSQL embarquée (PGlite) est créée automatiquement dans `.data/`.
-- Sans clé Brevo, les emails ne partent pas : ils sont simplement journalisés dans la console.
+- La base D1 locale est créée automatiquement dans `.wrangler/` (aucun compte Cloudflare nécessaire).
+- Sans clé Brevo, les emails ne partent pas : ils sont journalisés dans la console.
+- `npm run preview` : build Cloudflare + exécution dans le vrai moteur Workers (http://localhost:8787).
 
-Autres commandes : `npm test` (tests du calcul des créneaux), `npm run lint`, `npm run typecheck`, `npm run build`.
-
-## Mise en ligne (Vercel + PostgreSQL + Brevo)
-
-1. **Vercel** : « Add New → Project », importer ce dépôt GitHub.
-2. **Base de données** : dans le projet Vercel, onglet *Storage* → créer une base **Neon (Postgres)**, région
-   Europe. La variable `DATABASE_URL` est ajoutée automatiquement. (Supabase ou tout autre PostgreSQL convient
-   aussi : utiliser l'URL de connexion « pooled ».)
-3. **Brevo** (https://app.brevo.com) :
-   - *Expéditeurs, domaines & IP dédiées* → ajouter et vérifier l'adresse d'expédition (idéalement authentifier
-     le domaine du site : DKIM/DMARC, pour éviter les spams) ;
-   - *SMTP & API → Clés API* → créer une clé API ;
-   - si les emails ne partent pas depuis Vercel, vérifier *Sécurité → IP autorisées* (les IP de Vercel
-     changent : désactiver le blocage des IP inconnues).
-4. **Variables d'environnement** (Vercel → *Settings → Environment Variables*), voir `.env.example` :
-
-   | Variable | Rôle |
-   | --- | --- |
-   | `NEXT_PUBLIC_SITE_URL` | URL publique, ex. `https://www.lessoinsdebea.fr` (liens dans les emails) |
-   | `DATABASE_URL` | PostgreSQL (ajoutée par Neon/Vercel) |
-   | `ADMIN_PASSWORD` | Mot de passe de l'espace admin |
-   | `SESSION_SECRET` | Chaîne aléatoire ≥ 32 caractères (`openssl rand -base64 32`) |
-   | `BREVO_API_KEY` | Clé API Brevo |
-   | `BREVO_SENDER_EMAIL` / `BREVO_SENDER_NAME` | Expéditeur vérifié dans Brevo |
-   | `ADMIN_EMAIL` | Adresse de Béa qui reçoit les demandes et les messages |
-   | `CRON_SECRET` | Chaîne aléatoire : active les rappels envoyés la veille (cron `vercel.json`, 9 h) |
-
-5. **Déployer**. Les migrations de la base sont appliquées automatiquement au build (`scripts/migrate.mjs`).
-6. Brancher le nom de domaine (*Settings → Domains*), puis mettre à jour `NEXT_PUBLIC_SITE_URL`.
-
-La page *Horaires & réglages* de l'admin affiche l'état de la configuration (emails, base, rappels).
+Autres commandes : `npm test` (calcul des créneaux), `npm run lint`, `npm run typecheck`.
+Après une modification de `src/lib/db/schema.ts` : `npm run db:generate` (crée la migration SQL et l'embarque).
 
 ## Guide de l'espace admin (pour Béa)
 
@@ -74,18 +111,23 @@ La page *Horaires & réglages* de l'admin affiche l'état de la configuration (e
 
 - `src/lib/content.ts` : soins, durées, tarifs (utilisés à la fois par le site et par la réservation),
   témoignages, FAQ, formations.
-- `src/lib/site.ts` : téléphone, email, réseaux sociaux, adresse.
-- `public/images/` : photos.
+- `src/lib/site.ts` : téléphone, email, réseaux sociaux, domaine.
+- `public/images/` : photos (format WebP).
 
 ## À compléter avant la mise en ligne
 
-Email public, SIRET, adresse professionnelle, code APE, assureur RC Pro, médiateur de la consommation,
-fournisseur de base de données (pages *Mentions légales*, *Confidentialité*, *CGV* — repérés en surbrillance),
-liens Instagram/Facebook. Les horaires par défaut (lun.–ven. 9h–12h30 / 14h–19h, sam. 9h–13h) sont à ajuster
-dans l'admin.
+Email public, SIRET, adresse professionnelle, code APE, assureur RC Pro, médiateur de la consommation
+(pages *Mentions légales*, *Confidentialité*, *CGV* — repérés en surbrillance), liens Instagram/Facebook,
+domaine définitif. Les horaires par défaut (lun.–ven. 9h–12h30 / 14h–19h, sam. 9h–13h) sont à ajuster dans
+l'admin.
 
 ## Technique
 
-Next.js 16 (App Router) · React 19 · Tailwind CSS 4 · Drizzle ORM · PostgreSQL (PGlite en local) · API Brevo ·
-Zod · polices auto-hébergées (Fontsource). Les créneaux sont calculés en heure de Paris (changements d'heure
-gérés) et revérifiés sous verrou au moment de la réservation pour éviter les doubles réservations.
+Next.js 16 (App Router) · React 19 · Tailwind CSS 4 · OpenNext pour Cloudflare Workers · Cloudflare D1
+(SQLite) avec Drizzle ORM · API Brevo · Zod · polices auto-hébergées (Fontsource).
+
+- Les créneaux sont calculés en heure de Paris (changements d'heure gérés).
+- Anti double réservation : le créneau est inséré par une requête SQL unique et atomique qui échoue si un
+  autre rendez-vous chevauche (testé avec 10 réservations simultanées : 1 acceptée, 9 refusées).
+- Les pages publiques sont pré-générées et servies depuis les assets statiques du Worker.
+- `worker.ts` ajoute au Worker d'OpenNext une tâche planifiée quotidienne (rappels, `triggers.crons`).

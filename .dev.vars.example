@@ -1,0 +1,22 @@
+# ——— Variables pour le développement local ———
+# Copiez ce fichier en `.dev.vars` (utilisé par `npm run preview`) ET en `.env.local` (utilisé par `npm run dev`).
+# En production, définissez-les dans Cloudflare : Workers & Pages → les-soins-de-bea → Paramètres → Variables et secrets.
+
+# URL publique du site (liens dans les emails). En production : https://www.votre-domaine.fr
+SITE_URL=http://localhost:3000
+
+# Espace admin (/admin) — secrets
+ADMIN_PASSWORD=choisir-un-mot-de-passe-solide
+# Chaîne aléatoire d'au moins 32 caractères (ex. : openssl rand -base64 32)
+SESSION_SECRET=remplacer-par-une-longue-chaine-aleatoire-de-32-caracteres
+
+# Brevo (emails transactionnels) — https://app.brevo.com/settings/keys/api
+BREVO_API_KEY=
+# Adresse d'expédition vérifiée dans Brevo (Expéditeurs & domaines)
+BREVO_SENDER_EMAIL=
+BREVO_SENDER_NAME=Les Soins de Béa
+# Adresse de Béa qui reçoit les nouvelles demandes et les messages de contact
+ADMIN_EMAIL=
+
+# Rappels automatiques la veille (tâche planifiée du Worker) — chaîne aléatoire
+CRON_SECRET=

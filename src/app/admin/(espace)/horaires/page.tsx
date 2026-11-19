@@ -19,7 +19,7 @@ export default async function HorairesPage() {
   const checks = [
     { ok: brevoConfigured(), label: "Envoi des emails (Brevo)", hint: "BREVO_API_KEY et BREVO_SENDER_EMAIL" },
     { ok: Boolean(process.env.ADMIN_EMAIL), label: "Adresse de notification", hint: "ADMIN_EMAIL" },
-    { ok: Boolean(process.env.DATABASE_URL), label: "Base de données de production", hint: "DATABASE_URL" },
+    { ok: Boolean(process.env.SITE_URL), label: "Adresse du site dans les emails", hint: "SITE_URL" },
     { ok: Boolean(process.env.CRON_SECRET), label: "Rappels automatiques la veille", hint: "CRON_SECRET" },
   ];
 

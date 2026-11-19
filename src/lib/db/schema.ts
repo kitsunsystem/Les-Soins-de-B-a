@@ -1,44 +1,50 @@
-import { boolean, index, integer, jsonb, pgTable, serial, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { sql } from "drizzle-orm";
+import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
 /** Réglages de la réservation (une seule ligne, id = 1). */
-export const settings = pgTable("settings", {
+export const settings = sqliteTable("settings", {
   id: integer("id").primaryKey().default(1),
   slotStepMinutes: integer("slot_step_minutes").notNull().default(30),
   bufferMinutes: integer("buffer_minutes").notNull().default(15),
   minNoticeHours: integer("min_notice_hours").notNull().default(24),
   maxDaysAhead: integer("max_days_ahead").notNull().default(60),
-  autoConfirm: boolean("auto_confirm").notNull().default(false),
-  bookingEnabled: boolean("booking_enabled").notNull().default(true),
+  autoConfirm: integer("auto_confirm", { mode: "boolean" }).notNull().default(false),
+  bookingEnabled: integer("booking_enabled", { mode: "boolean" }).notNull().default(true),
   bookingNotice: text("booking_notice").notNull().default(""),
 });
 
 /** Horaires habituels : plusieurs plages possibles par jour (0 = dimanche … 6 = samedi). */
-export const weeklyHours = pgTable("weekly_hours", {
-  id: serial("id").primaryKey(),
+export const weeklyHours = sqliteTable("weekly_hours", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
   weekday: integer("weekday").notNull(),
   start: text("start").notNull(),
   end: text("end").notNull(),
 });
 
 /** Exceptions datées : jour fermé (congés…) ou horaires spécifiques. */
-export const dateOverrides = pgTable("date_overrides", {
+export const dateOverrides = sqliteTable("date_overrides", {
   date: text("date").primaryKey(),
-  closed: boolean("closed").notNull().default(false),
-  ranges: jsonb("ranges").$type<{ start: string; end: string }[]>().notNull().default([]),
+  closed: integer("closed", { mode: "boolean" }).notNull().default(false),
+  ranges: text("ranges", { mode: "json" })
+    .$type<{ start: string; end: string }[]>()
+    .notNull()
+    .default(sql`'[]'`),
   note: text("note").notNull().default(""),
 });
 
 export type AppointmentStatus = "pending" | "confirmed" | "declined" | "cancelled";
 
-export const appointments = pgTable(
+export const appointments = sqliteTable(
   "appointments",
   {
-    id: uuid("id").primaryKey().defaultRandom(),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
     serviceId: text("service_id").notNull(),
     serviceName: text("service_name").notNull(),
     durationMinutes: integer("duration_minutes").notNull(),
-    startsAt: timestamp("starts_at", { withTimezone: true }).notNull(),
-    endsAt: timestamp("ends_at", { withTimezone: true }).notNull(),
+    startsAt: integer("starts_at", { mode: "timestamp_ms" }).notNull(),
+    endsAt: integer("ends_at", { mode: "timestamp_ms" }).notNull(),
     status: text("status").$type<AppointmentStatus>().notNull().default("pending"),
     clientName: text("client_name").notNull(),
     clientEmail: text("client_email").notNull().default(""),
@@ -48,9 +54,13 @@ export const appointments = pgTable(
     source: text("source").notNull().default("online"),
     cancelToken: text("cancel_token").notNull().unique(),
     adminNote: text("admin_note").notNull().default(""),
-    reminderSentAt: timestamp("reminder_sent_at", { withTimezone: true }),
-    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
-    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    reminderSentAt: integer("reminder_sent_at", { mode: "timestamp_ms" }),
+    createdAt: integer("created_at", { mode: "timestamp_ms" })
+      .notNull()
+      .$defaultFn(() => new Date()),
+    updatedAt: integer("updated_at", { mode: "timestamp_ms" })
+      .notNull()
+      .$defaultFn(() => new Date()),
   },
   (t) => [index("appointments_starts_at_idx").on(t.startsAt), index("appointments_status_idx").on(t.status)],
 );

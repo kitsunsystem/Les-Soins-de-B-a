@@ -13,9 +13,9 @@ export const metadata: Metadata = {
 };
 
 const cabinet = [
-  { src: "/images/cabinet-1.jpg", w: 1600, h: 1200, alt: "La table de soin du cabinet, décorée de suspensions et de plantes" },
-  { src: "/images/cabinet-2.jpg", w: 1200, h: 1600, alt: "L'espace d'accueil du cabinet avec bureau et fauteuils" },
-  { src: "/images/cabinet-3.jpg", w: 1200, h: 1600, alt: "Vue d'ensemble du cabinet, lumière douce" },
+  { src: "/images/cabinet-1.webp", w: 1600, h: 1200, alt: "La table de soin du cabinet, décorée de suspensions et de plantes" },
+  { src: "/images/cabinet-2.webp", w: 1200, h: 1600, alt: "L'espace d'accueil du cabinet avec bureau et fauteuils" },
+  { src: "/images/cabinet-3.webp", w: 1200, h: 1600, alt: "Vue d'ensemble du cabinet, lumière douce" },
 ];
 
 export default function AProposPage() {
@@ -31,7 +31,7 @@ export default function AProposPage() {
         <div className="container-page grid gap-12 md:grid-cols-[0.9fr_1.1fr] md:gap-16">
           <Reveal className="relative mx-auto w-full max-w-sm md:sticky md:top-28 md:self-start">
             <Image
-              src="/images/about-hero-zen.jpg"
+              src="/images/about-hero-zen.webp"
               alt="Bougie, galets empilés et fleurs dans une ambiance zen"
               width={1024}
               height={1280}

@@ -1,0 +1,40 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "les-soins-de-bea",
+  // worker.ts = Worker généré par OpenNext + tâche planifiée (rappels de rendez-vous)
+  "main": "worker.ts",
+  "compatibility_date": "2026-11-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "services": [
+    {
+      // Référence à soi-même, utilisée par OpenNext (le nom doit être celui du Worker)
+      "binding": "WORKER_SELF_REFERENCE",
+      "service": "les-soins-de-bea"
+    }
+  ],
+  // Base de données D1 : créée automatiquement au premier déploiement si "database_id" est absent.
+  // Les tables sont créées par le site lui-même au premier accès (migrations embarquées).
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "les-soins-de-bea",
+      "migrations_dir": "drizzle"
+    }
+  ],
+  // Rappels envoyés chaque jour à 8 h UTC (9 h ou 10 h à Paris) pour les rendez-vous du lendemain.
+  "triggers": {
+    "crons": ["0 8 * * *"]
+  },
+  "observability": {
+    "enabled": true
+  },
+  // Conserve les variables saisies dans le tableau de bord Cloudflare lors des déploiements.
+  "keep_vars": true
+  // Variables non secrètes (SITE_URL, ADMIN_EMAIL, BREVO_SENDER_EMAIL…) : tableau de bord Cloudflare.
+  // Les secrets (ADMIN_PASSWORD, SESSION_SECRET, BREVO_API_KEY, CRON_SECRET) se définissent avec
+  // `npx wrangler secret put NOM` ou dans Paramètres → Variables et secrets du Worker. Voir README.
+}

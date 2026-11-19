@@ -1,8 +1,9 @@
 import type { NextConfig } from "next";
+import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 
 const nextConfig: NextConfig = {
-  // PGlite (base locale de développement) embarque des fichiers WASM : on ne la bundle pas.
-  serverExternalPackages: ["@electric-sql/pglite"],
+  // Images déjà optimisées (WebP) servies directement par le CDN de Cloudflare.
+  images: { unoptimized: true },
   turbopack: {
     rules: {
       "*.css": {
@@ -31,3 +32,6 @@ const nextConfig: NextConfig = {
 };
 
 export default nextConfig;
+
+// En développement (`next dev`), donne accès aux bindings Cloudflare (base D1 locale) via getCloudflareContext().
+initOpenNextCloudflareForDev();

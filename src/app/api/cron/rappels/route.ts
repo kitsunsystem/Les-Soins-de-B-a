@@ -3,8 +3,8 @@ import { sendReminders } from "@/lib/bookings";
 
 export const dynamic = "force-dynamic";
 
-// Appelé chaque jour par Vercel Cron (voir vercel.json) : envoie un rappel la veille du rendez-vous.
-// Vercel transmet automatiquement « Authorization: Bearer $CRON_SECRET ».
+// Appelé chaque jour par le déclencheur planifié du Worker (voir worker.ts et wrangler.jsonc) :
+// envoie un rappel la veille du rendez-vous. Protégé par « Authorization: Bearer $CRON_SECRET ».
 export async function GET(request: Request) {
   const secret = process.env.CRON_SECRET;
   if (!secret || request.headers.get("authorization") !== `Bearer ${secret}`) {

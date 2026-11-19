@@ -1,18 +1,18 @@
 {
   "version": "7",
-  "dialect": "postgresql",
+  "dialect": "sqlite",
   "entries": [
     {
       "idx": 0,
-      "version": "7",
-      "when": 1795105468401,
+      "version": "6",
+      "when": 1795109800693,
       "tag": "0000_init",
       "breakpoints": true
     },
     {
       "idx": 1,
-      "version": "7",
-      "when": 1795105469041,
+      "version": "6",
+      "when": 1795109801289,
       "tag": "0001_seed",
       "breakpoints": true
     }

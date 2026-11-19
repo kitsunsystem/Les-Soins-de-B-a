@@ -15,7 +15,8 @@ export const site = {
   addressNote: "Adresse communiquée lors de la prise de rendez-vous",
   instagram: null as string | null,
   facebook: null as string | null,
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "https://lessoinsdebea.fr",
+  /** Domaine définitif du site (sitemap, partages). À remplacer par le vrai domaine. */
+  url: process.env.SITE_URL ?? "https://www.lessoinsdebea.fr",
   payment: "Espèces ou carte bancaire",
 } as const;
 

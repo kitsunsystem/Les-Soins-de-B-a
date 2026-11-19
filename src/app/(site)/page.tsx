@@ -32,7 +32,7 @@ export default function HomePage() {
       {/* Accueil */}
       <section className="relative -mt-18 overflow-hidden md:-mt-20">
         <Image
-          src="/images/hero-bg.jpg"
+          src="/images/hero-bg.webp"
           alt=""
           fill
           priority
@@ -74,7 +74,7 @@ export default function HomePage() {
             <div className="relative mx-auto max-w-md">
               <div className="absolute -inset-4 -rotate-2 rounded-[2rem] bg-rose-soft" aria-hidden />
               <Image
-                src="/images/welcome-illustration.jpg"
+                src="/images/welcome-illustration.webp"
                 alt="Illustration aquarelle « les soins de béa » : une femme en méditation au cœur d'un lotus, entourée de feuillages, de pierres et de cartes d'oracle"
                 width={1313}
                 height={1198}

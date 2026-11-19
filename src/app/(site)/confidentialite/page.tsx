@@ -46,9 +46,8 @@ export default function ConfidentialitePage() {
           hébergées dans l&apos;Union européenne.
         </li>
         <li>
-          <strong>Hébergement du site et de la base de données</strong> : Vercel Inc. et le fournisseur de base de
-          données <Todo>nom du fournisseur, ex. Neon ou Supabase — région UE</Todo>, dans le cadre de clauses
-          contractuelles conformes au RGPD.
+          <strong>Hébergement du site et de la base de données</strong> : Cloudflare, Inc. (Cloudflare Workers et
+          D1), dans le cadre de clauses contractuelles conformes au RGPD.
         </li>
       </ul>
 

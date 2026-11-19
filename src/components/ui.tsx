@@ -45,7 +45,7 @@ export function PageHero({ eyebrow, title, intro }: { eyebrow: string; title: st
   return (
     <section className="relative -mt-18 overflow-hidden pt-18 md:-mt-20 md:pt-20">
       <Image
-        src="/images/hero-bg.jpg"
+        src="/images/hero-bg.webp"
         alt=""
         fill
         priority

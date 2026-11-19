@@ -28,7 +28,7 @@ export default function MentionsLegalesPage() {
 
       <h2>Hébergement</h2>
       <p>
-        Vercel Inc., 440 N Barranca Ave #4133, Covina, CA 91723, États-Unis — vercel.com
+        Cloudflare, Inc., 101 Townsend St, San Francisco, CA 94107, États-Unis — cloudflare.com
         <br />
         <span className="text-xs">(à adapter si le site est hébergé ailleurs)</span>
       </p>

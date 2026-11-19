@@ -1,9 +1,24 @@
-/** URL publique du site, utilisée dans les emails (liens d'annulation, espace admin…). */
-export function baseUrl(): string {
-  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL.replace(/\/$/, "");
-  if (process.env.VERCEL_PROJECT_PRODUCTION_URL) return `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`;
+import "server-only";
+import { headers } from "next/headers";
+
+/**
+ * URL publique du site, utilisée dans les emails (liens d'annulation, espace admin…).
+ * Priorité à la variable SITE_URL ; à défaut, le domaine de la requête en cours.
+ */
+export async function getBaseUrl(): Promise<string> {
+  if (process.env.SITE_URL) return process.env.SITE_URL.replace(/\/$/, "");
+  try {
+    const h = await headers();
+    const host = h.get("x-forwarded-host") ?? h.get("host");
+    if (host) {
+      const proto = h.get("x-forwarded-proto") ?? (/^(localhost|127\.)/.test(host) ? "http" : "https");
+      return `${proto}://${host}`;
+    }
+  } catch {
+    // hors requête
+  }
   return "http://localhost:3000";
 }
 
-export const cancelUrl = (token: string) => `${baseUrl()}/rendez-vous/annulation?token=${encodeURIComponent(token)}`;
-export const adminDayUrl = (date: string) => `${baseUrl()}/admin?jour=${date}`;
+export const cancelPath = (token: string) => `/rendez-vous/annulation?token=${encodeURIComponent(token)}`;
+export const adminDayPath = (date: string) => `/admin?jour=${date}`;

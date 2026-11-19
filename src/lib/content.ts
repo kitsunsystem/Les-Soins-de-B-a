@@ -270,42 +270,42 @@ export const testimonials: Testimonial[] = [
   {
     name: "Léa",
     text: "Un moment suspendu, d'évasion, de liberté. Des sensations, chaque fois plus uniques, singulières et intenses. Ton écoute, ô combien extraordinaire, tes mains… Pour tout ça, merci !",
-    image: "/images/temoignages/livre-dor-1.jpg",
+    image: "/images/temoignages/livre-dor-1.webp",
   },
   {
     name: "Val",
     text: "Merci d'être là. Merci pour le bien-être que vous m'avez procuré, vous êtes une vraie fée. Merci tout simplement.",
-    image: "/images/temoignages/livre-dor-2.jpg",
+    image: "/images/temoignages/livre-dor-2.webp",
   },
   {
     name: "Sarah",
     text: "Un grand merci pour ce moment de bien-être et d'échange. Tu es une pépite avec des mains et un cœur en or ❤️ À très bientôt et force à toi, je te souhaite toute la réussite que tu mérites.",
-    image: "/images/temoignages/livre-dor-3.jpg",
+    image: "/images/temoignages/livre-dor-3.webp",
   },
   {
     name: "Isabelle",
     text: "La rencontre avec Béatrice a été une révélation. J'ai longtemps cherché une professionnelle comme elle… Pluridisciplinaire, douce et bienveillante. C'est le destin qui l'a mise sur ma route, c'est sûr ! Dès la 1ère séance, j'ai eu beaucoup de réponses et ce fut le départ d'un nouveau cycle. Laissez-vous guider. Vous aurez de belles surprises. Avec gratitude ❤️",
-    image: "/images/temoignages/livre-dor-4.jpg",
+    image: "/images/temoignages/livre-dor-4.webp",
   },
   {
     name: "Céline",
     text: "Béa est à l'écoute et est très douce. Elle vise juste et cible tout de suite les points de tension et les problématiques. Elle lit en moi comme un livre ouvert. On sent qu'elle travaille avec le cœur et c'est très agréable. Vivement un autre soin avec elle. Merci, merci, merci.",
-    image: "/images/temoignages/livre-dor-5.jpg",
+    image: "/images/temoignages/livre-dor-5.webp",
   },
   {
     name: "Laurence",
     text: "Merci ma chère Béa pour ce soin complet d'un bienfait incroyable ! Tes gestes sont à la fois doux et fermes, précis, profonds. J'ai été touchée dans mon corps, mon cœur et mon âme. Praticienne en Chi Nei Tsang, j'ai adoré et reviendrai. Quel bon moment nous avons partagé. Merci pour ton professionnalisme et ta générosité de cœur.",
-    image: "/images/temoignages/livre-dor-6.jpg",
+    image: "/images/temoignages/livre-dor-6.webp",
   },
   {
     name: "Carole",
     text: "Expérience intrigante et incroyable. Béa est très douce, gentille et rassurante. J'ai adoré et je reviendrais. Merci Béa pour ta patience et le temps que tu as pris pour m'expliquer tes soins.",
-    image: "/images/temoignages/livre-dor-7.jpg",
+    image: "/images/temoignages/livre-dor-7.webp",
   },
   {
     name: "Stéphanie & Pascale",
     text: "Merci pour cette bienveillance hors du commun, merci d'avoir pris le temps… Un joli moment agréable, belle rencontre. À bientôt ❤️ — Merci pour ce merveilleux moment avec une belle personne.",
-    image: "/images/temoignages/livre-dor-8.jpg",
+    image: "/images/temoignages/livre-dor-8.webp",
   },
 ];
 
