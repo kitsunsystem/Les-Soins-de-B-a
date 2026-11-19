@@ -1,0 +1,30 @@
+{
+  "name": "les-soins-de-bea-video",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Vidéo de présentation publicitaire des Soins de Béa (Remotion)",
+  "scripts": {
+    "studio": "remotion studio",
+    "render": "remotion render Presentation out/les-soins-de-bea.mp4",
+    "still": "remotion still Presentation out/vignette.png --frame=225",
+    "music": "python3 scripts/generate-music.py public/musique.mp3",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@fontsource/cormorant-garamond": "5.3.0",
+    "@fontsource/dancing-script": "5.3.0",
+    "@fontsource/montserrat": "5.3.0",
+    "@remotion/cli": "4.0.545",
+    "@remotion/fonts": "4.0.545",
+    "@remotion/media": "4.0.545",
+    "@remotion/transitions": "4.0.545",
+    "lucide-react": "1.76.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "remotion": "4.0.545"
+  },
+  "devDependencies": {
+    "@types/react": "^19",
+    "typescript": "^5"
+  }
+}

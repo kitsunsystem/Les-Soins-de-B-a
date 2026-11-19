@@ -16,6 +16,8 @@ const eslintConfig = defineConfig([
     ".open-next/**",
     ".wrangler/**",
     "src/lib/db/migrations.generated.ts",
+    // Vidéo de présentation (projet Remotion autonome, avec ses propres dépendances)
+    "video/**",
   ]),
 ]);
 
