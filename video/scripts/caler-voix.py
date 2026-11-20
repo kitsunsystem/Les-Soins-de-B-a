@@ -9,6 +9,10 @@ Usage (depuis video/) :
 3. Recalage fin sur le signal : le modèle annonce les mots avec ~0,3 s de retard ; on retranche ce décalage puis
    on se cale sur la fin d'un silence (début réel de la parole) ou, à défaut, sur le creux d'énergie entre deux mots.
 
+4. Corrections manuelles (voix-off-corrections.json, à côté du texte annoté) : quelques mots que le recalage place mal,
+   par exemple sur le creux d'une consonne au milieu du mot. Elles ne s'appliquent qu'au fichier de voix dont
+   l'empreinte SHA-256 est indiquée dans le fichier ; pour une nouvelle voix, elles sont ignorées (avec un message).
+
 Écart mesuré sur la première voix off (repères relevés à la main) : 0,01 s en médiane, 0,05 s en moyenne.
 
 Prérequis : ffmpeg, et `pip install sherpa-onnx numpy`. Modèle (≈ 400 Mo) :
@@ -16,7 +20,9 @@ https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-s
 """
 
 import difflib
+import hashlib
 import json
+import os
 import re
 import subprocess
 import sys
@@ -222,6 +228,23 @@ final = [s for s, e in silences if s > resultat["paragraphes"][ids[-1]][0] and e
 resultat["paragraphes"][ids[-1]][1] = round(final[0] if final else duree, 2)
 premier_son = int(np.argmax(env_db > -40)) / 100
 resultat["paragraphes"][ids[0]][0] = round(min(resultat["paragraphes"][ids[0]][0], premier_son), 2)
+
+# 4. Corrections manuelles, propres à ce fichier de voix.
+empreinte = hashlib.sha256(open(audio, "rb").read()).hexdigest()
+chemin_corrections = os.path.join(os.path.dirname(annote), "voix-off-corrections.json")
+if os.path.exists(chemin_corrections):
+    with open(chemin_corrections, encoding="utf-8") as f:
+        corrections = json.load(f)
+    if corrections.get("voix") != empreinte:
+        print(f"Corrections de {chemin_corrections} ignorées : elles concernent un autre fichier de voix.\n")
+    else:
+        for nom_repere, instant in corrections.get("reperes", {}).items():
+            if nom_repere not in resultat["reperes"]:
+                sys.exit(f"Correction pour un repère inconnu : {nom_repere}")
+            print(f"Correction : {nom_repere} {resultat['reperes'][nom_repere]} → {instant}")
+            resultat["reperes"][nom_repere] = instant
+        print()
+print(f"Empreinte de la voix (pour {chemin_corrections}) : {empreinte}\n")
 
 with open(sortie, "w", encoding="utf-8") as f:
     f.write(ecrire_json(resultat))

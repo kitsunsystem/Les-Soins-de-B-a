@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { AbsoluteFill, interpolate, interpolateColors, useCurrentFrame } from "remotion";
 import type { CategoryId, Service } from "../../../src/lib/content";
 import { categories, categoryIcons, services } from "../script";
-import { colors, EASE_IN_OUT, EASE_OUT, fonts, titre, tones } from "../theme";
+import { colors, EASE_IN_OUT, EASE_OUT, fonts, FPS, titre, tones } from "../theme";
 import { Body, Botanical, Card, CategoryBadge, clamp, Eyebrow, halo, typo } from "../ui";
 
 const ORDRE: CategoryId[] = ["corps", "energetique", "femmes-bebes", "guidance"];
@@ -17,8 +17,8 @@ type Ton = (typeof tones)[CategoryId];
  */
 const introsVideo: Partial<Record<CategoryId, string>> = {
   corps: "Des soins manuels pour libérer les tensions et reconnecter votre corps à sa sérénité.",
-  energetique:
-    "Le magnétisme est le fil conducteur de sa pratique : Béatrice l'intègre à chacun de ses soins, et peut aussi le proposer de manière ciblée.",
+  // Lue en moins de 3 s avant « Magnétiseuse » : une phrase courte.
+  energetique: "Le magnétisme, fil conducteur de sa pratique.",
 };
 
 /** Descriptions affichées quand l'univers compte peu de soins. */
@@ -197,32 +197,38 @@ function Panneau({ id, local, reperes }: { id: CategoryId; local: number; repere
     ) : id === "guidance" ? (
       <BlocSeances local={local} reperes={reperes} ton={t} />
     ) : null;
-  const bascule = finLecture === undefined ? 0 : interpolate(local, [finLecture - 4, finLecture + 10], [0, 1], { ...clamp, easing: EASE_IN_OUT });
+  // L'intro s'efface d'abord, puis le second temps entre : jamais deux textes l'un sur l'autre.
+  const sortieIntro = finLecture === undefined ? 0 : interpolate(local, [finLecture - 8, finLecture], [0, 1], { ...clamp, easing: EASE_IN_OUT });
+  const entreeSecond = finLecture === undefined ? 0 : interpolate(local, [finLecture, finLecture + 10], [0, 1], { ...clamp, easing: EASE_OUT });
+  // L'encadré « Idéal pour » n'a sa place que si l'intro reste assez longtemps à l'écran pour être lue.
+  const avecIdeal = finLecture === undefined || finLecture > 5 * FPS;
 
   const intro = (
-    <div style={{ opacity: 1 - bascule, transform: `translateY(${-18 * bascule}px)` }}>
+    <div style={{ opacity: 1 - sortieIntro, transform: `translateY(${-18 * sortieIntro}px)` }}>
       <div style={{ opacity: a(7), transform: `translateY(${(1 - a(7)) * 24}px)` }}>
         <Body size={27} style={{ marginTop: 24 }}>
           {introsVideo[id] ?? c.intro}
         </Body>
       </div>
-      <div
-        style={{
-          marginTop: 30,
-          padding: "20px 28px",
-          borderRadius: 26,
-          background: colors.card,
-          border: `1.5px solid ${t.soft}`,
-          fontFamily: fonts.sans,
-          fontSize: 23,
-          lineHeight: 1.5,
-          color: colors.inkSoft,
-          opacity: a(10),
-          transform: `translateY(${(1 - a(10)) * 24}px)`,
-        }}
-      >
-        <span style={{ fontWeight: 750, color: t.text }}>Idéal pour :</span> {typo(c.idealFor)}.
-      </div>
+      {avecIdeal && (
+        <div
+          style={{
+            marginTop: 30,
+            padding: "20px 28px",
+            borderRadius: 26,
+            background: colors.card,
+            border: `1.5px solid ${t.soft}`,
+            fontFamily: fonts.sans,
+            fontSize: 23,
+            lineHeight: 1.5,
+            color: colors.inkSoft,
+            opacity: a(10),
+            transform: `translateY(${(1 - a(10)) * 24}px)`,
+          }}
+        >
+          <span style={{ fontWeight: 750, color: t.text }}>Idéal pour :</span> {typo(c.idealFor)}.
+        </div>
+      )}
     </div>
   );
 
@@ -243,7 +249,7 @@ function Panneau({ id, local, reperes }: { id: CategoryId; local: number; repere
         <div style={{ display: "grid" }}>
           <div style={{ gridArea: "1 / 1" }}>{intro}</div>
           {second && (
-            <div style={{ gridArea: "1 / 1", opacity: bascule, transform: `translateY(${18 * (1 - bascule)}px)`, paddingTop: 30 }}>{second}</div>
+            <div style={{ gridArea: "1 / 1", opacity: entreeSecond, transform: `translateY(${18 * (1 - entreeSecond)}px)`, paddingTop: 30 }}>{second}</div>
           )}
         </div>
       </div>
@@ -327,7 +333,7 @@ function Ligne({
         <div style={{ ...surlignage, display: "flex", alignItems: "center", gap: 30 }}>
           <div style={{ flex: 1 }}>
             <div style={{ ...titre, fontSize: 36, color: colors.ink, textWrap: "balance" }}>{service.name}</div>
-            <div style={{ marginTop: 8, fontFamily: fonts.sans, fontSize: 22, lineHeight: 1.5, color: colors.inkSoft, textWrap: "pretty" }}>
+            <div style={{ marginTop: 8, fontFamily: fonts.sans, fontSize: 24, lineHeight: 1.5, color: colors.inkSoft, textWrap: "pretty" }}>
               <TexteSurligne
                 texte={descriptionsCourtes[service.id] ?? service.description}
                 marques={(surlignages[service.id] ?? []).map((m) => ({ fragment: m.fragment, repere: reperes[m.repere] }))}
@@ -361,12 +367,13 @@ function Ligne({
       </div>
       <span style={{ flex: 1, borderBottom: "2px dotted rgba(86, 101, 93, 0.3)", marginBottom: 7 }} />
       {duree}
-      <div style={{ minWidth: 120 }}>{prix}</div>
+      {/* Assez large pour « sur devis » : les durées restent alignées sur toutes les lignes. */}
+      <div style={{ minWidth: 150 }}>{prix}</div>
     </div>
   );
 }
 
-/** Texte dont certains passages se surlignent (feutre teinté qui glisse) quand la voix les prononce. */
+/** Texte dont certains passages se surlignent (feutre teinté qui glisse, texte qui fonce) quand la voix les prononce. */
 function TexteSurligne({ texte, marques, local, ton }: { texte: string; marques: { fragment: string; repere?: number }[]; local: number; ton: Ton }) {
   const t = typo(texte);
   const morceaux: ReactNode[] = [];
@@ -383,8 +390,8 @@ function TexteSurligne({ texte, marques, local, ton }: { texte: string; marques:
       <span
         key={m.index}
         style={{
-          color: interpolateColors(p, [0, 1], [colors.inkSoft, ton.text]),
-          backgroundImage: `linear-gradient(${rgba(ton.solid, 0.2)}, ${rgba(ton.solid, 0.2)})`,
+          color: interpolateColors(p, [0, 1], [colors.inkSoft, colors.ink]),
+          backgroundImage: `linear-gradient(${rgba(ton.solid, 0.24)}, ${rgba(ton.solid, 0.24)})`,
           backgroundRepeat: "no-repeat",
           backgroundSize: `${p * 100}% 100%`,
           borderRadius: 6,
@@ -438,17 +445,25 @@ function Atout({ icon: Icon, titre: nom, texte, on, apparition, ton }: { icon: L
       </div>
       <div>
         <div style={{ ...titre, fontSize: 31, color: colors.ink }}>{typo(nom)}</div>
-        <div style={{ marginTop: 3, fontFamily: fonts.sans, fontSize: 21, lineHeight: 1.4, color: colors.inkSoft }}>{typo(texte)}</div>
+        <div style={{ marginTop: 3, fontFamily: fonts.sans, fontSize: 24, lineHeight: 1.35, color: colors.inkSoft }}>{typo(texte)}</div>
       </div>
     </div>
   );
 }
 
-/** « Magnétiseuse, Béatrice enlève aussi le feu, et pratique le magnétisme à distance, sur simple photo. » */
+/** Arrivée échelonnée des éléments d'un second temps, juste après la bascule (`debut`), avant que la voix les nomme. */
+function arrivee(local: number, debut: number, rang: number) {
+  return interpolate(local, [debut + 4 + 5 * rang, debut + 18 + 5 * rang], [0, 1], { ...clamp, easing: EASE_OUT });
+}
+
+/**
+ * « Magnétiseuse, Béatrice enlève aussi le feu, et pratique le magnétisme à distance, sur simple photo. »
+ * Les cartes arrivent avec le surtitre, éteintes, et chacune s'allume quand la voix la nomme.
+ */
 function BlocMagnetiseuse({ local, reperes, ton }: { local: number; reperes: Record<string, number>; ton: Ton }) {
   const feu = reperes.feu;
   const distance = reperes["magnetisme-distance"];
-  const entree = (r: number) => interpolate(local, [r - 10, r + 6], [0, 1], { ...clamp, easing: EASE_OUT });
+  const debut = reperes.magnetiseuse;
   return (
     <div>
       <Eyebrow size={20} color={ton.text}>
@@ -460,7 +475,7 @@ function BlocMagnetiseuse({ local, reperes, ton }: { local: number; reperes: Rec
           titre="Coupe de feu"
           texte="Elle enlève le feu : un savoir traditionnel"
           on={allumage(local, feu, distance, 0.5)}
-          apparition={entree(feu)}
+          apparition={arrivee(local, debut, 0)}
           ton={ton}
         />
         <Atout
@@ -468,27 +483,30 @@ function BlocMagnetiseuse({ local, reperes, ton }: { local: number; reperes: Rec
           titre="Magnétisme à distance"
           texte="Sur simple photo, sans vous déplacer"
           on={allumage(local, distance)}
-          apparition={entree(distance)}
+          apparition={arrivee(local, debut, 1)}
           ton={ton}
         />
       </div>
-      <div style={{ marginTop: 16, fontFamily: fonts.sans, fontSize: 18, lineHeight: 1.45, color: colors.inkSoft, opacity: 0.85 * entree(distance + 12) }}>
+      <div style={{ marginTop: 18, fontFamily: fonts.sans, fontSize: 23, lineHeight: 1.45, color: colors.inkSoft, opacity: arrivee(local, debut, 2) }}>
         {typo("Pratiques traditionnelles de bien-être, qui ne remplacent pas un avis médical.")}
       </div>
     </div>
   );
 }
 
-/** « Ces séances ont lieu au cabinet, mais aussi à distance, par téléphone ou en visio, où que vous soyez. » */
+/**
+ * « Ces séances ont lieu au cabinet, mais aussi à distance, par téléphone ou en visio, où que vous soyez. »
+ * Les trois modes arrivent avec le surtitre, éteints ; chacun s'allume quand la voix le nomme.
+ */
 function BlocSeances({ local, reperes, ton }: { local: number; reperes: Record<string, number>; ton: Ton }) {
   const modes = [
     { icon: House, titre: "Au cabinet", texte: "À Perpignan, sur rendez-vous", repere: reperes.seanceCabinet },
-    { icon: Phone, titre: "Par téléphone", texte: "Béatrice vous appelle au rendez-vous", repere: reperes.seanceTelephone },
+    { icon: Phone, titre: "Par téléphone", texte: "Béatrice vous appelle à l'heure du rendez-vous", repere: reperes.seanceTelephone },
     { icon: Video, titre: "En visio", texte: "Partout en France, depuis chez vous", repere: reperes.seanceVisio },
   ];
-  // « Où que vous soyez » : les trois modes restent allumés ensemble pour finir.
+  // « Où que vous soyez » : les trois modes s'allument ensemble pour finir, pleinement (pastille pleine, icône blanche).
   const ensemble = reperes.seancePartout;
-  const entree = (r: number) => interpolate(local, [r - 10, r + 6], [0, 1], { ...clamp, easing: EASE_OUT });
+  const final = interpolate(local, [ensemble - 2, ensemble + 8], [0, 1], { ...clamp, easing: EASE_IN_OUT });
   return (
     <div>
       <Eyebrow size={20} color={ton.text}>
@@ -498,15 +516,14 @@ function BlocSeances({ local, reperes, ton }: { local: number; reperes: Record<s
         {modes.map((m, i) => {
           const suivant = modes[i + 1]?.repere ?? ensemble;
           const lu = allumage(local, m.repere, suivant, 0.5);
-          const final = interpolate(local, [ensemble - 2, ensemble + 8], [0, 1], { ...clamp, easing: EASE_IN_OUT });
           return (
             <Atout
               key={m.titre}
               icon={m.icon}
               titre={m.titre}
               texte={m.texte}
-              on={Math.max(lu, 0.85 * final)}
-              apparition={i === 0 ? entree(reperes.seances) : entree(reperes.seanceDistance + 4 * (i - 1))}
+              on={Math.max(lu, final)}
+              apparition={arrivee(local, reperes.seances, i)}
               ton={ton}
             />
           );

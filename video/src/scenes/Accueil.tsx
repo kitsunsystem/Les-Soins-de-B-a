@@ -1,11 +1,11 @@
-import { ArrowRight, CalendarCheck, CalendarHeart, MapPin } from "lucide-react";
+import { ArrowRight, CalendarCheck, CalendarHeart, Globe2 } from "lucide-react";
 import { AbsoluteFill, Img, interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
 import { images } from "../assets";
 import { preuves, site } from "../script";
 import { colors, fonts, shadows, titre } from "../theme";
 import { Accent, Body, Botanical, Button, clamp, Eyebrow, FadeUp, FondLin, Stars, useAppear } from "../ui";
 
-/** Le haut de la nouvelle page d'accueil : titre explicite, preuves, photo en arche. */
+/** Le haut de la page d'accueil : titre explicite, preuves (dont les séances à distance), photo en arche. */
 export const Accueil: React.FC<{ duration: number }> = ({ duration }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -21,7 +21,7 @@ export const Accueil: React.FC<{ duration: number }> = ({ duration }) => {
       <AbsoluteFill style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 80, paddingTop: 10 }}>
         <div style={{ width: 920 }}>
           <FadeUp delay={0} distance={14}>
-            <Eyebrow>Praticienne bien-être · {site.city}</Eyebrow>
+            <Eyebrow>Praticienne bien-être · {site.city} &amp; à distance</Eyebrow>
           </FadeUp>
           <FadeUp delay={3}>
             <div style={{ ...titre, marginTop: 26, fontSize: 98, color: colors.ink }}>
@@ -56,7 +56,7 @@ export const Accueil: React.FC<{ duration: number }> = ({ duration }) => {
                 fort="Séances dès"
                 texte={`${preuves.dureeMin} min`}
               />
-              <Preuve visuel={<MapPin size={30} strokeWidth={1.7} color={colors.forest} />} fort="Cabinet" texte={`à ${site.city}`} />
+              <Preuve visuel={<Globe2 size={30} strokeWidth={1.7} color={colors.forest} />} fort={site.city} texte="& partout en France" />
             </div>
           </FadeUp>
         </div>

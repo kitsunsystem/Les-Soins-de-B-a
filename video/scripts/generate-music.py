@@ -197,7 +197,9 @@ gauche = gauche + 0.42 * rev_g
 droite = droite + 0.42 * rev_d
 
 # --- Finitions : fondus, normalisation ------------------------------------------------------
-fondu = lisse(t / 1.5) * (1.0 - lisse((t - (DUREE - 4.0)) / 4.0))
+# Fondu de fin court : c'est la vidéo (volumeMusique dans Presentation.tsx) qui fait remonter la musique après la
+# dernière phrase puis l'éteint ; un long fondu ici annulerait cette remontée.
+fondu = lisse(t / 1.5) * (1.0 - lisse((t - (DUREE - 1.2)) / 1.2))
 gauche *= fondu
 droite *= fondu
 stereo = np.stack([gauche, droite], axis=1)

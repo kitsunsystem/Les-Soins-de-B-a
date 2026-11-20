@@ -111,9 +111,10 @@ export const t = (secondesVoix: number) => DEBUT_VOIX + secondesVoix;
 
 /**
  * Prolongation (s) de certaines scènes au-delà du milieu du silence qui suit : la voix enchaîne déjà sur la scène
- * suivante pendant qu'on lit encore la fin de celle-ci (les citations, la dernière photo du cabinet).
+ * suivante pendant qu'on lit encore la fin de celle-ci (le surlignage « photo », les trois modes de séance allumés
+ * ensemble, la dernière photo du cabinet, les citations).
  */
-const PROLONGATIONS: Partial<Record<IdParagraphe, number>> = { cabinet: 0.5, temoignages: 1.0 };
+const PROLONGATIONS: Partial<Record<IdParagraphe, number>> = { energetique: 0.15, guidance: 1.0, cabinet: 0.5, temoignages: 1.0 };
 
 /** Coupe entre un paragraphe et le suivant : au milieu du silence qui les sépare (secondes vidéo). */
 export function coupeApres(id: IdParagraphe) {

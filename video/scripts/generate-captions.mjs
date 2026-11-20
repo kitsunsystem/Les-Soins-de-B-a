@@ -33,10 +33,17 @@ if (textesMd.join("\n") !== textesAnnotes.join("\n")) {
 // La fin est prononcée « en toutes lettres » pour la voix : on affiche l'écriture habituelle.
 const ECRITURES = [
   [/les soins de béa point f r/i, "lessoinsdebea.fr"],
-  [/zéro sept, soixante-deux, quatre-vingt-quatorze, soixante-dix-neuf, trente-neuf/i, "07 62 94 79 39"],
-  [/vingt-quatre heures sur vingt-quatre/i, "24 h/24"],
+  // Espaces insécables : le numéro et « 24 h/24 » ne se coupent jamais en fin de ligne.
+  [/zéro sept, soixante-deux, quatre-vingt-quatorze, soixante-dix-neuf, trente-neuf/i, "07\u00a062\u00a094\u00a079\u00a039"],
+  [/vingt-quatre heures sur vingt-quatre/i, "24\u00a0h/24"],
 ];
-const display = (t) => ECRITURES.reduce((acc, [re, ecrit]) => acc.replace(re, ecrit), t);
+// Typographie française, comme à l'écran : apostrophes courbes, espaces insécables dans les guillemets et avant
+// « ? ! : ; » (le lecteur ne coupe pas la ligne à ces endroits).
+const display = (t) =>
+  ECRITURES.reduce((acc, [re, ecrit]) => acc.replace(re, ecrit), t)
+    .replace(/'/g, "’")
+    .replace(/« /g, "«\u00a0")
+    .replace(/ ([»?!:;])/g, "\u00a0$1");
 /** Passages à ne jamais couper entre deux répliques (adresse du site, numéro…). */
 const insecables = (texte) =>
   ECRITURES.flatMap(([re]) => {

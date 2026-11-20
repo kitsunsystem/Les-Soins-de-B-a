@@ -49,23 +49,52 @@ const groupes = [
 /** Pression d'un clic : 0 au repos, 1 au moment du clic. */
 const pression = (frame: number, clic: number) => interpolate(frame, [clic - 4, clic, clic + 5], [0, 1, 0], clamp);
 
+/** Déroulé de la démo (images de la scène). `etapeSoin` : la démo montre aussi le choix du soin. */
+type Deroule = { etapeSoin: boolean; clicSoin: number; etape2: number; clicJour: number; clicHeure: number; clicContinuer: number; confirmation: number };
+
+/**
+ * Déroulé calé à rebours sur la confirmation, qui suit la voix (« Béatrice vous confirme… »). Avec assez de temps,
+ * la démo montre le choix du soin puis le calendrier ; sinon elle part du calendrier, soin déjà choisi. Les gestes
+ * restent toujours dans l'ordre : le rendu s'arrête plutôt que de montrer un parcours impossible.
+ */
+function deroule(confirmation: number): Deroule {
+  const fin = confirmation - 8;
+  const T: Deroule =
+    fin >= 94
+      ? { etapeSoin: true, clicSoin: 28, etape2: 36, clicJour: 52, clicHeure: 68, clicContinuer: 84, confirmation: fin }
+      : (() => {
+          // Jour, horaire et « Continuer » répartis sur le temps disponible (au plus 40 % plus lents que prévu).
+          const k = Math.min(1.4, (fin - 10) / 58);
+          return {
+            etapeSoin: false,
+            clicSoin: -1,
+            etape2: 0,
+            clicJour: Math.round(24 * k),
+            clicHeure: Math.round(42 * k),
+            clicContinuer: Math.round(58 * k),
+            confirmation: fin,
+          };
+        })();
+  const gestes = [...(T.etapeSoin ? [T.clicSoin, T.etape2] : []), T.clicJour, T.clicHeure, T.clicContinuer, T.confirmation];
+  if (T.clicJour < 16 || gestes.some((g, i) => i > 0 && g < gestes[i - 1] + 6)) {
+    throw new Error(`Démo de réservation : trop peu de temps avant la confirmation (${confirmation} images).`);
+  }
+  return T;
+}
+
 /**
  * « Votre séance en 3 étapes » et la démonstration de la prise de rendez-vous en ligne.
  * La confirmation apparaît quand la voix dit « Béatrice vous confirme votre rendez-vous » (`confirmation`).
  */
 export const Reservation: React.FC<{ duration: number; confirmation: number }> = ({ confirmation }) => {
   const frame = useCurrentFrame();
-  const T = {
-    clicSoin: 28,
-    etape2: 36,
-    clicJour: 52,
-    clicHeure: 68,
-    clicContinuer: Math.min(84, confirmation - 18),
-    confirmation: confirmation - 8,
-  };
+  const T = deroule(confirmation);
   const carte = useAppear(2, 20);
-  const phase1 = interpolate(frame, [T.etape2 - 6, T.etape2 + 1], [1, 0], clamp);
-  const phase2 = interpolate(frame, [T.etape2 - 1, T.etape2 + 6, T.confirmation - 4, T.confirmation + 2], [0, 1, 1, 0], clamp);
+  // Les écrans de la maquette s'enchaînent sans se superposer.
+  const phase1 = T.etapeSoin ? interpolate(frame, [T.etape2 - 6, T.etape2], [1, 0], clamp) : 0;
+  const phase2 = T.etapeSoin
+    ? interpolate(frame, [T.etape2, T.etape2 + 6, T.confirmation - 6, T.confirmation], [0, 1, 1, 0], clamp)
+    : interpolate(frame, [T.confirmation - 6, T.confirmation], [1, 0], clamp);
   const phase3 = interpolate(frame, [T.confirmation, T.confirmation + 12], [0, 1], { ...clamp, easing: EASE_OUT });
   const etapeActive = frame < T.confirmation ? 0 : 1;
 
@@ -416,7 +445,9 @@ function Calendrier({ frame, clic }: { frame: number; clic: number }) {
 }
 
 function Creneaux({ frame, clicJour, clicHeure }: { frame: number; clicJour: number; clicHeure: number }) {
-  const visible = interpolate(frame, [clicJour + 2, clicJour + 12], [0, 1], { ...clamp, easing: EASE_IN_OUT });
+  // La consigne s'efface d'abord, puis les horaires apparaissent.
+  const consigne = interpolate(frame, [clicJour + 1, clicJour + 4], [1, 0], clamp);
+  const visible = interpolate(frame, [clicJour + 4, clicJour + 12], [0, 1], { ...clamp, easing: EASE_IN_OUT });
   const choisie = frame >= clicHeure;
   const press = pression(frame, clicHeure);
   return (
@@ -433,8 +464,8 @@ function Creneaux({ frame, clicJour, clicHeure }: { frame: number; clicJour: num
         border: "1.5px solid rgba(230, 221, 208, 0.95)",
       }}
     >
-      {visible < 1 && (
-        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", padding: 34, textAlign: "center", fontFamily: fonts.sans, fontSize: 19, lineHeight: 1.55, color: colors.inkSoft, opacity: 1 - visible }}>
+      {consigne > 0 && (
+        <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", padding: 34, textAlign: "center", fontFamily: fonts.sans, fontSize: 19, lineHeight: 1.55, color: colors.inkSoft, opacity: consigne }}>
           Choisissez un jour en vert dans le calendrier pour voir les horaires disponibles.
         </div>
       )}
@@ -528,7 +559,7 @@ function Confirmation({ progression }: { progression: number }) {
   );
 }
 
-function Curseur({ frame, T }: { frame: number; T: Record<"clicSoin" | "clicJour" | "clicHeure" | "clicContinuer" | "confirmation" | "etape2", number> }) {
+function Curseur({ frame, T }: { frame: number; T: Deroule }) {
   const option = etape1[0].options[0];
   const cibles = {
     depart: { x: 980, y: 820 },
@@ -539,8 +570,12 @@ function Curseur({ frame, T }: { frame: number; T: Record<"clicSoin" | "clicJour
   };
   const trajet = [
     { f: 8, p: cibles.depart },
-    { f: T.clicSoin - 4, p: cibles.soin },
-    { f: T.etape2 + 2, p: cibles.soin },
+    ...(T.etapeSoin
+      ? [
+          { f: T.clicSoin - 4, p: cibles.soin },
+          { f: T.etape2 + 2, p: cibles.soin },
+        ]
+      : []),
     { f: T.clicJour - 4, p: cibles.jour },
     { f: T.clicJour + 2, p: cibles.jour },
     { f: T.clicHeure - 4, p: cibles.heure },
@@ -558,9 +593,13 @@ function Curseur({ frame, T }: { frame: number; T: Record<"clicSoin" | "clicJour
       p = b.p;
     }
   }
-  const opacite = interpolate(frame, [6, 12, T.clicContinuer + 6, T.clicContinuer + 12], [0, 1, 1, 0], clamp);
-  const clics = [T.clicSoin, T.clicJour, T.clicHeure, T.clicContinuer];
+  // Le curseur s'en va après le dernier clic, avant l'arrivée de la confirmation.
+  const depart = Math.min(T.clicContinuer + 6, T.confirmation - 7);
+  const opacite = interpolate(frame, [6, 12, depart, depart + 6], [0, 1, 1, 0], clamp);
+  const clics = [...(T.etapeSoin ? [T.clicSoin] : []), T.clicJour, T.clicHeure, T.clicContinuer];
   const press = Math.max(...clics.map((c) => pression(frame, c)));
+  // Aucune onde de clic ne reste sur l'écran de confirmation.
+  const ondes = interpolate(frame, [T.confirmation - 7, T.confirmation - 2], [1, 0], clamp);
   return (
     <>
       {clics.map((c) => {
@@ -577,7 +616,7 @@ function Curseur({ frame, T }: { frame: number; T: Record<"clicSoin" | "clicJour
               height: 68,
               borderRadius: "50%",
               border: `3px solid ${colors.forest}`,
-              opacity: (1 - r) * 0.7,
+              opacity: (1 - r) * 0.7 * ondes,
               transform: `scale(${0.3 + r})`,
             }}
           />

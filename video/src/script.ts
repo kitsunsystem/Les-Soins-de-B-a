@@ -39,7 +39,7 @@ export const pastillesFormations = parcours.map((f) => f.title.replace("Formatio
 export const etapes = [
   { titre: "Je réserve en ligne", texte: "Un soin, un créneau libre, 24 h/24, sans créer de compte." },
   { titre: "Béatrice confirme", texte: "Email récapitulatif, puis confirmation à ajouter à l'agenda." },
-  { titre: "Je prends soin de moi", texte: "Règlement sur place, espèces ou carte." },
+  { titre: "Je prends soin de moi", texte: "Au cabinet, ou à distance par visio ou téléphone pour la guidance." },
 ];
 
 /**

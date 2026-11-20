@@ -157,11 +157,11 @@ export default function HomePage() {
           <Reveal>
             <p className="eyebrow">En vidéo</p>
             <h2 id="titre-video" className="mt-3 text-[2.4rem] md:text-[3rem]">
-              Faites connaissance <span className="accent">en une minute</span>
+              Faites connaissance <span className="accent">en deux minutes</span>
             </h2>
             <p className="mt-5 text-lg text-ink-soft">
-              L&apos;approche de Béatrice, ses quatre univers de soins, son cabinet et la réservation en ligne : tout
-              ce qu&apos;il faut savoir avant votre première séance.
+              L&apos;approche de Béatrice, ses quatre univers de soins, son cabinet, les séances à distance et la
+              réservation en ligne : tout ce qu&apos;il faut savoir avant votre première séance.
             </p>
             <ul className="mt-6 flex flex-wrap gap-2 text-sm font-semibold text-ink-soft">
               <li className="rounded-full border border-line bg-card px-3.5 py-1.5">{video.duration}</li>

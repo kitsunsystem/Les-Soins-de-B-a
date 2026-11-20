@@ -59,12 +59,14 @@ Titre, durée et description affichés sur le site : `presentationVideo` dans `.
   `scripts/caler-voix.py`). Le script retrouve dans la voix chaque paragraphe et chaque mot repère de
   `voix-off-reperes.txt` (les `{repères}` placés devant les mots) et écrit `src/voix-off.json` : les scènes se recalent
   toutes seules. Si le texte change, reporter la modification dans `voix-off-reperes.txt`, puis relancer
-  `npm run music` pour que la musique suive la nouvelle durée.
+  `npm run music` pour que la musique suive la nouvelle durée. Les rares mots que le calage place mal se corrigent
+  dans `voix-off-corrections.json` (instant du début du mot, en secondes) : ces corrections ne valent que pour le
+  fichier de voix dont l'empreinte y est notée, et sont ignorées après une nouvelle génération.
 - **Textes propres à la vidéo** (accroche, extraits du livre d'or, démonstration de réservation) : `src/script.ts`.
 - **Images** : lues directement dans `../public/images`.
 - **Musique** : `public/musique.mp3`, une nappe d'ambiance générée par `scripts/generate-music.py` (libre de droits),
-  baissée automatiquement sous la voix. Pour une autre musique, remplacer ce fichier (même nom) par un MP3 libre de
-  droits. Pour la regénérer : `npm run music` (Python 3 avec numpy, et ffmpeg ; durée et repères lus dans
+  baissée automatiquement sous la voix (niveaux dans `src/Presentation.tsx` ; le son est mixé par ffmpeg au rendu,
+  vers −15,5 LUFS). Pour une autre musique, remplacer ce fichier (même nom) par un MP3 libre de droits. Pour la regénérer : `npm run music` (Python 3 avec numpy, et ffmpeg ; durée et repères lus dans
   `src/voix-off.json`).
 
 ## Licence Remotion

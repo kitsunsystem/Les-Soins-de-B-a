@@ -12,8 +12,14 @@ const icones = [Hand, Flame];
  */
 export const Formations: React.FC<{ duration: number; reperes: number[] }> = ({ reperes }) => {
   const frame = useCurrentFrame();
-  const active = reperes.filter((r) => frame >= r - 6).length - 1;
   const focus = interpolate(frame, [reperes[0] - 8, reperes[0] + 4], [0, 1], { ...clamp, easing: EASE_IN_OUT });
+  const ons = formations.map((_, i) =>
+    interpolate(frame, [reperes[i] - 6, reperes[i] + 4, (reperes[i + 1] ?? 1e9) - 6, (reperes[i + 1] ?? 1e9) + 4], [0, 1, 1, 0], {
+      ...clamp,
+      easing: EASE_IN_OUT,
+    }),
+  );
+  const enAvant = Math.max(...ons);
 
   return (
     <AbsoluteFill>
@@ -22,11 +28,9 @@ export const Formations: React.FC<{ duration: number; reperes: number[] }> = ({ 
         <SectionHeading eyebrow="Transmettre" title="Transmettre, c'est prolonger le soin." titleSize={86} />
         <div style={{ marginTop: 62, display: "flex", gap: 40 }}>
           {formations.map((f, i) => {
-            const on = interpolate(frame, [reperes[i] - 6, reperes[i] + 4, (reperes[i + 1] ?? 1e9) - 6, (reperes[i + 1] ?? 1e9) + 4], [0, 1, 1, 0], {
-              ...clamp,
-              easing: EASE_IN_OUT,
-            });
-            const attenue = focus * (active === i ? 0 : 1);
+            const on = ons[i];
+            // La carte qui n'est pas nommée s'efface un peu, au rythme où l'autre s'avance (pas de saut).
+            const attenue = focus * (enAvant - on);
             return (
               <FadeUp key={f.title} delay={8 + i * 4} style={{ display: "flex" }}>
                 <div style={{ display: "flex", opacity: 1 - 0.4 * attenue, transform: `translateY(${-14 * on}px) scale(${1 + 0.04 * on})` }}>
@@ -50,7 +54,7 @@ export const Formations: React.FC<{ duration: number; reperes: number[] }> = ({ 
                     </Body>
                     <div style={{ paddingTop: 30 }}>
                       <Button variant="outline" scale={0.78}>
-                        Me contacter pour en savoir plus
+                        Contacter Béatrice
                       </Button>
                     </div>
                   </Card>

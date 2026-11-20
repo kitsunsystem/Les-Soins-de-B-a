@@ -1,16 +1,17 @@
 import { CalendarHeart, Globe, MapPin, Phone } from "lucide-react";
 import { AbsoluteFill, interpolate, interpolateColors, spring, useCurrentFrame, useVideoConfig } from "remotion";
 import { domaine, site } from "../script";
-import { colors, EASE_IN_OUT, fonts } from "../theme";
-import { Accent, Body, Botanical, Button, clamp, Eyebrow, FadeUp, LogoBadge, Title } from "../ui";
+import { colors, EASE_IN_OUT, EASE_OUT, fonts } from "../theme";
+import { Accent, Body, Botanical, Button, clamp, Eyebrow, FadeUp, LogoBadge, Title, typo } from "../ui";
 
 /**
  * Bandeau d'appel à l'action du site, en plan final. Repères (images de la scène) : le nom de la marque
  * apparaît sur « Les Soins de Béa », l'adresse du site se souligne sur « Réservez sur… », puis le bouton
  * téléphone s'allume et chaque paire de chiffres passe en or au moment où elle est dictée. Sur « Prenez soin de
- * vous », le titre laisse place à ces derniers mots.
+ * vous », le titre laisse place à ces derniers mots. Le cadre lin reste fixe ; seul le contenu avance très lentement.
  */
 export const Final: React.FC<{ duration: number; site: number; telephone: number; paires: number[]; prenezSoin: number }> = ({
+  duration,
   site: repereSite,
   telephone,
   paires,
@@ -24,7 +25,11 @@ export const Final: React.FC<{ duration: number; site: number; telephone: number
   const trait = interpolate(frame, [repereSite - 6, repereSite + 6], [0, 1], { ...clamp, easing: EASE_IN_OUT });
   const surSite = interpolate(frame, [repereSite - 6, repereSite + 6, telephone - 8, telephone + 4], [0, 1, 1, 0.35], clamp);
   const surTel = interpolate(frame, [telephone - 6, telephone + 6], [0, 1], clamp);
-  const adieu = interpolate(frame, [prenezSoin - 6, prenezSoin + 12], [0, 1], { ...clamp, easing: EASE_IN_OUT });
+  // Le titre s'efface pendant la pause qui précède « Prenez soin de vous », puis les derniers mots arrivent : les deux
+  // titres ne sont jamais lisibles en même temps.
+  const sortieTitre = interpolate(frame, [prenezSoin - 11, prenezSoin - 2], [0, 1], { ...clamp, easing: EASE_IN_OUT });
+  const adieu = interpolate(frame, [prenezSoin - 2, prenezSoin + 10], [0, 1], { ...clamp, easing: EASE_OUT });
+  const poussee = interpolate(frame, [0, duration], [1, 1.025], clamp);
 
   return (
     <AbsoluteFill style={{ background: colors.linen }}>
@@ -49,7 +54,7 @@ export const Final: React.FC<{ duration: number; site: number; telephone: number
           style={{ right: -30, bottom: -80, transformOrigin: "50% 50%" }}
         />
 
-        <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", textAlign: "center", paddingBottom: 30 }}>
+        <AbsoluteFill style={{ alignItems: "center", justifyContent: "center", textAlign: "center", paddingBottom: 30, transform: `scale(${poussee})` }}>
           <LogoBadge size={100} inverse trace={logo} />
           <FadeUp delay={3} distance={16}>
             <Title size={70} color={colors.linen} style={{ marginTop: 18 }}>
@@ -64,7 +69,7 @@ export const Final: React.FC<{ duration: number; site: number; telephone: number
           <FadeUp delay={12}>
             {/* Les deux titres occupent la même case : le bloc ne bouge pas quand l'un remplace l'autre. */}
             <div style={{ display: "grid", marginTop: 34 }}>
-              <Title size={84} color={colors.linen} style={{ gridArea: "1 / 1", opacity: 1 - adieu, transform: `translateY(${-16 * adieu}px)` }}>
+              <Title size={84} color={colors.linen} style={{ gridArea: "1 / 1", opacity: 1 - sortieTitre, transform: `translateY(${-16 * sortieTitre}px)` }}>
                 Offrez-vous un moment rien qu'à vous
               </Title>
               <Title size={84} color={colors.linen} style={{ gridArea: "1 / 1", opacity: adieu, transform: `translateY(${16 * (1 - adieu)}px)` }}>
@@ -74,7 +79,9 @@ export const Final: React.FC<{ duration: number; site: number; telephone: number
           </FadeUp>
           <FadeUp delay={15}>
             <Body size={29} color="rgba(248, 244, 238, 0.82)" style={{ marginTop: 18, maxWidth: 1080 }}>
-              Choisissez votre soin et votre créneau en ligne en moins d'une minute, ou appelez Béatrice directement.
+              {typo("Choisissez votre soin et votre créneau en ligne en moins d'une minute,")}
+              <br />
+              ou appelez Béatrice directement.
             </Body>
           </FadeUp>
           <FadeUp delay={18}>
@@ -138,8 +145,8 @@ export const Final: React.FC<{ duration: number; site: number; telephone: number
             bottom: 30,
             textAlign: "center",
             fontFamily: fonts.sans,
-            fontSize: 22,
-            color: "rgba(248, 244, 238, 0.75)",
+            fontSize: 24,
+            color: "rgba(248, 244, 238, 0.85)",
             opacity: interpolate(frame, [30, 50], [0, 1], clamp),
           }}
         >

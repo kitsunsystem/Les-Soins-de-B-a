@@ -58,7 +58,9 @@ export const Temoignages: React.FC<{ duration: number; lectures: Lecture[] }> = 
             const lecture = lectures.find((l) => l.auteur === t.name);
             const f = focus(t.name);
             const recul = actif - f;
-            const nom = lecture ? interpolate(frame, [lecture.signature - 3, lecture.signature + 4, lecture.signature + 16], [0, 1, 0.6], clamp) : 0;
+            // Sur « écrit Léa »… : la pastille et le prénom passent en terracotta et y restent ; seule la taille pulse.
+            const signe = lecture ? interpolate(frame, [lecture.signature - 3, lecture.signature + 4], [0, 1], clamp) : 0;
+            const impulsion = lecture ? interpolate(frame, [lecture.signature - 3, lecture.signature + 4, lecture.signature + 16], [0, 1, 0.4], clamp) : 0;
             return (
               <FadeUp key={t.name} delay={8 + i * 3} style={{ display: "flex", zIndex: f > 0.5 ? 1 : 0 }}>
                 <div
@@ -105,18 +107,18 @@ export const Temoignages: React.FC<{ duration: number; lectures: Lecture[] }> = 
                           width: 54,
                           height: 54,
                           borderRadius: "50%",
-                          background: interpolateColors(nom, [0, 1], [colors.claySoft, colors.clay]),
-                          color: interpolateColors(nom, [0, 1], [colors.clayDark, "#ffffff"]),
+                          background: interpolateColors(signe, [0, 1], [colors.claySoft, colors.clay]),
+                          color: interpolateColors(signe, [0, 1], [colors.clayDark, "#ffffff"]),
                           fontSize: 28,
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
-                          transform: `scale(${1 + 0.15 * nom})`,
+                          transform: `scale(${1 + 0.15 * impulsion})`,
                         }}
                       >
                         {t.name.charAt(0)}
                       </div>
-                      <div style={{ fontFamily: fonts.sans, fontSize: 25, fontWeight: 750, color: interpolateColors(nom, [0, 1], [colors.ink, colors.clayDark]) }}>
+                      <div style={{ fontFamily: fonts.sans, fontSize: 25, fontWeight: 750, color: interpolateColors(signe, [0, 1], [colors.ink, colors.clayDark]) }}>
                         {t.name}
                       </div>
                     </div>

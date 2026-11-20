@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
-import { Audio } from "@remotion/media";
-import { AbsoluteFill, interpolate, Sequence, staticFile } from "remotion";
+import { AbsoluteFill, Html5Audio, interpolate, Sequence, staticFile } from "remotion";
 import { Accueil } from "./scenes/Accueil";
 import { Beatrice } from "./scenes/Beatrice";
 import { Cabinet } from "./scenes/Cabinet";
@@ -121,13 +120,27 @@ const scenes: Scene[] = [
 
 export const DUREE_TOTALE = f(DUREE_VIDEO);
 
+/**
+ * Niveaux du mixage. Le son est mixé par ffmpeg au rendu (Html5Audio) : la voix, mono et normalisée à −16 LUFS,
+ * est répartie sur les deux canaux à −3 dB. On la remonte de 1 dB (environ −15,7 LUFS, crêtes vers −4 dBFS) et la
+ * musique reste environ 14,5 LU dessous.
+ */
+const VOLUME_VOIX = 1.12;
+const MUSIQUE_SOUS_VOIX = 0.175;
+const MUSIQUE_SEULE = 0.355;
+
 /** Musique d'ambiance : discrète sous la voix, un peu plus présente une fois la voix terminée. */
 function volumeMusique(image: number) {
   const s = image / FPS;
   const finVoix = t(DUREE_VOIX);
   const remontee = finVoix + 0.6;
   const fondu = Math.max(remontee + 0.1, DUREE_VIDEO - 1.2);
-  return interpolate(s, [0, 0.5, finVoix - 0.1, remontee, fondu, Math.max(fondu + 0.1, DUREE_VIDEO)], [0, 0.22, 0.22, 0.45, 0.45, 0], clamp);
+  return interpolate(
+    s,
+    [0, 0.5, finVoix - 0.1, remontee, fondu, Math.max(fondu + 0.1, DUREE_VIDEO)],
+    [0, MUSIQUE_SOUS_VOIX, MUSIQUE_SOUS_VOIX, MUSIQUE_SEULE, MUSIQUE_SEULE, 0],
+    clamp,
+  );
 }
 
 export const Presentation: React.FC<{ audio: boolean }> = ({ audio }) => {
@@ -138,8 +151,8 @@ export const Presentation: React.FC<{ audio: boolean }> = ({ audio }) => {
         const duree = f(s.a) - debut;
         return (
           <Sequence key={s.id} from={debut} durationInFrames={duree} name={s.id}>
-            {/* La scène des univers a sa propre poussée, panneau par panneau. */}
-            <Fondu duration={duree} entree={i > 0} sortie={i < scenes.length - 1} poussee={s.id !== "soins"}>
+            {/* La scène des univers a sa propre poussée, panneau par panneau ; le plan final garde son cadre fixe. */}
+            <Fondu duration={duree} entree={i > 0} sortie={i < scenes.length - 1} poussee={s.id !== "soins" && s.id !== "final"}>
               {s.rendu(duree, debut)}
             </Fondu>
           </Sequence>
@@ -148,9 +161,9 @@ export const Presentation: React.FC<{ audio: boolean }> = ({ audio }) => {
       {audio && (
         <>
           <Sequence from={f(DEBUT_VOIX)} name="voix off">
-            <Audio src={staticFile(FICHIER_VOIX)} />
+            <Html5Audio src={staticFile(FICHIER_VOIX)} volume={VOLUME_VOIX} />
           </Sequence>
-          <Audio src={staticFile("musique.mp3")} volume={volumeMusique} />
+          <Html5Audio src={staticFile("musique.mp3")} volume={volumeMusique} />
         </>
       )}
     </AbsoluteFill>
