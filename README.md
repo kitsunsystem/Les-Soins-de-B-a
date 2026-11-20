@@ -128,7 +128,9 @@ Après une modification de `src/lib/db/schema.ts` : `npm run db:generate` (crée
 ## Vidéo de présentation
 
 La vidéo est intégrée à la page d'accueil (section « En vidéo », sous-titrée, chargée au clic) depuis
-`public/videos/`. Après une modification : `cd video && npm run render && npm run site`.
+`public/videos/`, avec un lecteur aux couleurs du site (`src/components/PresentationVideo.tsx`) : barre de
+commandes flottante, progression terracotta, volume, sous-titres dans la typographie du site, plein écran,
+raccourcis clavier (Espace/K, ←/→, M, C, F) et écran de fin « Prendre rendez-vous ». Après une modification : `cd video && npm run render && npm run site`.
 
 Le dossier `video/` contient une vidéo publicitaire d'1 min 21 avec voix off (Remotion, 1920 × 1080), dans le
 style du site. Elle reprend automatiquement les soins, tarifs, témoignages et coordonnées de `src/lib/`. Projet
