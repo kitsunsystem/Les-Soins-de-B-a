@@ -20,3 +20,9 @@ ADMIN_EMAIL=
 
 # Rappels automatiques la veille (tâche planifiée du Worker) — chaîne aléatoire
 CRON_SECRET=
+
+# Acomptes payés en ligne (facultatif) — https://dashboard.stripe.com/apikeys
+# Sans ces clés, l'acompte est noté « à demander » et réglé directement auprès de Béa.
+STRIPE_SECRET_KEY=
+# Secret de signature du webhook (Développeurs → Webhooks → point de terminaison /api/stripe/webhook)
+STRIPE_WEBHOOK_SECRET=

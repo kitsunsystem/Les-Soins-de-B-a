@@ -33,15 +33,48 @@ function button(href: string, label: string) {
   return `<p style="text-align:center;margin:28px 0;"><a href="${href}" style="display:inline-block;background:${C.rose};color:#fff;text-decoration:none;padding:12px 26px;border-radius:999px;font-size:15px;">${esc(label)}</a></p>`;
 }
 
+/** Où se déroule la séance (cabinet, visio ou téléphone). */
+function placeLine(a: Appointment) {
+  if (a.mode === "visio") return "À distance, en visio : Béatrice vous envoie le lien de connexion avant la séance";
+  if (a.mode === "telephone")
+    return `À distance, par téléphone : Béatrice vous appelle à l'heure du rendez-vous${a.clientPhone ? ` (au ${a.clientPhone})` : ""}`;
+  return `Cabinet à ${site.city} (${site.addressNote.toLowerCase()})`;
+}
+
+function depositLine(a: Appointment) {
+  const amount = `${a.depositCents / 100} €`;
+  if (a.depositStatus === "paid") return `Acompte réglé : ${amount} (déduit du prix de la séance)`;
+  if (a.depositStatus === "refunded") return `Acompte de ${amount} remboursé`;
+  if (a.depositStatus === "manual") return `Un acompte de ${amount} vous sera demandé pour valider ce rendez-vous`;
+  return "";
+}
+
 function recap(a: Appointment) {
+  const deposit = depositLine(a);
   return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${C.bg};border-radius:12px;margin:20px 0;">
 <tr><td style="padding:16px 20px;font-size:15px;line-height:1.7;">
 <strong>${esc(a.serviceName)}</strong><br>
 ${esc(formatDateTime(a.startsAt))}<br>
 Durée : ${a.durationMinutes} min<br>
-Lieu : cabinet à ${esc(site.city)} (${esc(site.addressNote.toLowerCase())})
+Lieu : ${esc(placeLine(a))}${deposit ? `<br>${esc(deposit)}` : ""}
 </td></tr></table>`;
 }
+
+/** Invitation à remplir la fiche d'admission (première séance). */
+const admissionNote = (url?: string | null) =>
+  url
+    ? `<p style="background:${C.bg};border-radius:12px;padding:14px 18px;font-size:14px;">Première séance ? Merci de remplir votre <strong>fiche d'admission</strong> avant de venir (5 minutes, strictement confidentielle) : <a href="${url}" style="color:${C.rose};">remplir ma fiche</a>.</p>`
+    : "";
+
+/** Phrase d'accueil selon le lieu de la séance. */
+const practicalNote = (a: Appointment, confirmed: boolean) =>
+  a.mode === "cabinet"
+    ? confirmed
+      ? "L'adresse exacte du cabinet vous sera communiquée par téléphone ou par email avant la séance."
+      : ""
+    : a.mode === "visio"
+      ? "Installez-vous au calme, avec un ordinateur ou un téléphone et une bonne connexion."
+      : "Installez-vous au calme, téléphone chargé, à l'heure du rendez-vous.";
 
 const cancelNote = (base: string, a: Appointment) =>
   `<p style="font-size:13px;color:${C.muted};">Un empêchement ? Merci de prévenir au moins 24 h à l'avance : <a href="${base}${cancelPath(a.cancelToken)}" style="color:${C.rose};">annuler mon rendez-vous</a> ou appeler le ${esc(site.phone)}.</p>`;
@@ -55,19 +88,19 @@ function icsAttachment(base: string, a: Appointment) {
     end: a.endsAt,
     summary: `${a.serviceName} — ${site.name}`,
     description: `Rendez-vous avec ${site.owner}. Tél. ${site.phone}. Annulation : ${base}${cancelPath(a.cancelToken)}`,
-    location: `Cabinet ${site.name}, ${site.city}`,
+    location: a.mode === "cabinet" ? `Cabinet ${site.name}, ${site.city}` : a.mode === "visio" ? "Visio" : "Téléphone",
   });
   return [{ name: "rendez-vous.ics", content: Buffer.from(ics).toString("base64") }];
 }
 
 /** Email au client juste après sa demande (en attente, ou confirmée si la confirmation est automatique). */
-export async function mailBookingReceived(a: Appointment) {
+export async function mailBookingReceived(a: Appointment, extra: { admissionUrl?: string | null } = {}) {
   const base = await getBaseUrl();
   const confirmed = a.status === "confirmed";
   const subject = confirmed ? "Votre rendez-vous est confirmé" : "Votre demande de rendez-vous est bien reçue";
   const body = confirmed
-    ? `<p>Bonjour ${esc(a.clientName)},</p><p>Merci pour votre confiance ! Votre rendez-vous est <strong>confirmé</strong> :</p>${recap(a)}<p>L'adresse exacte du cabinet vous sera communiquée par téléphone ou par email avant la séance. Vous trouverez ce rendez-vous en pièce jointe pour l'ajouter à votre agenda.</p>${cancelNote(base, a)}<p>À très bientôt,<br>Béatrice</p>`
-    : `<p>Bonjour ${esc(a.clientName)},</p><p>Merci pour votre demande ! Le créneau ci-dessous est réservé pour vous en attendant ma confirmation :</p>${recap(a)}<p>Je reviens vers vous très rapidement par email pour confirmer le rendez-vous.</p>${cancelNote(base, a)}<p>À très bientôt,<br>Béatrice</p>`;
+    ? `<p>Bonjour ${esc(a.clientName)},</p><p>Merci pour votre confiance ! Votre rendez-vous est <strong>confirmé</strong> :</p>${recap(a)}<p>${practicalNote(a, true)} Vous trouverez ce rendez-vous en pièce jointe pour l'ajouter à votre agenda.</p>${admissionNote(extra.admissionUrl)}${cancelNote(base, a)}<p>À très bientôt,<br>Béatrice</p>`
+    : `<p>Bonjour ${esc(a.clientName)},</p><p>Merci pour votre demande ! Le créneau ci-dessous est réservé pour vous en attendant ma confirmation :</p>${recap(a)}<p>Je reviens vers vous très rapidement par email pour confirmer le rendez-vous.</p>${admissionNote(extra.admissionUrl)}${cancelNote(base, a)}<p>À très bientôt,<br>Béatrice</p>`;
   return sendEmail({
     to: client(a),
     subject,
@@ -100,7 +133,8 @@ ${button(`${base}${adminDayPath(parisDateStr(a.startsAt))}`, pending ? "Confirme
 export async function mailBookingConfirmed(a: Appointment) {
   const base = await getBaseUrl();
   const subject = "Votre rendez-vous est confirmé";
-  const body = `<p>Bonjour ${esc(a.clientName)},</p><p>J'ai le plaisir de vous confirmer votre rendez-vous :</p>${recap(a)}<p>L'adresse exacte du cabinet vous sera communiquée avant la séance. Le règlement s'effectue en fin de séance (${esc(site.payment.toLowerCase())}). Vous trouverez ce rendez-vous en pièce jointe pour l'ajouter à votre agenda.</p>${cancelNote(base, a)}<p>À très bientôt,<br>Béatrice</p>`;
+  const payment = a.mode === "cabinet" ? ` Le règlement s'effectue en fin de séance (${esc(site.payment.toLowerCase())}).` : "";
+  const body = `<p>Bonjour ${esc(a.clientName)},</p><p>J'ai le plaisir de vous confirmer votre rendez-vous :</p>${recap(a)}<p>${practicalNote(a, true)}${payment} Vous trouverez ce rendez-vous en pièce jointe pour l'ajouter à votre agenda.</p>${cancelNote(base, a)}<p>À très bientôt,<br>Béatrice</p>`;
   return sendEmail({ to: client(a), subject, html: layout(base, subject, body), attachments: icsAttachment(base, a), tags: ["rdv-confirme"] });
 }
 
@@ -122,7 +156,8 @@ export async function mailCancelledByClient(a: Appointment) {
   const base = await getBaseUrl();
   const admin = adminContact();
   const subject = "Votre rendez-vous est annulé";
-  const body = `<p>Bonjour ${esc(a.clientName)},</p><p>Votre rendez-vous a bien été annulé :</p>${recap(a)}<p>Au plaisir de vous accueillir une prochaine fois.</p>${button(`${base}/rendez-vous`, "Reprendre rendez-vous")}<p>Béatrice</p>`;
+  const kept = a.depositStatus === "paid" ? `<p style="font-size:13px;color:${C.muted};">Conformément aux conditions générales, l'acompte versé (${a.depositCents / 100} €) n'est pas remboursé.</p>` : "";
+  const body = `<p>Bonjour ${esc(a.clientName)},</p><p>Votre rendez-vous a bien été annulé :</p>${recap(a)}${kept}<p>Au plaisir de vous accueillir une prochaine fois.</p>${button(`${base}/rendez-vous`, "Reprendre rendez-vous")}<p>Béatrice</p>`;
   await sendEmail({ to: client(a), subject, html: layout(base, subject, body), tags: ["rdv-annule-client"] });
   if (admin) {
     const s2 = `Annulation : ${a.clientName} — ${formatDateTime(a.startsAt)}`;
@@ -135,10 +170,14 @@ export async function mailCancelledByClient(a: Appointment) {
   }
 }
 
-export async function mailReminder(a: Appointment) {
+export async function mailReminder(a: Appointment, extra: { admissionUrl?: string | null } = {}) {
   const base = await getBaseUrl();
   const subject = "Rappel : votre rendez-vous de demain";
-  const body = `<p>Bonjour ${esc(a.clientName)},</p><p>Petit rappel de votre rendez-vous :</p>${recap(a)}<p>Pensez à venir dans une tenue confortable. Le règlement s'effectue en fin de séance (${esc(site.payment.toLowerCase())}).</p>${cancelNote(base, a)}<p>À demain,<br>Béatrice</p>`;
+  const advice =
+    a.mode === "cabinet"
+      ? `Pensez à venir dans une tenue confortable. Le règlement s'effectue en fin de séance (${esc(site.payment.toLowerCase())}).`
+      : practicalNote(a, true);
+  const body = `<p>Bonjour ${esc(a.clientName)},</p><p>Petit rappel de votre rendez-vous :</p>${recap(a)}<p>${advice}</p>${admissionNote(extra.admissionUrl)}${cancelNote(base, a)}<p>À demain,<br>Béatrice</p>`;
   return sendEmail({ to: client(a), subject, html: layout(base, subject, body), tags: ["rdv-rappel"] });
 }
 
@@ -169,4 +208,22 @@ export async function mailContact(data: { name: string; email: string; phone: st
     tags: ["contact-accuse"],
   });
   return ok;
+}
+
+/** Envoi du lien de la fiche d'admission à un client (depuis l'espace admin). */
+export async function mailAdmissionRequest(c: { name: string; email: string }, url: string) {
+  const base = await getBaseUrl();
+  const subject = "Votre fiche d'admission — Les Soins de Béa";
+  const body = `<p>Bonjour ${esc(c.name)},</p><p>Avant votre première séance, merci de remplir votre fiche d'admission en ligne : vos coordonnées, ce qui vous amène, et quelques questions de santé pour adapter la séance en toute sécurité. Cela prend environ 5 minutes et reste strictement confidentiel.</p>${button(url, "Remplir ma fiche d'admission")}<p>À très bientôt,<br>Béatrice</p>`;
+  return sendEmail({ to: [{ email: c.email, name: c.name }], subject, html: layout(base, subject, body), tags: ["fiche-admission"] });
+}
+
+/** Prévient Béa qu'une fiche d'admission a été remplie (aucune donnée de santé dans l'email). */
+export async function mailAdmissionReceived(clientId: string, name: string) {
+  const admin = adminContact();
+  if (!admin) return false;
+  const base = await getBaseUrl();
+  const subject = `Fiche d'admission reçue : ${name}`;
+  const body = `<p>${esc(name)} vient de remplir sa fiche d'admission en ligne.</p><p>Pour des raisons de confidentialité, les réponses ne sont pas envoyées par email : consultez-les dans votre espace.</p>${button(`${base}/admin/clients/${clientId}`, "Voir la fiche client")}`;
+  return sendEmail({ to: [admin], subject, html: layout(base, subject, body), tags: ["fiche-admission-admin"] });
 }

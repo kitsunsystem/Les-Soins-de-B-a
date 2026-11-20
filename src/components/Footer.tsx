@@ -71,7 +71,7 @@ export function Footer() {
             <li className="flex items-start gap-3">
               <MapPin className="mt-1 size-4 shrink-0 text-gold" aria-hidden />
               <span>
-                Cabinet à {site.city}, sur rendez-vous
+                Cabinet à {site.city}, sur rendez-vous · et partout en France à distance
                 <br />
                 <span className="text-sm text-linen/60">{site.addressNote}</span>
               </span>

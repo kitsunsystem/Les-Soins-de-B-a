@@ -6,7 +6,18 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import type { Range, WeeklyHour } from "@/lib/availability";
 import { checkPassword, createSession, destroySession, requireAdmin } from "@/lib/auth";
-import { createClient, deleteClient, updateClient } from "@/lib/clients";
+import {
+  createClient,
+  deleteClient,
+  deleteSessionNote,
+  importWorkbook,
+  saveSessionNote,
+  sendAdmissionLink,
+  updateClient,
+} from "@/lib/clients";
+import { prestationsJournal } from "@/lib/content";
+import type { ImportedClient, ImportedSession } from "@/lib/import-excel";
+import { admissionPath, getBaseUrl } from "@/lib/urls";
 import {
   cancelAppointmentByAdmin,
   closePeriod,
@@ -66,6 +77,7 @@ export async function cancelAction(formData: FormData) {
     str(formData, "id"),
     str(formData, "reason").slice(0, 1000),
     formData.get("notify") === "on",
+    str(formData, "by") === "client" ? "client" : "admin",
   );
   revalidatePath("/admin", "layout");
 }
@@ -93,6 +105,7 @@ const manualSchema = z.object({
   note: z.string().trim().max(1000),
   notify: z.boolean(),
   clientId: z.string().max(64).optional(),
+  mode: z.enum(["cabinet", "visio", "telephone"]).default("cabinet"),
 });
 
 export async function addAppointmentAction(_: ActionState, formData: FormData): Promise<ActionState> {
@@ -108,6 +121,7 @@ export async function addAppointmentAction(_: ActionState, formData: FormData): 
     note: str(formData, "note"),
     notify: formData.get("notify") === "on",
     clientId: str(formData, "clientId") || undefined,
+    mode: str(formData, "mode") || "cabinet",
   });
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Données invalides" };
   await createManualAppointment(parsed.data);
@@ -196,6 +210,9 @@ const settingsSchema = z.object({
   autoConfirm: z.boolean(),
   bookingEnabled: z.boolean(),
   bookingNotice: z.string().trim().max(500),
+  depositEnabled: z.boolean(),
+  depositAmount: z.coerce.number().int().min(1, "Montant d'acompte invalide").max(500),
+  depositThreshold: z.coerce.number().int().min(1).max(20),
 });
 
 export async function saveSettingsAction(_: ActionState, formData: FormData): Promise<ActionState> {
@@ -208,8 +225,11 @@ export async function saveSettingsAction(_: ActionState, formData: FormData): Pr
     autoConfirm: formData.get("autoConfirm") === "on",
     bookingEnabled: formData.get("bookingEnabled") === "on",
     bookingNotice: str(formData, "bookingNotice"),
+    depositEnabled: formData.get("depositEnabled") === "on",
+    depositAmount: str(formData, "depositAmount") || "20",
+    depositThreshold: str(formData, "depositThreshold") || "2",
   });
-  if (!parsed.success) return { error: "Réglages invalides." };
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Réglages invalides." };
   await updateSettings(parsed.data);
   revalidatePath("/admin", "layout");
   return { ok: "Réglages enregistrés." };
@@ -217,21 +237,42 @@ export async function saveSettingsAction(_: ActionState, formData: FormData): Pr
 
 // ——— Fiches clients (CRM) ———
 
-const clientSchema = z.object({
-  name: z.string().trim().min(2, "Indiquez au moins le nom.").max(120),
-  email: z.union([z.literal(""), z.email("Email invalide")]),
-  phone: z.string().trim().max(30),
-  birthdate: z.union([z.literal(""), z.string().refine(isDateStr, "Date de naissance invalide")]),
-  notes: z.string().max(5000),
-});
+const optDate = (label: string) => z.union([z.literal(""), z.string().refine(isDateStr, `${label} invalide`)]);
+
+const clientSchema = z
+  .object({
+    lastName: z.string().trim().max(80),
+    firstName: z.string().trim().max(80),
+    email: z.union([z.literal(""), z.email("Email invalide")]),
+    phone: z.string().trim().max(30),
+    birthdate: optDate("Date de naissance"),
+    address: z.string().trim().max(300),
+    profession: z.string().trim().max(120),
+    howFound: z.string().trim().max(200),
+    motive: z.string().trim().max(1000),
+    vigilance: z.string().trim().max(2000),
+    firstVisit: optDate("Date de 1ère venue"),
+    notes: z.string().max(5000),
+    depositPolicy: z.enum(["auto", "always", "never"]).default("auto"),
+  })
+  .refine((c) => (c.lastName + c.firstName).length >= 2, "Indiquez au moins le nom.")
+  .transform((c) => ({ ...c, name: `${c.firstName} ${c.lastName}`.trim() }));
 
 function clientFields(formData: FormData) {
   return clientSchema.safeParse({
-    name: str(formData, "name"),
+    lastName: str(formData, "lastName"),
+    firstName: str(formData, "firstName"),
     email: str(formData, "email").toLowerCase(),
     phone: str(formData, "phone"),
     birthdate: str(formData, "birthdate"),
+    address: str(formData, "address"),
+    profession: str(formData, "profession"),
+    howFound: str(formData, "howFound"),
+    motive: String(formData.get("motive") ?? "").trim(),
+    vigilance: String(formData.get("vigilance") ?? "").trim(),
+    firstVisit: str(formData, "firstVisit"),
     notes: String(formData.get("notes") ?? "").trim(),
+    depositPolicy: str(formData, "depositPolicy") || "auto",
   });
 }
 
@@ -260,4 +301,119 @@ export async function deleteClientAction(formData: FormData) {
   await deleteClient(str(formData, "id"));
   revalidatePath("/admin", "layout");
   redirect("/admin/clients");
+}
+
+// ——— Journal des séances ———
+
+const noteSchema = z.object({
+  id: z.string().max(64).optional(),
+  clientId: z.string().min(1).max(64),
+  appointmentId: z.string().max(64).optional(),
+  date: z.string().refine(isDateStr, "Date de séance invalide"),
+  prestation: z.enum(prestationsJournal),
+  durationMinutes: z.union([z.literal(""), z.coerce.number().int().min(5).max(600)]),
+  motive: z.string().trim().max(1000),
+  changeReported: z.boolean(),
+  observations: z.string().trim().max(5000),
+  feeling: z.string().trim().max(2000),
+  advice: z.string().trim().max(2000),
+  nextSession: optDate("Date de prochaine séance"),
+});
+
+export async function saveSessionNoteAction(_: ActionState, formData: FormData): Promise<ActionState> {
+  await requireAdmin();
+  const parsed = noteSchema.safeParse({
+    id: str(formData, "id") || undefined,
+    clientId: str(formData, "clientId"),
+    appointmentId: str(formData, "appointmentId") || undefined,
+    date: str(formData, "date"),
+    prestation: str(formData, "prestation"),
+    durationMinutes: str(formData, "durationMinutes"),
+    motive: String(formData.get("motive") ?? ""),
+    changeReported: str(formData, "changeReported") === "oui",
+    observations: String(formData.get("observations") ?? ""),
+    feeling: String(formData.get("feeling") ?? ""),
+    advice: String(formData.get("advice") ?? ""),
+    nextSession: str(formData, "nextSession"),
+  });
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Données invalides" };
+  const d = parsed.data;
+  await saveSessionNote({ ...d, durationMinutes: d.durationMinutes === "" ? null : d.durationMinutes });
+  revalidatePath("/admin", "layout");
+  return { ok: d.id ? "Séance mise à jour." : "Séance ajoutée au journal." };
+}
+
+export async function deleteSessionNoteAction(formData: FormData) {
+  await requireAdmin();
+  await deleteSessionNote(str(formData, "id"), str(formData, "clientId"));
+  revalidatePath("/admin", "layout");
+}
+
+// ——— Fiche d'admission ———
+
+export async function sendAdmissionLinkAction(_: ActionState, formData: FormData): Promise<ActionState> {
+  await requireAdmin();
+  const token = str(formData, "token");
+  if (!/^[a-f0-9]{24,64}$/.test(token)) return { error: "Lien introuvable." };
+  const sent = await sendAdmissionLink(str(formData, "clientId"), `${await getBaseUrl()}${admissionPath(token)}`);
+  return sent ? { ok: "Lien envoyé par email." } : { error: "Envoi impossible : pas d'email sur la fiche, ou emails non configurés." };
+}
+
+// ——— Import du classeur Excel ———
+
+const cell = (max: number) => z.string().max(max).catch("");
+const dateCell = z.union([z.literal(""), z.string().regex(/^\d{4}-\d{2}-\d{2}$/)]).catch("");
+const importSchema = z.object({
+  clients: z
+    .array(
+      z.object({
+        key: z.string().min(1).max(200),
+        lastName: cell(80),
+        firstName: cell(80),
+        birthdate: dateCell,
+        phone: cell(30),
+        email: z.union([z.literal(""), z.email()]).catch(""),
+        address: cell(300),
+        firstVisit: dateCell,
+        howFound: cell(200),
+        motive: cell(1000),
+        vigilance: cell(1000),
+        admissionReceived: z.boolean().catch(false),
+        consentDate: dateCell,
+        notes: cell(5000),
+      }),
+    )
+    .max(2000),
+  sessions: z
+    .array(
+      z.object({
+        clientKey: z.string().min(1).max(200),
+        date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+        prestation: cell(80),
+        durationMinutes: z.number().int().min(1).max(1440).nullable().catch(null),
+        motive: cell(1000),
+        changeReported: z.boolean().catch(false),
+        observations: cell(5000),
+        feeling: cell(2000),
+        advice: cell(2000),
+        nextSession: dateCell,
+      }),
+    )
+    .max(5000),
+});
+
+/** Import du classeur Excel (envoyé par paquets depuis le navigateur). */
+export async function importWorkbookAction(data: {
+  clients: ImportedClient[];
+  sessions: ImportedSession[];
+}): Promise<ActionState & { summary?: { created: number; updated: number; sessionsAdded: number } }> {
+  await requireAdmin();
+  const parsed = importSchema.safeParse(data);
+  if (!parsed.success) return { error: "Fichier illisible : certaines lignes ne sont pas au format attendu." };
+  const summary = await importWorkbook(parsed.data);
+  revalidatePath("/admin", "layout");
+  return {
+    ok: `${summary.created} fiche(s) créée(s), ${summary.updated} complétée(s), ${summary.sessionsAdded} séance(s) ajoutée(s) au journal.`,
+    summary,
+  };
 }

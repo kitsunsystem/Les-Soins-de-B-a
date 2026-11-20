@@ -40,7 +40,7 @@ export function ClosePeriodForm({ today }: { today: string }) {
   );
 }
 
-export function SettingsForm({ settings }: { settings: Settings }) {
+export function SettingsForm({ settings, stripeReady }: { settings: Settings; stripeReady: boolean }) {
   const [state, action, pending] = useActionState(saveSettingsAction, null);
   return (
     <form action={action} className="mt-5 space-y-4 text-sm">
@@ -99,6 +99,40 @@ export function SettingsForm({ settings }: { settings: Settings }) {
           <input id="s-ahead" name="maxDaysAhead" type="number" min={1} max={365} defaultValue={settings.maxDaysAhead} className="field !py-1.5" />
         </div>
       </div>
+
+      <fieldset className="space-y-3 rounded-xl border border-line bg-white p-3">
+        <legend className="px-1 font-semibold">Acompte après des annulations</legend>
+        <label className="flex items-start gap-3">
+          <input type="checkbox" name="depositEnabled" defaultChecked={settings.depositEnabled} className="mt-1 size-4 accent-forest" />
+          <span>
+            <span className="font-medium">Demander un acompte aux personnes qui annulent souvent</span>
+            <span className="block text-xs text-ink-soft">
+              Calculé automatiquement : annulations faites par la personne + absences. L&apos;acompte est déduit du prix de
+              la séance et n&apos;est pas remboursé si elle annule. Vous pouvez aussi l&apos;imposer ou en dispenser
+              quelqu&apos;un depuis sa fiche client.
+            </span>
+          </span>
+        </label>
+        <div className="grid grid-cols-2 gap-3">
+          <div>
+            <label htmlFor="s-dep-n" className="label text-xs">
+              À partir de (annulations / absences)
+            </label>
+            <input id="s-dep-n" name="depositThreshold" type="number" min={1} max={20} defaultValue={settings.depositThreshold} className="field !py-1.5" />
+          </div>
+          <div>
+            <label htmlFor="s-dep-a" className="label text-xs">
+              Montant de l&apos;acompte (€)
+            </label>
+            <input id="s-dep-a" name="depositAmount" type="number" min={1} max={500} defaultValue={settings.depositAmount} className="field !py-1.5" />
+          </div>
+        </div>
+        <p className="text-xs text-ink-soft">
+          {stripeReady
+            ? "Paiement par carte en ligne (Stripe) actif : le créneau est retenu 30 minutes le temps du paiement."
+            : "Paiement en ligne non configuré (Stripe) : la réservation est enregistrée avec la mention « acompte à demander », à régler auprès de vous."}
+        </p>
+      </fieldset>
 
       <div>
         <label htmlFor="s-msg" className="label text-xs">

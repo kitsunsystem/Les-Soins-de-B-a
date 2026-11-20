@@ -3,7 +3,7 @@ import Image from "next/image";
 import { GraduationCap } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
 import { CtaBand, Disclaimer, PageHero, SectionHeading } from "@/components/ui";
-import { parcours } from "@/lib/content";
+import { diplomas, parcours } from "@/lib/content";
 
 export const metadata: Metadata = {
   title: "À propos — Béatrice, praticienne bien-être",
@@ -94,6 +94,34 @@ export default function AProposPage() {
               </Reveal>
             ))}
           </ol>
+          {diplomas.length > 0 && (
+            <div className="mx-auto mt-14 max-w-5xl">
+              <h3 className="text-center text-3xl">Mes certificats</h3>
+              <ul className="mt-8 grid grid-cols-2 gap-5 md:grid-cols-3 lg:grid-cols-4">
+                {diplomas.map((d, i) => (
+                  <Reveal as="li" key={d.image} delay={(i % 4) * 60}>
+                    <a
+                      href={d.image}
+                      target="_blank"
+                      rel="noopener"
+                      className="group block overflow-hidden rounded-2xl border border-line bg-card p-2 shadow-card transition-transform hover:-translate-y-1"
+                    >
+                      <Image
+                        src={d.image}
+                        alt={`Certificat : ${d.title}`}
+                        width={600}
+                        height={800}
+                        sizes="(max-width: 768px) 45vw, 260px"
+                        className="aspect-[3/4] w-full rounded-xl bg-white object-contain"
+                      />
+                      <span className="block px-2 pb-1 pt-3 text-sm font-bold leading-snug">{d.title}</span>
+                      {d.detail && <span className="block px-2 pb-1 text-xs text-ink-soft">{d.detail}</span>}
+                    </a>
+                  </Reveal>
+                ))}
+              </ul>
+            </div>
+          )}
           <p className="mx-auto mt-8 max-w-2xl text-center text-xs text-ink-soft">
             Ces formations ne constituent pas des diplômes d&apos;État et n&apos;autorisent pas l&apos;exercice de
             la médecine.

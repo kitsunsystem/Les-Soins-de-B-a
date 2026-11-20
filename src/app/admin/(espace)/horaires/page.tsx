@@ -2,6 +2,7 @@ import { CheckCircle2, XCircle } from "lucide-react";
 import { requireAdmin } from "@/lib/auth";
 import { getOverrides, getSettings, getWeeklyHours } from "@/lib/bookings";
 import { brevoConfigured } from "@/lib/brevo";
+import { stripeConfigured } from "@/lib/stripe";
 import { addDays, formatDateStr, parisDateStr } from "@/lib/time";
 import { deleteOverrideAction } from "../../actions";
 import { ClosePeriodForm, SettingsForm } from "./forms";
@@ -21,6 +22,12 @@ export default async function HorairesPage() {
     { ok: Boolean(process.env.ADMIN_EMAIL), label: "Adresse de notification", hint: "ADMIN_EMAIL" },
     { ok: Boolean(process.env.SITE_URL), label: "Adresse du site dans les emails", hint: "SITE_URL" },
     { ok: Boolean(process.env.CRON_SECRET), label: "Rappels automatiques la veille", hint: "CRON_SECRET" },
+    { ok: stripeConfigured(), label: "Paiement des acomptes par carte (Stripe)", hint: "STRIPE_SECRET_KEY" },
+    {
+      ok: Boolean(process.env.STRIPE_WEBHOOK_SECRET),
+      label: "Notifications de paiement Stripe",
+      hint: "STRIPE_WEBHOOK_SECRET (webhook vers /api/stripe/webhook)",
+    },
   ];
 
   return (
@@ -74,7 +81,7 @@ export default async function HorairesPage() {
       <div className="space-y-6">
         <section className="card p-5 md:p-6" aria-labelledby="t-reglages">
           <h2 id="t-reglages" className="text-3xl">Réglages de la réservation</h2>
-          <SettingsForm settings={settings} />
+          <SettingsForm settings={settings} stripeReady={stripeConfigured()} />
         </section>
 
         <section className="card p-5 md:p-6" aria-labelledby="t-config">

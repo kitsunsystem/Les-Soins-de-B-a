@@ -2,9 +2,9 @@ import Link from "next/link";
 import { AlertCircle, ChevronLeft, ChevronRight, Clock, Inbox } from "lucide-react";
 import { rangesForDate, type DateOverride } from "@/lib/availability";
 import { requireAdmin } from "@/lib/auth";
-import { getOverrides, getWeeklyHours, listAppointments, listPending } from "@/lib/bookings";
+import { expireHolds, getOverrides, getWeeklyHours, listAppointments, listPending } from "@/lib/bookings";
 import { brevoConfigured } from "@/lib/brevo";
-import { clientOptions } from "@/lib/clients";
+import { appointmentsWithNotes, clientOptions, getClientsByIds } from "@/lib/clients";
 import {
   addDays,
   daysOfMonth,
@@ -34,6 +34,7 @@ export default async function AgendaPage({ searchParams }: PageProps<"/admin">) 
   const mois = isMonthStr(sp.mois) ? sp.mois : jour.slice(0, 7);
 
   const days = daysOfMonth(mois);
+  await expireHolds();
   const [weekly, overrides, appts, pending, clients] = await Promise.all([
     getWeeklyHours(),
     getOverrides(days[0], days.at(-1)!),
@@ -54,6 +55,12 @@ export default async function AgendaPage({ searchParams }: PageProps<"/admin">) 
     jour.slice(0, 7) === mois
       ? (byDay.get(jour) ?? [])
       : await listAppointments(parisToUtc(jour, "00:00"), parisToUtc(addDays(jour, 1), "00:00"));
+  // Fiches clients (vigilance, fiche d'admission) et comptes-rendus des rendez-vous affichés.
+  const shown = [...pending, ...dayAppts];
+  const [clientMap, noted] = await Promise.all([
+    getClientsByIds(shown.map((a) => a.clientId ?? "")),
+    appointmentsWithNotes(dayAppts.map((a) => a.id)),
+  ]);
   const weeklyRanges = weekly
     .filter((w) => w.weekday === weekdayOf(jour))
     .map(({ start, end }) => ({ start, end }));
@@ -81,7 +88,7 @@ export default async function AgendaPage({ searchParams }: PageProps<"/admin">) 
           </h2>
           <div className="mt-4 grid gap-3 lg:grid-cols-2">
             {pending.map((a) => (
-              <AppointmentCard key={a.id} appt={a} showDate />
+              <AppointmentCard key={a.id} appt={a} showDate client={a.clientId ? clientMap.get(a.clientId) : undefined} />
             ))}
           </div>
         </section>
@@ -120,8 +127,8 @@ export default async function AgendaPage({ searchParams }: PageProps<"/admin">) 
               const ranges = rangesForDate(d, weekly, overrideMap);
               const closed = ranges.length === 0;
               const o = overrideMap.get(d);
-              const list = (byDay.get(d) ?? []).filter((a) => a.status === "pending" || a.status === "confirmed");
-              const nPending = list.filter((a) => a.status === "pending").length;
+              const list = (byDay.get(d) ?? []).filter((a) => ["pending", "confirmed", "awaiting_payment"].includes(a.status));
+              const nPending = list.filter((a) => a.status !== "confirmed").length;
               const nConfirmed = list.length - nPending;
               const selected = d === jour;
               const past = d < today;
@@ -193,7 +200,12 @@ export default async function AgendaPage({ searchParams }: PageProps<"/admin">) 
             ) : (
               <div className="mt-4 space-y-3">
                 {dayAppts.map((a) => (
-                  <AppointmentCard key={a.id} appt={a} />
+                  <AppointmentCard
+                    key={a.id}
+                    appt={a}
+                    client={a.clientId ? clientMap.get(a.clientId) : undefined}
+                    hasNote={noted.has(a.id)}
+                  />
                 ))}
               </div>
             )}

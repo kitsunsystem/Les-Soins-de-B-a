@@ -8,22 +8,40 @@ import {
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
+  ClipboardList,
   Clock,
+  CreditCard,
+  Globe2,
   Loader2,
   MailCheck,
+  MapPin,
+  Phone,
+  Video,
 } from "lucide-react";
-import { categories, getService, services, type Service } from "@/lib/content";
+import { canBeRemote, categories, getService, modesOf, services, type Service } from "@/lib/content";
 import { CategoryBadge } from "./services";
 import { site } from "@/lib/site";
 import { addDays, daysOfMonth, formatDateStr, formatMonth, parisDateStr, shiftMonth, weekdayOf } from "@/lib/time";
 
 type Step = 1 | 2 | 3 | 4;
+type Mode = "cabinet" | "visio" | "telephone";
+type Result = { status: string; deposit: number; admissionUrl: string | null };
+
+const MODES: { id: Mode; label: string; hint: string; icon: typeof MapPin }[] = [
+  { id: "cabinet", label: "Au cabinet", hint: "À Perpignan", icon: MapPin },
+  { id: "visio", label: "En visio", hint: "Depuis chez vous, partout en France", icon: Video },
+  { id: "telephone", label: "Par téléphone", hint: "Béatrice vous appelle", icon: Phone },
+];
+const onSite = (s: Service) => modesOf(s).includes("cabinet");
 type Availability = { days: Record<string, string[]>; enabled: boolean; notice: string; maxDaysAhead: number };
 
 const WEEKDAYS = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
 
-export function BookingWizard({ initialServiceId }: { initialServiceId?: string }) {
+export function BookingWizard({ initialServiceId, remote = false }: { initialServiceId?: string; remote?: boolean }) {
   const initial = getService(initialServiceId);
+  const [where, setWhere] = useState<"all" | "distance">(remote ? "distance" : "all");
+  const [mode, setMode] = useState<Mode>(initial && (!onSite(initial) || (remote && canBeRemote(initial))) ? "visio" : "cabinet");
+  const [deposit, setDeposit] = useState<{ amount: number; online: boolean } | null>(null);
   const [step, setStep] = useState<Step>(initial?.durationMinutes ? 2 : 1);
   const [serviceId, setServiceId] = useState<string | null>(initial?.durationMinutes ? initial.id : null);
   const [today] = useState(() => parisDateStr(new Date()));
@@ -35,7 +53,7 @@ export function BookingWizard({ initialServiceId }: { initialServiceId?: string 
   const [time, setTime] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-  const [result, setResult] = useState<{ status: string } | null>(null);
+  const [result, setResult] = useState<Result | null>(null);
   const autoAdvanced = useRef(0);
   const topRef = useRef<HTMLDivElement>(null);
 
@@ -75,6 +93,8 @@ export function BookingWizard({ initialServiceId }: { initialServiceId?: string 
 
   function chooseService(s: Service) {
     setServiceId(s.id);
+    setMode(!onSite(s) || (where === "distance" && canBeRemote(s)) ? "visio" : "cabinet");
+    setDeposit(null);
     setDate(null);
     setTime(null);
     setError(null);
@@ -98,10 +118,13 @@ export function BookingWizard({ initialServiceId }: { initialServiceId?: string 
           serviceId: service.id,
           date,
           time,
-          name: fd.get("name"),
+          firstName: fd.get("firstName"),
+          lastName: fd.get("lastName"),
           email: fd.get("email"),
           phone: fd.get("phone"),
           message: fd.get("message") ?? "",
+          mode: canBeRemote(service) ? mode : "cabinet",
+          acceptDeposit: deposit ? fd.get("acceptDeposit") === "on" : undefined,
           consent: fd.get("consent") === "on",
           website: fd.get("website") ?? "",
         }),
@@ -116,7 +139,17 @@ export function BookingWizard({ initialServiceId }: { initialServiceId?: string 
         return;
       }
       if (!res.ok) throw new Error(json.error ?? "Une erreur est survenue.");
-      setResult({ status: json.status });
+      if (json.depositRequired) {
+        // Acompte demandé (annulations répétées) : on l'explique, la personne valide puis renvoie.
+        setDeposit({ amount: json.amount, online: json.online });
+        requestAnimationFrame(() => document.getElementById("acompte")?.scrollIntoView({ behavior: "smooth", block: "center" }));
+        return;
+      }
+      if (json.paymentUrl) {
+        window.location.assign(json.paymentUrl);
+        return;
+      }
+      setResult({ status: json.status, deposit: json.deposit ?? 0, admissionUrl: json.admissionUrl ?? null });
       setStep(4);
       scrollTop();
     } catch (err) {
@@ -141,8 +174,39 @@ export function BookingWizard({ initialServiceId }: { initialServiceId?: string 
       {/* Étape 1 : choix du soin */}
       {step === 1 && (
         <div className="mt-10 space-y-10">
+          <div className="flex flex-col items-center gap-3">
+            <div role="radiogroup" aria-label="Où souhaitez-vous faire la séance ?" className="inline-flex rounded-full bg-card p-1 ring-1 ring-line">
+              {(
+                [
+                  ["all", "Tous les soins", MapPin],
+                  ["distance", "À distance (visio / téléphone)", Globe2],
+                ] as const
+              ).map(([id, label, Icon]) => (
+                <button
+                  key={id}
+                  type="button"
+                  role="radio"
+                  aria-checked={where === id}
+                  onClick={() => setWhere(id)}
+                  className={`flex items-center gap-1.5 rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
+                    where === id ? "bg-forest text-white" : "text-ink-soft hover:text-forest"
+                  }`}
+                >
+                  <Icon className="size-4" aria-hidden />
+                  {label}
+                </button>
+              ))}
+            </div>
+            <p className="max-w-xl text-center text-sm text-ink-soft">
+              {where === "distance"
+                ? "Guidance, tarot et médiumnité se font aussi bien à distance : depuis chez vous, partout en France."
+                : `Soins au cabinet à ${site.city}. Les consultations marquées « aussi à distance » se font en visio ou par téléphone, partout en France.`}
+            </p>
+          </div>
           {categories.map((c) => {
-            const list = services.filter((s) => s.category === c.id && s.durationMinutes !== null);
+            const list = services.filter(
+              (s) => s.category === c.id && s.durationMinutes !== null && (where === "all" || canBeRemote(s)),
+            );
             if (!list.length) return null;
             return (
               <fieldset key={c.id}>
@@ -161,6 +225,12 @@ export function BookingWizard({ initialServiceId }: { initialServiceId?: string 
                       }`}
                     >
                       <span className="font-serif text-xl leading-snug">{s.name}</span>
+                      {canBeRemote(s) && (
+                        <span className="mt-2 inline-flex items-center gap-1 rounded-full bg-lavender-soft px-2.5 py-0.5 text-xs font-semibold text-lavender">
+                          <Globe2 className="size-3" aria-hidden />
+                          {onSite(s) ? "Aussi à distance" : "À distance"}
+                        </span>
+                      )}
                       <span className="mt-2 flex w-full items-center justify-between text-sm text-ink-soft">
                         <span className="flex items-center gap-1.5">
                           <Clock className="size-3.5" aria-hidden />
@@ -177,7 +247,11 @@ export function BookingWizard({ initialServiceId }: { initialServiceId?: string 
           <div className="rounded-2xl border border-dashed border-line bg-card/60 p-6 text-sm text-ink-soft">
             <p className="font-medium text-ink">Sur demande uniquement</p>
             <p className="mt-1">
-              {onRequest.map((s) => s.name).join(" · ")} : ces prestations se préparent ensemble.{" "}
+              {onRequest
+                .filter((s) => where === "all" || canBeRemote(s))
+                .map((s) => s.name)
+                .join(" · ")}{" "}
+              : ces prestations se préparent ensemble.{" "}
               <Link href="/contact?objet=rdv" className="text-forest underline">
                 Contactez-moi
               </Link>{" "}
@@ -262,13 +336,46 @@ export function BookingWizard({ initialServiceId }: { initialServiceId?: string 
       {step === 3 && service && date && time && (
         <form onSubmit={submit} className="mx-auto mt-10 grid max-w-4xl gap-6 lg:grid-cols-[1fr_18rem]">
           <div className="card space-y-5 p-6 md:p-8">
+            {canBeRemote(service) && (
+              <fieldset>
+                <legend className="text-3xl">Où se déroule la séance ?</legend>
+                <div className="mt-4 grid gap-3 sm:grid-cols-3">
+                  {MODES.filter((m) => m.id !== "cabinet" || onSite(service)).map((m) => (
+                    <label
+                      key={m.id}
+                      className={`flex cursor-pointer flex-col gap-1 rounded-2xl border p-4 text-sm transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-forest/30 ${
+                        mode === m.id ? "border-forest bg-sage-soft/60" : "border-line bg-white hover:border-sage"
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        name="mode"
+                        value={m.id}
+                        checked={mode === m.id}
+                        onChange={() => setMode(m.id)}
+                        className="sr-only"
+                      />
+                      <m.icon className={`size-5 ${mode === m.id ? "text-forest" : "text-ink-soft"}`} aria-hidden />
+                      <span className="font-semibold">{m.label}</span>
+                      <span className="text-xs text-ink-soft">{m.hint}</span>
+                    </label>
+                  ))}
+                </div>
+              </fieldset>
+            )}
             <h2 className="text-3xl">Vos coordonnées</h2>
             <div className="grid gap-5 sm:grid-cols-2">
-              <div className="sm:col-span-2">
-                <label htmlFor="b-name" className="label">
-                  Nom et prénom <span className="text-forest">*</span>
+              <div>
+                <label htmlFor="b-first" className="label">
+                  Prénom <span className="text-forest">*</span>
                 </label>
-                <input id="b-name" name="name" required minLength={2} maxLength={120} autoComplete="name" className="field" />
+                <input id="b-first" name="firstName" required maxLength={80} autoComplete="given-name" className="field" />
+              </div>
+              <div>
+                <label htmlFor="b-last" className="label">
+                  Nom <span className="text-forest">*</span>
+                </label>
+                <input id="b-last" name="lastName" required maxLength={80} autoComplete="family-name" className="field" />
               </div>
               <div>
                 <label htmlFor="b-email" className="label">
@@ -300,7 +407,11 @@ export function BookingWizard({ initialServiceId }: { initialServiceId?: string 
                 name="message"
                 rows={4}
                 maxLength={2000}
-                placeholder="Vos attentes, une grossesse en cours, un point de santé à signaler…"
+                placeholder={
+                  mode === "cabinet"
+                    ? "Vos attentes, une grossesse en cours, un point de santé à signaler…"
+                    : "Vos questions, les thèmes que vous souhaitez aborder…"
+                }
                 className="field resize-y"
               />
             </div>
@@ -322,6 +433,29 @@ export function BookingWizard({ initialServiceId }: { initialServiceId?: string 
                 .
               </span>
             </label>
+            {deposit && (
+              <div id="acompte" className="space-y-3 rounded-2xl border border-gold/50 bg-amber-soft/50 p-5 text-sm" role="alert">
+                <p className="flex items-center gap-2 font-serif text-xl">
+                  <CreditCard className="size-5 text-gold" aria-hidden />
+                  Un acompte de {deposit.amount} € est demandé
+                </p>
+                <p className="text-ink-soft">
+                  Plusieurs rendez-vous précédents ayant été annulés ou manqués, un acompte de {deposit.amount} € est
+                  demandé pour réserver ce créneau. Il est <strong>déduit du prix de la séance</strong>, et{" "}
+                  <strong>n&apos;est pas remboursé en cas d&apos;annulation de votre part</strong> (il l&apos;est si
+                  Béatrice annule ou ne peut pas vous recevoir).
+                </p>
+                <p className="text-ink-soft">
+                  {deposit.online
+                    ? "Le paiement se fait par carte bancaire sur une page sécurisée (Stripe). Le créneau vous est réservé 30 minutes, le temps du paiement."
+                    : "Béatrice vous indiquera comment régler l'acompte : le rendez-vous est validé à sa réception."}
+                </p>
+                <label className="flex items-start gap-3 font-semibold">
+                  <input type="checkbox" name="acceptDeposit" required className="mt-1 size-4 accent-forest" />
+                  J&apos;accepte de verser un acompte de {deposit.amount} €, non remboursable si j&apos;annule.
+                </label>
+              </div>
+            )}
             {error && (
               <p role="alert" className="alert-error">
                 {error}
@@ -333,12 +467,18 @@ export function BookingWizard({ initialServiceId }: { initialServiceId?: string 
                 Modifier le créneau
               </button>
               <button type="submit" className="btn btn-primary" disabled={submitting}>
-                {submitting ? <Loader2 className="size-4 animate-spin" aria-hidden /> : <CalendarCheck className="size-4" aria-hidden />}
-                Envoyer ma demande
+                {submitting ? (
+                  <Loader2 className="size-4 animate-spin" aria-hidden />
+                ) : deposit?.online ? (
+                  <CreditCard className="size-4" aria-hidden />
+                ) : (
+                  <CalendarCheck className="size-4" aria-hidden />
+                )}
+                {deposit?.online ? `Payer l'acompte (${deposit.amount} €)` : deposit ? "Réserver avec acompte" : "Envoyer ma demande"}
               </button>
             </div>
           </div>
-          <Recap service={service} date={date} time={time} />
+          <Recap service={service} date={date} time={time} mode={canBeRemote(service) ? mode : "cabinet"} />
         </form>
       )}
 
@@ -362,7 +502,15 @@ export function BookingWizard({ initialServiceId }: { initialServiceId?: string 
             <p className="font-serif text-xl">{service.name}</p>
             <p className="mt-1 first-letter:uppercase">{formatDateStr(date, { year: "numeric" })}</p>
             <p>à {time.replace(":", "h")}</p>
+            <p className="mt-1 text-ink-soft">{MODES.find((m) => m.id === (canBeRemote(service) ? mode : "cabinet"))?.label}</p>
           </div>
+          {result && result.deposit > 0 && (
+            <p className="mx-auto mt-4 max-w-md rounded-2xl bg-amber-soft/60 p-4 text-sm">
+              Acompte de {result.deposit} € : Béatrice vous indique comment le régler. Le rendez-vous est validé à sa
+              réception.
+            </p>
+          )}
+          {result?.admissionUrl && <AdmissionCta url={result.admissionUrl} />}
           <p className="mt-6 text-xs text-ink-soft">
             Pensez à vérifier vos courriers indésirables. Un empêchement ? Le lien d&apos;annulation figure dans
             l&apos;email.
@@ -586,7 +734,25 @@ function TimePicker({
   );
 }
 
-function Recap({ service, date, time }: { service: Service; date: string; time: string }) {
+export function AdmissionCta({ url }: { url: string }) {
+  return (
+    <div className="mx-auto mt-6 max-w-md rounded-2xl border border-forest/30 bg-forest-soft/60 p-5 text-left">
+      <p className="flex items-center gap-2 font-serif text-xl">
+        <ClipboardList className="size-5 text-forest" aria-hidden />
+        Dernière étape : votre fiche d&apos;admission
+      </p>
+      <p className="mt-2 text-sm text-ink-soft">
+        Quelques questions sur vous et votre santé, pour que la séance soit adaptée et sans risque. 5 minutes, strictement
+        confidentiel. Le lien vous est aussi envoyé par email.
+      </p>
+      <a href={url} className="btn btn-primary mt-4 w-full justify-center">
+        Remplir ma fiche maintenant
+      </a>
+    </div>
+  );
+}
+
+function Recap({ service, date, time, mode }: { service: Service; date: string; time: string; mode: Mode }) {
   return (
     <aside className="h-fit rounded-[1.25rem] bg-sage-soft p-6 text-sm lg:sticky lg:top-28">
       <p className="text-xs uppercase tracking-widest text-ink-soft">Récapitulatif</p>
@@ -597,8 +763,16 @@ function Recap({ service, date, time }: { service: Service; date: string; time: 
       </p>
       <p className="mt-3 font-serif text-2xl text-clay">{service.price}</p>
       <p className="mt-4 border-t border-sage/40 pt-4 text-xs text-ink-soft">
-        Cabinet à {site.city} — l&apos;adresse exacte vous est communiquée à la confirmation. Règlement sur place :{" "}
-        {site.payment.toLowerCase()}.
+        {mode === "cabinet" ? (
+          <>
+            Cabinet à {site.city} — l&apos;adresse exacte vous est communiquée à la confirmation. Règlement sur place :{" "}
+            {site.payment.toLowerCase()}.
+          </>
+        ) : mode === "visio" ? (
+          <>En visio, depuis chez vous : Béatrice vous envoie le lien de connexion avant la séance. Les modalités de règlement vous sont précisées lors de la confirmation.</>
+        ) : (
+          <>Par téléphone : Béatrice vous appelle à l&apos;heure du rendez-vous. Les modalités de règlement vous sont précisées lors de la confirmation.</>
+        )}
       </p>
     </aside>
   );
