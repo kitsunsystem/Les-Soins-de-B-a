@@ -4,23 +4,35 @@ import { temoignages } from "../script";
 import { colors, EASE_IN_OUT, fonts, shadows, titre } from "../theme";
 import { Accent, Body, Card, clamp, FadeUp, FondLin, SectionHeading, Stars, typo } from "../ui";
 
-/** Morceaux de la phrase lue par la voix : chacun s'allume quand il est prononcé. */
-const FRAGMENTS_LUS = ["Un moment suspendu, ", "d'évasion, ", "de liberté."];
+/** Morceaux de chaque message lus par la voix : chacun s'allume quand il est prononcé. */
+const FRAGMENTS_LUS: Record<string, string[]> = {
+  Léa: ["Un moment suspendu, ", "d'évasion, ", "de liberté."],
+  Val: ["vous êtes ", "une vraie fée."],
+  Sarah: ["une pépite ", "avec des mains ", "et un cœur en or"],
+};
+
+type Lecture = {
+  auteur: string;
+  /** Images de scène où la voix commence chaque morceau lu. */
+  fragments: number[];
+  /** Image de scène de « écrit Léa », « ajoute Val », « confie Sarah ». */
+  signature: number;
+};
 
 /**
- * Section « Livre d'or » de l'accueil. Pendant la citation de Léa (repères en images de la scène),
- * sa carte s'avance, les mots lus s'allument un à un, puis son nom sur « écrit Léa ».
+ * Section « Livre d'or » de l'accueil. La voix lit trois messages l'un après l'autre : la carte lue s'avance,
+ * ses mots s'allument au fil de la lecture, puis le nom de son autrice ; les autres cartes restent visibles en retrait.
  */
-export const Temoignages: React.FC<{
-  duration: number;
-  auteur: string;
-  /** Images de scène : « Un moment suspendu », « d'évasion », « de liberté », « écrit Léa ». */
-  lecture: [number, number, number, number];
-}> = ({ auteur, lecture }) => {
+export const Temoignages: React.FC<{ duration: number; lectures: Lecture[] }> = ({ lectures }) => {
   const frame = useCurrentFrame();
-  const [citation, , , signature] = lecture;
-  const focus = interpolate(frame, [citation - 8, citation + 6], [0, 1], { ...clamp, easing: EASE_IN_OUT });
-  const nom = interpolate(frame, [signature - 3, signature + 4, signature + 16], [0, 1, 0.6], clamp);
+  const focus = (auteur: string) => {
+    const i = lectures.findIndex((l) => l.auteur === auteur);
+    if (i < 0) return 0;
+    const debut = lectures[i].fragments[0];
+    const suivant = lectures[i + 1]?.fragments[0] ?? 1e9;
+    return interpolate(frame, [debut - 8, debut + 6, suivant - 8, suivant + 6], [0, 1, 1, 0], { ...clamp, easing: EASE_IN_OUT });
+  };
+  const actif = Math.max(...temoignages.map((t) => focus(t.name)));
 
   return (
     <AbsoluteFill>
@@ -43,15 +55,17 @@ export const Temoignages: React.FC<{
         </FadeUp>
         <div style={{ marginTop: 52, display: "flex", alignItems: "stretch", gap: 34 }}>
           {temoignages.map((t, i) => {
-            const vedette = t.name === auteur;
+            const lecture = lectures.find((l) => l.auteur === t.name);
+            const f = focus(t.name);
+            const recul = actif - f;
+            const nom = lecture ? interpolate(frame, [lecture.signature - 3, lecture.signature + 4, lecture.signature + 16], [0, 1, 0.6], clamp) : 0;
             return (
-              <FadeUp key={t.name} delay={8 + i * 3} style={{ display: "flex" }}>
+              <FadeUp key={t.name} delay={8 + i * 3} style={{ display: "flex", zIndex: f > 0.5 ? 1 : 0 }}>
                 <div
                   style={{
                     display: "flex",
-                    opacity: vedette ? 1 : 1 - 0.45 * focus,
-                    transform: vedette ? `translateY(${-18 * focus}px) scale(${1 + 0.07 * focus})` : `scale(${1 - 0.03 * focus})`,
-                    zIndex: vedette ? 1 : 0,
+                    opacity: 1 - 0.42 * recul,
+                    transform: `translateY(${-18 * f}px) scale(${1 + 0.06 * f - 0.03 * recul})`,
                   }}
                 >
                   <Card
@@ -61,7 +75,7 @@ export const Temoignages: React.FC<{
                       padding: "42px 44px 34px",
                       display: "flex",
                       flexDirection: "column",
-                      boxShadow: vedette && focus > 0.3 ? shadows.soft : undefined,
+                      boxShadow: f > 0.3 ? shadows.soft : undefined,
                     }}
                   >
                     <div style={{ position: "absolute", right: 38, top: 34, color: colors.sageSoft }}>
@@ -82,7 +96,7 @@ export const Temoignages: React.FC<{
                         textWrap: "pretty",
                       }}
                     >
-                      {vedette ? <CitationLue texte={t.text} lecture={lecture} focus={focus} /> : typo(t.text)}
+                      {lecture ? <CitationLue texte={t.text} morceaux={FRAGMENTS_LUS[t.name] ?? []} instants={lecture.fragments} focus={f} /> : typo(t.text)}
                     </div>
                     <div style={{ marginTop: 26, paddingTop: 22, borderTop: `1.5px solid ${colors.line}`, display: "flex", alignItems: "center", gap: 16 }}>
                       <div
@@ -91,18 +105,18 @@ export const Temoignages: React.FC<{
                           width: 54,
                           height: 54,
                           borderRadius: "50%",
-                          background: vedette ? interpolateColors(nom, [0, 1], [colors.claySoft, colors.clay]) : colors.claySoft,
-                          color: vedette ? interpolateColors(nom, [0, 1], [colors.clayDark, "#ffffff"]) : colors.clayDark,
+                          background: interpolateColors(nom, [0, 1], [colors.claySoft, colors.clay]),
+                          color: interpolateColors(nom, [0, 1], [colors.clayDark, "#ffffff"]),
                           fontSize: 28,
                           display: "flex",
                           alignItems: "center",
                           justifyContent: "center",
-                          transform: vedette ? `scale(${1 + 0.15 * nom})` : undefined,
+                          transform: `scale(${1 + 0.15 * nom})`,
                         }}
                       >
                         {t.name.charAt(0)}
                       </div>
-                      <div style={{ fontFamily: fonts.sans, fontSize: 25, fontWeight: 750, color: vedette ? interpolateColors(nom, [0, 1], [colors.ink, colors.clayDark]) : colors.ink }}>
+                      <div style={{ fontFamily: fonts.sans, fontSize: 25, fontWeight: 750, color: interpolateColors(nom, [0, 1], [colors.ink, colors.clayDark]) }}>
                         {t.name}
                       </div>
                     </div>
@@ -117,28 +131,29 @@ export const Temoignages: React.FC<{
   );
 };
 
-/** La citation de Léa : les morceaux lus par la voix passent en terracotta foncé, le reste s'efface un peu. */
-function CitationLue({ texte, lecture, focus }: { texte: string; lecture: [number, number, number, number]; focus: number }) {
+/** Un message du livre d'or : les morceaux lus passent en terracotta foncé, le reste s'efface un peu pendant la lecture. */
+function CitationLue({ texte, morceaux, instants, focus }: { texte: string; morceaux: string[]; instants: number[]; focus: number }) {
   const frame = useCurrentFrame();
   const t = typo(texte);
-  const morceaux = FRAGMENTS_LUS.map(typo);
-  // Le texte complet commence par « « » puis les morceaux lus, puis la suite non lue.
-  const debut = t.indexOf(morceaux[0]);
-  const finLue = t.indexOf(morceaux[2]) + morceaux[2].length;
-  if (debut < 0 || finLue < morceaux[2].length) return <>{t}</>;
-  const reste = t.slice(finLue);
+  const lus = morceaux.map(typo);
+  // Les morceaux lus se suivent dans le message : on les retrouve d'un bloc.
+  const debut = t.indexOf(lus.join(""));
+  if (debut < 0 || lus.length === 0) return <>{t}</>;
+  const fin = debut + lus.join("").length;
+  // Seul le texte non lu s'efface (pas les guillemets qui encadrent un passage lu).
+  const efface = (morceau: string) => ({ opacity: /\p{L}/u.test(morceau) ? 1 - 0.45 * focus : 1 });
   return (
     <>
-      {t.slice(0, debut)}
-      {morceaux.map((m, i) => {
-        const allume = interpolate(frame, [lecture[i] - 3, lecture[i] + 5], [0, 1], clamp);
+      <span style={efface(t.slice(0, debut))}>{t.slice(0, debut)}</span>
+      {lus.map((m, i) => {
+        const allume = interpolate(frame, [instants[i] - 3, instants[i] + 5], [0, 1], clamp);
         return (
           <span key={m} style={{ color: interpolateColors(allume, [0, 1], [colors.ink, colors.clayDark]) }}>
             {m}
           </span>
         );
       })}
-      <span style={{ opacity: 1 - 0.45 * focus }}>{reste}</span>
+      <span style={efface(t.slice(fin))}>{t.slice(fin)}</span>
     </>
   );
 }

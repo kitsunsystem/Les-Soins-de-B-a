@@ -5,9 +5,12 @@ Musique d'ambiance de la vidéo, générée par calcul (libre de droits).
 Nappe douce en fa majeur (Fa maj9 → Ré m9 → Si♭ maj9 → Do add9), basse feutrée, petites notes
 de carillon, bol chantant sur l'apparition du nom et sur le plan final, réverbération par convolution.
 
-Usage : python3 scripts/generate-music.py public/musique.mp3 [durée_en_secondes]
+Les repères (durée, apparition du nom, plan final) sont lus dans src/voix-off.json, comme la vidéo.
+
+Usage : python3 scripts/generate-music.py public/musique.mp3
 Dépendances : numpy, et ffmpeg pour l'encodage MP3.
 """
+import json
 import math
 import os
 import subprocess
@@ -18,10 +21,12 @@ import wave
 import numpy as np
 
 SR = 44100
-# Repères de la vidéo (secondes), alignés sur la voix off (voir src/voix-off.ts : la voix démarre à 0,3 s).
-DUREE = float(sys.argv[2]) if len(sys.argv) > 2 else 80.7  # durée de la vidéo
-MARQUE = 0.3 + 8.15  # « Bienvenue aux Soins de Béa »
-FINAL = 0.3 + 68.47  # plan final : « Les Soins de Béa, à Perpignan »
+# Repères de la vidéo (secondes), alignés sur la voix off (voir src/voix-off.ts : la voix démarre à 0,3 s et le
+# plan final reste 2,2 s après la dernière phrase).
+_voix = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "src", "voix-off.json"), encoding="utf-8"))
+DUREE = 0.3 + _voix["duree"] + 2.2  # durée de la vidéo
+MARQUE = 0.3 + _voix["paragraphes"]["marque"][0]  # « Bienvenue aux Soins de Béa »
+FINAL = 0.3 + _voix["paragraphes"]["final"][0]  # plan final : « Les Soins de Béa, à Perpignan »
 rng = np.random.default_rng(7)
 
 N = int(SR * (DUREE + 0.1))
@@ -54,10 +59,13 @@ ACCORDS = {
 }
 cycle = ["F", "Dm", "Bb", "C"]
 
-# Déroulé : Fa dès l'introduction, 15 accords entre la marque et le plan final, puis cadence sur Fa.
-d = (FINAL - MARQUE) / 15
+# Déroulé : Fa dès l'introduction, un accord toutes les 4,5 s environ entre la marque et le plan final, le dernier
+# sur Si♭ (cadence plagale), puis Fa pour finir.
+n_accords = max(3, round((FINAL - MARQUE) / 4.5))
+n_accords += (3 - n_accords % 4) % 4
+d = (FINAL - MARQUE) / n_accords
 plan = [("F", 0.0, MARQUE + d)]
-for k in range(1, 15):
+for k in range(1, n_accords):
     plan.append((cycle[k % 4], MARQUE + k * d, MARQUE + (k + 1) * d))
 plan.append(("F_fin", FINAL, DUREE + 2))
 

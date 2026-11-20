@@ -2,17 +2,19 @@ import { CalendarHeart, Globe, MapPin, Phone } from "lucide-react";
 import { AbsoluteFill, interpolate, interpolateColors, spring, useCurrentFrame, useVideoConfig } from "remotion";
 import { domaine, site } from "../script";
 import { colors, EASE_IN_OUT, fonts } from "../theme";
-import { Body, Botanical, Button, clamp, Eyebrow, FadeUp, LogoBadge, Title } from "../ui";
+import { Accent, Body, Botanical, Button, clamp, Eyebrow, FadeUp, LogoBadge, Title } from "../ui";
 
 /**
  * Bandeau d'appel à l'action du site, en plan final. Repères (images de la scène) : le nom de la marque
  * apparaît sur « Les Soins de Béa », l'adresse du site se souligne sur « Réservez sur… », puis le bouton
- * téléphone s'allume et chaque paire de chiffres passe en or au moment où elle est dictée.
+ * téléphone s'allume et chaque paire de chiffres passe en or au moment où elle est dictée. Sur « Prenez soin de
+ * vous », le titre laisse place à ces derniers mots.
  */
-export const Final: React.FC<{ duration: number; site: number; telephone: number; paires: number[] }> = ({
+export const Final: React.FC<{ duration: number; site: number; telephone: number; paires: number[]; prenezSoin: number }> = ({
   site: repereSite,
   telephone,
   paires,
+  prenezSoin,
 }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
@@ -22,6 +24,7 @@ export const Final: React.FC<{ duration: number; site: number; telephone: number
   const trait = interpolate(frame, [repereSite - 6, repereSite + 6], [0, 1], { ...clamp, easing: EASE_IN_OUT });
   const surSite = interpolate(frame, [repereSite - 6, repereSite + 6, telephone - 8, telephone + 4], [0, 1, 1, 0.35], clamp);
   const surTel = interpolate(frame, [telephone - 6, telephone + 6], [0, 1], clamp);
+  const adieu = interpolate(frame, [prenezSoin - 6, prenezSoin + 12], [0, 1], { ...clamp, easing: EASE_IN_OUT });
 
   return (
     <AbsoluteFill style={{ background: colors.linen }}>
@@ -59,9 +62,15 @@ export const Final: React.FC<{ duration: number; site: number; telephone: number
             </Eyebrow>
           </FadeUp>
           <FadeUp delay={12}>
-            <Title size={84} color={colors.linen} style={{ marginTop: 34 }}>
-              Offrez-vous un moment rien qu'à vous
-            </Title>
+            {/* Les deux titres occupent la même case : le bloc ne bouge pas quand l'un remplace l'autre. */}
+            <div style={{ display: "grid", marginTop: 34 }}>
+              <Title size={84} color={colors.linen} style={{ gridArea: "1 / 1", opacity: 1 - adieu, transform: `translateY(${-16 * adieu}px)` }}>
+                Offrez-vous un moment rien qu'à vous
+              </Title>
+              <Title size={84} color={colors.linen} style={{ gridArea: "1 / 1", opacity: adieu, transform: `translateY(${16 * (1 - adieu)}px)` }}>
+                Prenez soin <Accent color={colors.gold}>de vous</Accent>.
+              </Title>
+            </div>
           </FadeUp>
           <FadeUp delay={15}>
             <Body size={29} color="rgba(248, 244, 238, 0.82)" style={{ marginTop: 18, maxWidth: 1080 }}>

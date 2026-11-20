@@ -13,13 +13,15 @@ et montée sur la voix off ElevenLabs : chaque scène commence et s'arrête au r
 | « Béatrice vous reçoit pour des soins sur mesure… » | Haut de la page d'accueil (titre, preuves, photo en arche) |
 | « Sensible aux énergies depuis l'adolescence… » | « Qui suis-je ? » |
 | « Quatre univers de soins, une même attention. » | Les 4 cartes colorées |
-| Corps, énergie, futures mamans, guidance | Les 4 univers de la page Soins, avec tous les tarifs |
+| Corps, énergie, futures mamans, guidance | Les 4 univers de la page Soins, avec tous les tarifs ; chaque soin s'allume quand il est nommé |
+| « Magnétiseuse, Béatrice enlève aussi le feu… à distance, sur simple photo. » | Coupe de feu et magnétisme à distance (avec la mention « ne remplacent pas un avis médical ») |
+| « Ces séances ont lieu au cabinet, mais aussi à distance, par téléphone ou en visio… » | Guidance : au cabinet, par téléphone, en visio |
 | « Béatrice transmet aussi son savoir… » | Formations |
-| « Son cabinet est un espace pensé pour votre détente. » | Photos du cabinet |
-| « Celles qui l'ont rencontrée en parlent… » | Livre d'or (la carte de Léa s'avance pendant sa citation) |
+| « Son cabinet est un espace pensé pour votre détente : une table de soin… » | Photos du cabinet, mises en avant une à une avec leur légende |
+| « Celles qui l'ont rencontrée en parlent… » | Livre d'or : les messages de Léa, Val et Sarah s'avancent l'un après l'autre pendant leur lecture |
 | « Réservez en ligne… Béatrice vous confirme… » | Les 3 étapes et la démonstration de réservation |
 | « Envie de faire plaisir ? » | Cartes cadeaux |
-| « Les Soins de Béa, à Perpignan. Réservez sur… » | Bandeau final (site puis téléphone mis en valeur quand ils sont prononcés) |
+| « Les Soins de Béa, à Perpignan. Réservez sur… » | Bandeau final (site puis téléphone mis en valeur quand ils sont prononcés), puis « Prenez soin de vous » |
 
 ## Commandes
 
@@ -36,13 +38,18 @@ npm run render    # fichier final : out/les-soins-de-bea.mp4
   `../src/lib/content.ts` et `../src/lib/site.ts`. Après une modification du site, relancer `npm run render`.
 - **Domaine affiché à la fin** : `url` dans `../src/lib/site.ts`.
 - **Voix off** : texte et réglages dans `voix-off.md`, fichier dans `public/voix-off.mp3`. Après une nouvelle
-  génération, remplacer le fichier et mettre à jour les repères (début et fin de chaque paragraphe) dans
-  `src/voix-off.ts` : les scènes se recalent toutes seules.
+  génération, remplacer le fichier puis lancer le calage automatique, `npm run caler -- <dossier-du-modèle>` (Python
+  avec `sherpa-onnx` et `numpy`, et un modèle de reconnaissance français à télécharger une fois : voir l'en-tête de
+  `scripts/caler-voix.py`). Le script retrouve dans la voix chaque paragraphe et chaque mot repère de
+  `voix-off-reperes.txt` (les `{repères}` placés devant les mots) et écrit `src/voix-off.json` : les scènes se recalent
+  toutes seules. Si le texte change, reporter la modification dans `voix-off-reperes.txt`, puis relancer
+  `npm run music` pour que la musique suive la nouvelle durée.
 - **Textes propres à la vidéo** (accroche, extraits du livre d'or, démonstration de réservation) : `src/script.ts`.
 - **Images** : lues directement dans `../public/images`.
 - **Musique** : `public/musique.mp3`, une nappe d'ambiance générée par `scripts/generate-music.py` (libre de droits),
   baissée automatiquement sous la voix. Pour une autre musique, remplacer ce fichier (même nom) par un MP3 libre de
-  droits. Pour la regénérer : `npm run music` (Python 3 avec numpy, et ffmpeg).
+  droits. Pour la regénérer : `npm run music` (Python 3 avec numpy, et ffmpeg ; durée et repères lus dans
+  `src/voix-off.json`).
 
 ## Licence Remotion
 

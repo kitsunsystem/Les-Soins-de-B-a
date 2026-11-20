@@ -8,6 +8,7 @@
     "render": "remotion render Presentation out/les-soins-de-bea.mp4",
     "still": "remotion still Presentation out/vignette.png --frame=300",
     "music": "python3 scripts/generate-music.py public/musique.mp3",
+    "caler": "python3 scripts/caler-voix.py",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

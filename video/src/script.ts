@@ -47,8 +47,9 @@ export const etapes = [
  * Le rendu s'arrête si un extrait ne correspond plus au texte du site.
  */
 const extraits: Record<string, string> = {
-  Val: "Merci d'être là. Merci pour le bien-être que vous m'avez procuré, vous êtes une vraie fée.",
+  // Dans l'ordre où la voix off les lit.
   Léa: "Un moment suspendu, d'évasion, de liberté. Des sensations, chaque fois plus uniques, singulières et intenses.",
+  Val: "Merci d'être là. Merci pour le bien-être que vous m'avez procuré, vous êtes une vraie fée.",
   Sarah: "Un grand merci pour ce moment de bien-être et d'échange. Tu es une pépite avec des mains et un cœur en or",
 };
 

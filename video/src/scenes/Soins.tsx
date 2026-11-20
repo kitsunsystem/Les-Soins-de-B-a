@@ -1,12 +1,15 @@
-import { Clock } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
+import { Clock, Flame, House, ImageIcon, Phone, Video } from "lucide-react";
+import type { ReactNode } from "react";
 import { AbsoluteFill, interpolate, interpolateColors, useCurrentFrame } from "remotion";
 import type { CategoryId, Service } from "../../../src/lib/content";
 import { categories, categoryIcons, services } from "../script";
 import { colors, EASE_IN_OUT, EASE_OUT, fonts, titre, tones } from "../theme";
-import { Body, Botanical, Card, CategoryBadge, clamp, halo, typo } from "../ui";
+import { Body, Botanical, Card, CategoryBadge, clamp, Eyebrow, halo, typo } from "../ui";
 
 const ORDRE: CategoryId[] = ["corps", "energetique", "femmes-bebes", "guidance"];
 const LARGEUR_GAUCHE = 640;
+type Ton = (typeof tones)[CategoryId];
 
 /**
  * Textes adaptés pour la vidéo : la voix off parle de Béatrice à la troisième personne,
@@ -29,16 +32,46 @@ const descriptionsCourtes: Partial<Record<string, string>> = {
   mediumnite: "Guidance, accompagnement autour d'un deuil, questionnement spirituel.",
 };
 
+/** Mots des descriptions surlignés quand la voix les prononce (nom du repère). */
+const surlignages: Partial<Record<string, { fragment: string; repere: string }[]>> = {
+  "magnetisme-distance": [{ fragment: "à partir d'une photo récente", repere: "photo" }],
+  "oracle-tarot": [
+    { fragment: "Amour", repere: "amour" },
+    { fragment: "travail", repere: "travail" },
+    { fragment: "choix de vie", repere: "choix-de-vie" },
+  ],
+  mediumnite: [{ fragment: "accompagnement autour d'un deuil", repere: "deuil" }],
+};
+
+/** Repères qui mettent fin à la lecture des soins d'un univers (la voix passe à autre chose). */
+const finsDeLecture: Partial<Record<CategoryId, string>> = { energetique: "magnetiseuse", guidance: "seances" };
+
 /** Repère de voix d'un soin : pour Corps & Détente, la voix dit « réflexologie et massages » (deux groupes). */
 function repereDuSoin(s: Service, reperes: Record<string, number>) {
   if (s.category === "corps") return s.id.startsWith("reflexologie") ? reperes.reflexologie : reperes.massages;
   return reperes[s.id];
 }
 
+/** Hex → rgba, pour les surlignages teintés. */
+function rgba(hex: string, a: number) {
+  const n = parseInt(hex.slice(1), 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${a})`;
+}
+
+/** 0 avant le repère, 1 quand la voix le dit, `reste` une fois passé le repère suivant. */
+function allumage(local: number, repere: number | undefined, suivant?: number, reste = 0.45) {
+  if (repere === undefined) return 0;
+  return interpolate(local, [repere - 3, repere + 5, (suivant ?? 1e9) - 2, (suivant ?? 1e9) + 8], [0, 1, 1, reste], {
+    ...clamp,
+    easing: EASE_IN_OUT,
+  });
+}
+
 /**
  * Les quatre univers de la page Soins, enchaînés sans coupure : la barre des univers reste en place,
  * le panneau change au moment où la voix passe à l'univers suivant (`changements`), et chaque soin
- * s'allume quand la voix le nomme (`reperes`, images de la scène).
+ * s'allume quand la voix le nomme (`reperes`, images de la scène). L'énergétique et la guidance ont un
+ * second temps : les savoir-faire de magnétiseuse, puis les séances au cabinet ou à distance.
  */
 export const Soins: React.FC<{ duration: number; changements: [number, number, number]; reperes: Record<string, number> }> = ({
   duration,
@@ -151,7 +184,46 @@ function Panneau({ id, local, reperes }: { id: CategoryId; local: number; repere
   const a = (d: number, dur = 16) => interpolate(local - d, [0, dur], [0, 1], { ...clamp, easing: EASE_OUT });
 
   // Ordre de lecture des soins (ou des groupes) pour savoir quand une ligne cesse d'être celle qu'on lit.
-  const reperesListe = [...new Set(liste.map((s) => repereDuSoin(s, reperes)).filter((r): r is number => r !== undefined))].sort((x, y) => x - y);
+  const finLecture = finsDeLecture[id] ? reperes[finsDeLecture[id]] : undefined;
+  const reperesListe = [
+    ...new Set([...liste.map((s) => repereDuSoin(s, reperes)), finLecture].filter((r): r is number => r !== undefined)),
+  ].sort((x, y) => x - y);
+
+  // Second temps du panneau (savoir-faire de magnétiseuse, séances à distance) : il remplace l'intro.
+  const second =
+    id === "energetique" ? (
+      <BlocMagnetiseuse local={local} reperes={reperes} ton={t} />
+    ) : id === "guidance" ? (
+      <BlocSeances local={local} reperes={reperes} ton={t} />
+    ) : null;
+  const bascule = finLecture === undefined ? 0 : interpolate(local, [finLecture - 4, finLecture + 10], [0, 1], { ...clamp, easing: EASE_IN_OUT });
+
+  const intro = (
+    <div style={{ opacity: 1 - bascule, transform: `translateY(${-18 * bascule}px)` }}>
+      <div style={{ opacity: a(7), transform: `translateY(${(1 - a(7)) * 24}px)` }}>
+        <Body size={27} style={{ marginTop: 24 }}>
+          {introsVideo[id] ?? c.intro}
+        </Body>
+      </div>
+      <div
+        style={{
+          marginTop: 30,
+          padding: "20px 28px",
+          borderRadius: 26,
+          background: colors.card,
+          border: `1.5px solid ${t.soft}`,
+          fontFamily: fonts.sans,
+          fontSize: 23,
+          lineHeight: 1.5,
+          color: colors.inkSoft,
+          opacity: a(10),
+          transform: `translateY(${(1 - a(10)) * 24}px)`,
+        }}
+      >
+        <span style={{ fontWeight: 750, color: t.text }}>Idéal pour :</span> {typo(c.idealFor)}.
+      </div>
+    </div>
+  );
 
   return (
     <AbsoluteFill style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 90, paddingTop: 110 }}>
@@ -166,27 +238,12 @@ function Panneau({ id, local, reperes }: { id: CategoryId; local: number; repere
             </div>
           ))}
         </div>
-        <div style={{ opacity: a(7), transform: `translateY(${(1 - a(7)) * 24}px)` }}>
-          <Body size={27} style={{ marginTop: 24 }}>
-            {introsVideo[id] ?? c.intro}
-          </Body>
-        </div>
-        <div
-          style={{
-            marginTop: 30,
-            padding: "20px 28px",
-            borderRadius: 26,
-            background: colors.card,
-            border: `1.5px solid ${t.soft}`,
-            fontFamily: fonts.sans,
-            fontSize: 23,
-            lineHeight: 1.5,
-            color: colors.inkSoft,
-            opacity: a(10),
-            transform: `translateY(${(1 - a(10)) * 24}px)`,
-          }}
-        >
-          <span style={{ fontWeight: 750, color: t.text }}>Idéal pour :</span> {typo(c.idealFor)}.
+        {/* Les deux temps occupent la même case : la colonne garde sa hauteur quand l'un remplace l'autre. */}
+        <div style={{ display: "grid" }}>
+          <div style={{ gridArea: "1 / 1" }}>{intro}</div>
+          {second && (
+            <div style={{ gridArea: "1 / 1", opacity: bascule, transform: `translateY(${18 * (1 - bascule)}px)`, paddingTop: 30 }}>{second}</div>
+          )}
         </div>
       </div>
 
@@ -195,13 +252,9 @@ function Panneau({ id, local, reperes }: { id: CategoryId; local: number; repere
           {liste.map((s, i) => {
             const repere = repereDuSoin(s, reperes);
             const suivant = repere === undefined ? undefined : reperesListe.find((r) => r > repere);
-            const allume =
-              repere === undefined
-                ? 0
-                : interpolate(local, [repere - 3, repere + 5, (suivant ?? 1e9) - 2, (suivant ?? 1e9) + 8], [0, 1, 1, 0.4], {
-                    ...clamp,
-                    easing: EASE_IN_OUT,
-                  });
+            // Massages nommés un par un (« relaxant, californien ou ayurvédique ») : petite impulsion.
+            const propre = s.category === "corps" ? reperes[s.id] : undefined;
+            const accent = propre === undefined ? 0 : interpolate(local, [propre - 3, propre + 4, propre + 16, propre + 26], [0, 1, 1, 0], clamp);
             return (
               <Ligne
                 key={s.id}
@@ -209,8 +262,11 @@ function Panneau({ id, local, reperes }: { id: CategoryId; local: number; repere
                 details={details}
                 derniere={i === liste.length - 1}
                 apparition={a(6 + i * (details ? 4 : 2), 14)}
-                allume={allume}
+                allume={allumage(local, repere, suivant, 0.4)}
+                accent={accent}
                 ton={t}
+                local={local}
+                reperes={reperes}
               />
             );
           })}
@@ -226,7 +282,10 @@ function Ligne({
   derniere,
   apparition,
   allume,
+  accent,
   ton,
+  local,
+  reperes,
 }: {
   service: Service;
   details: boolean;
@@ -234,7 +293,11 @@ function Ligne({
   apparition: number;
   /** 0 : pas encore nommé ; 1 : la voix le nomme ; 0,4 : déjà nommé. */
   allume: number;
-  ton: (typeof tones)[CategoryId];
+  /** Impulsion quand la voix nomme ce soin précis dans un groupe. */
+  accent: number;
+  ton: Ton;
+  local: number;
+  reperes: Record<string, number>;
 }) {
   const duree = (
     <div style={{ display: "flex", alignItems: "center", gap: 8, whiteSpace: "nowrap", fontFamily: fonts.sans, fontSize: 21, color: colors.inkSoft }}>
@@ -263,8 +326,13 @@ function Ligne({
         <div style={{ ...surlignage, display: "flex", alignItems: "center", gap: 30 }}>
           <div style={{ flex: 1 }}>
             <div style={{ ...titre, fontSize: 36, color: colors.ink, textWrap: "balance" }}>{service.name}</div>
-            <div style={{ marginTop: 8, fontFamily: fonts.sans, fontSize: 21, lineHeight: 1.5, color: colors.inkSoft, textWrap: "pretty" }}>
-              {typo(descriptionsCourtes[service.id] ?? service.description)}
+            <div style={{ marginTop: 8, fontFamily: fonts.sans, fontSize: 22, lineHeight: 1.5, color: colors.inkSoft, textWrap: "pretty" }}>
+              <TexteSurligne
+                texte={descriptionsCourtes[service.id] ?? service.description}
+                marques={(surlignages[service.id] ?? []).map((m) => ({ fragment: m.fragment, repere: reperes[m.repere] }))}
+                local={local}
+                ton={ton}
+              />
             </div>
           </div>
           <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 8 }}>
@@ -279,10 +347,170 @@ function Ligne({
   // Beaucoup de soins : lignes « soin ····· durée prix » de l'accueil.
   return (
     <div style={{ ...surlignage, display: "flex", alignItems: "baseline", gap: 20 }}>
-      <div style={{ fontFamily: fonts.sans, fontSize: 25, fontWeight: 650, color: colors.ink }}>{service.name}</div>
+      <div
+        style={{
+          fontFamily: fonts.sans,
+          fontSize: 25,
+          fontWeight: 650,
+          color: interpolateColors(accent, [0, 1], [colors.ink, ton.solid]),
+          transform: `translateX(${8 * accent}px)`,
+        }}
+      >
+        {service.name}
+      </div>
       <span style={{ flex: 1, borderBottom: "2px dotted rgba(86, 101, 93, 0.3)", marginBottom: 7 }} />
       {duree}
       <div style={{ minWidth: 120 }}>{prix}</div>
+    </div>
+  );
+}
+
+/** Texte dont certains passages se surlignent (feutre teinté qui glisse) quand la voix les prononce. */
+function TexteSurligne({ texte, marques, local, ton }: { texte: string; marques: { fragment: string; repere?: number }[]; local: number; ton: Ton }) {
+  const t = typo(texte);
+  const morceaux: ReactNode[] = [];
+  let curseur = 0;
+  const places = marques
+    .map((m) => ({ ...m, fragment: typo(m.fragment), index: t.indexOf(typo(m.fragment)) }))
+    .filter((m) => m.index >= 0)
+    .sort((x, y) => x.index - y.index);
+  for (const m of places) {
+    if (m.index < curseur) continue;
+    morceaux.push(t.slice(curseur, m.index));
+    const p = m.repere === undefined ? 0 : interpolate(local, [m.repere - 2, m.repere + 9], [0, 1], { ...clamp, easing: EASE_OUT });
+    morceaux.push(
+      <span
+        key={m.index}
+        style={{
+          color: interpolateColors(p, [0, 1], [colors.inkSoft, ton.text]),
+          backgroundImage: `linear-gradient(${rgba(ton.solid, 0.2)}, ${rgba(ton.solid, 0.2)})`,
+          backgroundRepeat: "no-repeat",
+          backgroundSize: `${p * 100}% 100%`,
+          borderRadius: 6,
+          padding: "1px 3px",
+          margin: "0 -3px",
+          boxDecorationBreak: "clone",
+          WebkitBoxDecorationBreak: "clone",
+        }}
+      >
+        {m.fragment}
+      </span>,
+    );
+    curseur = m.index + m.fragment.length;
+  }
+  morceaux.push(t.slice(curseur));
+  return <>{morceaux}</>;
+}
+
+/** Un savoir-faire ou un mode de séance : pastille, titre, précision ; s'allume quand la voix le nomme. */
+function Atout({ icon: Icon, titre: nom, texte, on, apparition, ton }: { icon: LucideIcon; titre: string; texte: string; on: number; apparition: number; ton: Ton }) {
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        gap: 20,
+        padding: "14px 22px 14px 14px",
+        borderRadius: 26,
+        background: interpolateColors(on, [0, 1], [colors.card, ton.soft]),
+        border: `1.5px solid ${interpolateColors(on, [0, 1], ["rgba(230, 221, 208, 0.85)", rgba(ton.solid, 0.35)])}`,
+        boxShadow: on > 0.5 ? `0 18px 40px -26px ${rgba(ton.solid, 0.7)}` : "none",
+        opacity: apparition,
+        transform: `translateX(${(1 - apparition) * 30}px) scale(${1 + 0.02 * on})`,
+        transformOrigin: "left center",
+      }}
+    >
+      <div
+        style={{
+          width: 64,
+          height: 64,
+          borderRadius: "50%",
+          flexShrink: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          background: interpolateColors(on, [0.55, 1], [ton.soft, ton.solid]),
+          color: interpolateColors(on, [0.55, 1], [ton.text, "#ffffff"]),
+        }}
+      >
+        <Icon size={29} strokeWidth={1.6} />
+      </div>
+      <div>
+        <div style={{ ...titre, fontSize: 31, color: colors.ink }}>{typo(nom)}</div>
+        <div style={{ marginTop: 3, fontFamily: fonts.sans, fontSize: 21, lineHeight: 1.4, color: colors.inkSoft }}>{typo(texte)}</div>
+      </div>
+    </div>
+  );
+}
+
+/** « Magnétiseuse, Béatrice enlève aussi le feu, et pratique le magnétisme à distance, sur simple photo. » */
+function BlocMagnetiseuse({ local, reperes, ton }: { local: number; reperes: Record<string, number>; ton: Ton }) {
+  const feu = reperes.feu;
+  const distance = reperes["magnetisme-distance"];
+  const entree = (r: number) => interpolate(local, [r - 10, r + 6], [0, 1], { ...clamp, easing: EASE_OUT });
+  return (
+    <div>
+      <Eyebrow size={20} color={ton.text}>
+        Magnétiseuse
+      </Eyebrow>
+      <div style={{ marginTop: 20, display: "flex", flexDirection: "column", gap: 14 }}>
+        <Atout
+          icon={Flame}
+          titre="Coupe de feu"
+          texte="Elle enlève le feu : un savoir traditionnel"
+          on={allumage(local, feu, distance, 0.5)}
+          apparition={entree(feu)}
+          ton={ton}
+        />
+        <Atout
+          icon={ImageIcon}
+          titre="Magnétisme à distance"
+          texte="Sur simple photo, sans vous déplacer"
+          on={allumage(local, distance)}
+          apparition={entree(distance)}
+          ton={ton}
+        />
+      </div>
+      <div style={{ marginTop: 16, fontFamily: fonts.sans, fontSize: 18, lineHeight: 1.45, color: colors.inkSoft, opacity: 0.85 * entree(distance + 12) }}>
+        {typo("Pratiques traditionnelles de bien-être, qui ne remplacent pas un avis médical.")}
+      </div>
+    </div>
+  );
+}
+
+/** « Ces séances ont lieu au cabinet, mais aussi à distance, par téléphone ou en visio, où que vous soyez. » */
+function BlocSeances({ local, reperes, ton }: { local: number; reperes: Record<string, number>; ton: Ton }) {
+  const modes = [
+    { icon: House, titre: "Au cabinet", texte: "À Perpignan, sur rendez-vous", repere: reperes.seanceCabinet },
+    { icon: Phone, titre: "Par téléphone", texte: "Sans vous déplacer", repere: reperes.seanceTelephone },
+    { icon: Video, titre: "En visio", texte: "Où que vous soyez", repere: reperes.seanceVisio },
+  ];
+  // « Où que vous soyez » : les trois modes restent allumés ensemble pour finir.
+  const ensemble = reperes.seancePartout;
+  const entree = (r: number) => interpolate(local, [r - 10, r + 6], [0, 1], { ...clamp, easing: EASE_OUT });
+  return (
+    <div>
+      <Eyebrow size={20} color={ton.text}>
+        Tirages & médiumnité
+      </Eyebrow>
+      <div style={{ marginTop: 20, display: "flex", flexDirection: "column", gap: 12 }}>
+        {modes.map((m, i) => {
+          const suivant = modes[i + 1]?.repere ?? ensemble;
+          const lu = allumage(local, m.repere, suivant, 0.5);
+          const final = interpolate(local, [ensemble - 2, ensemble + 8], [0, 1], { ...clamp, easing: EASE_IN_OUT });
+          return (
+            <Atout
+              key={m.titre}
+              icon={m.icon}
+              titre={m.titre}
+              texte={m.texte}
+              on={Math.max(lu, 0.85 * final)}
+              apparition={i === 0 ? entree(reperes.seances) : entree(reperes.seanceDistance + 4 * (i - 1))}
+              ton={ton}
+            />
+          );
+        })}
+      </div>
     </div>
   );
 }

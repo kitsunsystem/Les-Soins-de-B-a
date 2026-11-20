@@ -14,10 +14,12 @@ import { Temoignages } from "./scenes/Temoignages";
 import { Univers } from "./scenes/Univers";
 import { colors, FPS } from "./theme";
 import { clamp, Fondu } from "./ui";
-import { coupeApres, coupeAvant, DEBUT_VOIX, DUREE_VIDEO, DUREE_VOIX, FICHIER_VOIX, paragraphes, reperes, reperesSoins, t } from "./voix-off";
+import { coupeApres, coupeAvant, DEBUT_VOIX, DUREE_VIDEO, DUREE_VOIX, FICHIER_VOIX, paragraphes, reperes, t, type NomRepere } from "./voix-off";
 
 /** Secondes → images. */
 const f = (secondes: number) => Math.round(secondes * FPS);
+/** Repère de la voix → image de la scène qui commence à l'image `debut`. */
+const r = (nom: NomRepere, debut = 0) => f(t(reperes[nom])) - debut;
 
 type Scene = {
   id: string;
@@ -37,11 +39,11 @@ const scenes: Scene[] = [
     rendu: (d) => (
       <Ouverture
         duration={d}
-        stress={f(t(reperes.stress))}
-        tensions={f(t(reperes.tensions))}
-        fatigue={f(t(reperes.fatigue))}
-        question={f(t(reperes.question))}
-        moment={f(t(reperes.moment))}
+        stress={r("stress")}
+        tensions={r("tensions")}
+        fatigue={r("fatigue")}
+        question={r("question")}
+        moment={r("moment")}
         marque={f(t(paragraphes.marque[0]))}
       />
     ),
@@ -57,7 +59,7 @@ const scenes: Scene[] = [
       <Soins
         duration={d}
         changements={[f(coupeAvant("energetique")) - debut, f(coupeAvant("femmes-bebes")) - debut, f(coupeAvant("guidance")) - debut]}
-        reperes={Object.fromEntries(Object.entries(reperesSoins).map(([id, s]) => [id, f(t(s)) - debut]))}
+        reperes={Object.fromEntries(Object.entries(reperes).map(([nom, s]) => [nom, f(t(s)) - debut]))}
       />
     ),
   },
@@ -66,10 +68,15 @@ const scenes: Scene[] = [
     de: coupeAvant("formations"),
     a: coupeApres("formations"),
     rendu: (d, debut) => (
-      <Formations duration={d} reperes={[f(t(reperes.formationMagnetisme)) - debut, f(t(reperes.flammeViolette)) - debut]} />
+      <Formations duration={d} reperes={[r("formationMagnetisme", debut), r("flammeViolette", debut)]} />
     ),
   },
-  { id: "cabinet", de: coupeAvant("cabinet"), a: coupeApres("cabinet"), rendu: (d) => <Cabinet duration={d} /> },
+  {
+    id: "cabinet",
+    de: coupeAvant("cabinet"),
+    a: coupeApres("cabinet"),
+    rendu: (d, debut) => <Cabinet duration={d} photos={[r("table", debut), r("coin", debut), r("lumiere", debut)]} />,
+  },
   {
     id: "temoignages",
     de: coupeAvant("temoignages"),
@@ -77,12 +84,14 @@ const scenes: Scene[] = [
     rendu: (d, debut) => (
       <Temoignages
         duration={d}
-        auteur="Léa"
-        lecture={[
-          f(t(reperes.citationLea)) - debut,
-          f(t(reperes.evasion)) - debut,
-          f(t(reperes.liberte)) - debut,
-          f(t(reperes.ecritLea)) - debut,
+        lectures={[
+          { auteur: "Léa", fragments: [r("citationLea", debut), r("evasion", debut), r("liberte", debut)], signature: r("ecritLea", debut) },
+          { auteur: "Val", fragments: [r("citationVal", debut), r("feeVal", debut)], signature: r("ajouteVal", debut) },
+          {
+            auteur: "Sarah",
+            fragments: [r("citationSarah", debut), r("mainsSarah", debut), r("coeurSarah", debut)],
+            signature: r("confieSarah", debut),
+          },
         ]}
       />
     ),
@@ -91,7 +100,7 @@ const scenes: Scene[] = [
     id: "reservation",
     de: coupeAvant("reservation"),
     a: coupeApres("reservation"),
-    rendu: (d, debut) => <Reservation duration={d} confirmation={f(t(reperes.confirmation)) - debut} />,
+    rendu: (d, debut) => <Reservation duration={d} confirmation={r("confirmation", debut)} />,
   },
   { id: "cadeau", de: coupeAvant("cadeau"), a: coupeApres("cadeau"), rendu: (d) => <Cadeau duration={d} /> },
   {
@@ -101,9 +110,10 @@ const scenes: Scene[] = [
     rendu: (d, debut) => (
       <Final
         duration={d}
-        site={f(t(reperes.site)) - debut}
-        telephone={f(t(reperes.telephone)) - debut}
-        paires={reperes.paires.map((s) => f(t(s)) - debut)}
+        site={r("site", debut)}
+        telephone={r("telephone", debut)}
+        paires={(["p0", "p1", "p2", "p3", "p4"] as const).map((p) => r(p, debut))}
+        prenezSoin={r("prenezSoin", debut)}
       />
     ),
   },
