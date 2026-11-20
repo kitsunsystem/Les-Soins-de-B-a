@@ -28,7 +28,23 @@ cd video
 npm install
 npm run studio    # aperçu interactif dans le navigateur
 npm run render    # fichier final : out/les-soins-de-bea.mp4
+npm run site      # version web pour le site (public/videos) : vidéo compressée, vignette, sous-titres
 ```
+
+Sur une machine sans Chrome, indiquer un Chromium « headless shell » : `npx remotion render Presentation
+out/les-soins-de-bea.mp4 --browser-executable=/chemin/vers/chrome-headless-shell`.
+
+## Sur le site
+
+La page d'accueil affiche la vidéo (section « En vidéo »), avec une vignette légère : la vidéo ne se charge
+qu'au clic. Fichiers dans `../public/videos/` :
+
+- `les-soins-de-bea.mp4` — version web (H.264, démarrage rapide), **moins de 25 Mo** (limite de Cloudflare) ;
+- `les-soins-de-bea-vignette.jpg` — vignette ;
+- `les-soins-de-bea.fr.vtt` — sous-titres, générés depuis `voix-off.md` et les repères de `src/voix-off.ts`
+  (`npm run captions`).
+
+Titre, durée et description affichés sur le site : `presentationVideo` dans `../src/lib/site.ts`.
 
 ## Modifier la vidéo
 

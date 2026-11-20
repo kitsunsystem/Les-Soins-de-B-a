@@ -3,14 +3,27 @@ import Link from "next/link";
 import { ArrowRight, CalendarCheck, CalendarHeart, CreditCard, HandHeart, MailCheck, MapPin, Plus, ShieldCheck, Sparkles } from "lucide-react";
 import { Botanical } from "@/components/brand";
 import { NextSlot } from "@/components/NextSlot";
+import { PresentationVideo } from "@/components/PresentationVideo";
 import { Reveal } from "@/components/Reveal";
 import { CategoryBadge, ServiceLine, tones } from "@/components/services";
 import { Testimonials } from "@/components/Testimonials";
 import { CtaBand, SectionHeading, Stars } from "@/components/ui";
 import { categories, faq, getService, parcours, popularServiceIds, servicesByCategory, testimonials } from "@/lib/content";
-import { site } from "@/lib/site";
+import { presentationVideo as video, site } from "@/lib/site";
 
 const popular = popularServiceIds.map((id) => getService(id)!).filter(Boolean);
+
+const videoJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "VideoObject",
+  name: video.title,
+  description: video.description,
+  thumbnailUrl: `${site.url}${video.poster}`,
+  contentUrl: `${site.url}${video.src}`,
+  uploadDate: video.uploadDate,
+  duration: video.isoDuration,
+  inLanguage: "fr",
+};
 
 const steps = [
   {
@@ -132,6 +145,41 @@ export default function HomePage() {
               ))}
             </ul>
           </div>
+        </div>
+      </section>
+
+      {/* ——— Vidéo de présentation ——— */}
+      <section className="pt-20 md:pt-28" aria-labelledby="titre-video">
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(videoJsonLd) }} />
+        <div className="container-page grid items-center gap-10 lg:grid-cols-[0.75fr_1.25fr] lg:gap-14">
+          <Reveal>
+            <p className="eyebrow">En vidéo</p>
+            <h2 id="titre-video" className="mt-3 text-[2.4rem] md:text-[3rem]">
+              Faites connaissance <span className="accent">en une minute</span>
+            </h2>
+            <p className="mt-5 text-lg text-ink-soft">
+              L&apos;approche de Béatrice, ses quatre univers de soins, son cabinet et la réservation en ligne : tout
+              ce qu&apos;il faut savoir avant votre première séance.
+            </p>
+            <ul className="mt-6 flex flex-wrap gap-2 text-sm font-semibold text-ink-soft">
+              <li className="rounded-full border border-line bg-card px-3.5 py-1.5">{video.duration}</li>
+              <li className="rounded-full border border-line bg-card px-3.5 py-1.5">Sous-titrée</li>
+              <li className="rounded-full border border-line bg-card px-3.5 py-1.5">Voix off & musique douce</li>
+            </ul>
+            <Link href="/rendez-vous" className="btn btn-primary mt-8">
+              <CalendarHeart className="size-4" aria-hidden />
+              Prendre rendez-vous
+            </Link>
+          </Reveal>
+          <Reveal delay={100}>
+            <PresentationVideo
+              src={video.src}
+              poster={video.poster}
+              captions={video.captions}
+              title={video.title}
+              duration={video.duration}
+            />
+          </Reveal>
         </div>
       </section>
 

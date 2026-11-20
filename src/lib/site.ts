@@ -20,6 +20,19 @@ export const site = {
   payment: "Espèces ou carte bancaire",
 } as const;
 
+/** Vidéo de présentation (rendue depuis le projet video/, fichiers dans public/videos). */
+export const presentationVideo = {
+  title: "Les Soins de Béa en 1 minute",
+  description:
+    "Béatrice, son approche holistique, ses quatre univers de soins (corps, énergie, femmes enceintes et bébés, guidance) et la réservation en ligne, au cabinet de Perpignan.",
+  src: "/videos/les-soins-de-bea.mp4",
+  poster: "/videos/les-soins-de-bea-vignette.jpg",
+  captions: "/videos/les-soins-de-bea.fr.vtt",
+  duration: "1 min 21",
+  isoDuration: "PT1M21S",
+  uploadDate: "2026-11-20",
+} as const;
+
 export const nav = [
   { href: "/", label: "Accueil" },
   { href: "/a-propos", label: "À propos" },

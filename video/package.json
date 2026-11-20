@@ -8,7 +8,9 @@
     "render": "remotion render Presentation out/les-soins-de-bea.mp4",
     "still": "remotion still Presentation out/vignette.png --frame=300",
     "music": "python3 scripts/generate-music.py public/musique.mp3",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "captions": "node scripts/generate-captions.mjs",
+    "site": "node scripts/export-for-site.mjs"
   },
   "dependencies": {
     "@fontsource-variable/fraunces": "5.3.0",
