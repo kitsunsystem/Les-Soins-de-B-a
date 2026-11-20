@@ -51,6 +51,7 @@ const NOMS_REPERES = [
   "photo",
   "massage-prenatal",
   "atelier-massage-bebe",
+  "guidance-complete",
   "oracle-tarot",
   "amour",
   "travail",

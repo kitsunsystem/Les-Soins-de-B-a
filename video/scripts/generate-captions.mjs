@@ -1,5 +1,5 @@
 // Génère les sous-titres WebVTT de la vidéo à partir du texte de la voix off (voix-off.md)
-// et des repères mesurés (src/voix-off.ts). Usage : npm run captions
+// et des repères mesurés (src/voix-off.json, produit par scripts/caler-voix.py). Usage : npm run captions
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import { dirname } from "node:path";
 
@@ -13,13 +13,12 @@ const texts = block
   .map((l) => l.replace(/\[[^\]]*\]\s*/g, "").replace(/\s+/g, " ").trim())
   .filter(Boolean);
 
-// Repères : DEBUT_VOIX et le tableau `paragraphes` de src/voix-off.ts.
+// Repères : DEBUT_VOIX (src/voix-off.ts) et les paragraphes mesurés dans src/voix-off.json, dans l'ordre du texte.
 const ts = readFileSync("src/voix-off.ts", "utf8");
 const offset = Number(ts.match(/DEBUT_VOIX\s*=\s*([\d.]+)/)[1]);
-const table = ts.slice(ts.indexOf("export const paragraphes"), ts.indexOf("};", ts.indexOf("export const paragraphes")));
-const times = [...table.matchAll(/:\s*\[([\d.]+),\s*([\d.]+)\]/g)].map((m) => [Number(m[1]), Number(m[2])]);
+const times = Object.values(JSON.parse(readFileSync("src/voix-off.json", "utf8")).paragraphes);
 if (times.length !== texts.length) {
-  throw new Error(`${texts.length} paragraphes de texte mais ${times.length} repères : vérifiez voix-off.md et src/voix-off.ts`);
+  throw new Error(`${texts.length} paragraphes de texte mais ${times.length} repères : vérifiez voix-off.md et src/voix-off.json`);
 }
 
 // La fin est prononcée « en toutes lettres » pour la voix : on affiche l'écriture habituelle.

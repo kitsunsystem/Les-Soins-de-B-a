@@ -43,7 +43,7 @@ qu'au clic. Fichiers dans `../public/videos/` :
 
 - `les-soins-de-bea.mp4` — version web (H.264, démarrage rapide), **moins de 25 Mo** (limite de Cloudflare) ;
 - `les-soins-de-bea-vignette.jpg` — vignette ;
-- `les-soins-de-bea.fr.vtt` — sous-titres, générés depuis `voix-off.md` et les repères de `src/voix-off.ts`
+- `les-soins-de-bea.fr.vtt` — sous-titres, générés depuis `voix-off.md` et les repères de `src/voix-off.json`
   (`npm run captions`).
 
 Titre, durée et description affichés sur le site : `presentationVideo` dans `../src/lib/site.ts`.

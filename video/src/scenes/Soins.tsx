@@ -28,6 +28,7 @@ const descriptionsCourtes: Partial<Record<string, string>> = {
   "magnetisme-distance": "Accompagnement énergétique à distance, à partir d'une photo récente.",
   "massage-prenatal": "Un moment de détente et de reconnexion, adapté à chaque trimestre.",
   "atelier-massage-bebe": "Béatrice vous transmet les gestes pour masser votre bébé et renforcer le lien.",
+  "guidance-complete": "Une heure pour toutes vos questions : tirage d'oracle et de tarot, enrichi des messages reçus en médiumnité.",
   "oracle-tarot": "Amour, travail, famille, choix de vie : un tirage personnalisé selon votre demande.",
   mediumnite: "Guidance, accompagnement autour d'un deuil, questionnement spirituel.",
 };
@@ -482,8 +483,8 @@ function BlocMagnetiseuse({ local, reperes, ton }: { local: number; reperes: Rec
 function BlocSeances({ local, reperes, ton }: { local: number; reperes: Record<string, number>; ton: Ton }) {
   const modes = [
     { icon: House, titre: "Au cabinet", texte: "À Perpignan, sur rendez-vous", repere: reperes.seanceCabinet },
-    { icon: Phone, titre: "Par téléphone", texte: "Sans vous déplacer", repere: reperes.seanceTelephone },
-    { icon: Video, titre: "En visio", texte: "Où que vous soyez", repere: reperes.seanceVisio },
+    { icon: Phone, titre: "Par téléphone", texte: "Béatrice vous appelle au rendez-vous", repere: reperes.seanceTelephone },
+    { icon: Video, titre: "En visio", texte: "Partout en France, depuis chez vous", repere: reperes.seanceVisio },
   ];
   // « Où que vous soyez » : les trois modes restent allumés ensemble pour finir.
   const ensemble = reperes.seancePartout;
@@ -491,7 +492,7 @@ function BlocSeances({ local, reperes, ton }: { local: number; reperes: Record<s
   return (
     <div>
       <Eyebrow size={20} color={ton.text}>
-        Tirages & médiumnité
+        Au cabinet ou à distance
       </Eyebrow>
       <div style={{ marginTop: 20, display: "flex", flexDirection: "column", gap: 12 }}>
         {modes.map((m, i) => {
