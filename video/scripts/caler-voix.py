@@ -88,9 +88,13 @@ for ligne in open(annote, encoding="utf-8").read().strip().split("\n"):
     if not ligne.strip() or ligne.startswith("#"):
         continue
     pid, texte = ligne.split(" | ", 1)
+    texte = re.sub(r"\[(?:sighs|exhales|inhales deeply|breathes|gasps|laughs|chuckles)\]", " ⟨souffle⟩ ", texte)
     texte = re.sub(r"\[[^\]]*\]", " ", texte)
-    mots, attente = [], []
+    mots, attente, souffle = [], [], False
     for tok in re.findall(r"\{[^}]+\}|[^\s{]+", texte):
+        if tok == "⟨souffle⟩":
+            souffle = True
+            continue
         if tok.startswith("{"):
             nom_repere = tok[1:-1]
             if nom_repere in noms_vus:
@@ -99,8 +103,8 @@ for ligne in open(annote, encoding="utf-8").read().strip().split("\n"):
             attente.append(nom_repere)
             continue
         if norm(tok):
-            mots.append({"n": norm(tok), "reperes": attente})
-            attente = []
+            mots.append({"n": norm(tok), "reperes": attente, "apres_souffle": souffle})
+            attente, souffle = [], False
     paragraphes.append((pid, mots))
 tous = [m for _, ms in paragraphes for m in ms]
 
@@ -166,6 +170,15 @@ def creux(t, avant=0.22, apres=0.08):
     return (a + k) / 100 if seg.max() - seg[k] >= 6 else t
 
 
+def attaque(t, avant=0.1, apres=0.6):
+    """Après un soupir, le modèle situe mal le mot : on prend la plus forte montée d'énergie (attaque du mot)."""
+    a, b = int(max(0, t - avant) * 100), int(min(len(env_db) - 4, (t + apres) * 100))
+    if b <= a:
+        return t
+    montees = env_db[a + 3 : b + 3] - env_db[a:b]
+    return (a + int(np.argmax(montees)) + 1) / 100
+
+
 def recale(t, precedent):
     """Fin d'un silence proche qui sépare bien ce mot du précédent ; sinon creux d'énergie proche."""
     proches = [e for s, e in silences if t - 0.45 <= e <= t + 0.15 and (precedent is None or s >= precedent + 0.05)]
@@ -194,8 +207,9 @@ for pid, mots in paragraphes:
     debut = min(proches, key=lambda e: abs(e - temps[idx[0]])) if proches else temps[idx[0]]
     resultat["paragraphes"][pid] = [round(debut, 2), None]
     for k in idx:
+        instant = attaque(temps[k]) if tous[k]["apres_souffle"] else recale(temps[k], temps[k - 1] if k > 0 else None)
         for r in tous[k]["reperes"]:
-            resultat["reperes"][r] = round(recale(temps[k], temps[k - 1] if k > 0 else None), 2)
+            resultat["reperes"][r] = round(instant, 2)
 
 # Fin d'un paragraphe : début du silence qui précède le paragraphe suivant.
 ids = list(resultat["paragraphes"])
@@ -206,6 +220,8 @@ for a, b in zip(ids, ids[1:]):
     resultat["paragraphes"][a][1] = round(fin, 2)
 final = [s for s, e in silences if s > resultat["paragraphes"][ids[-1]][0] and e >= duree - 0.05]
 resultat["paragraphes"][ids[-1]][1] = round(final[0] if final else duree, 2)
+premier_son = int(np.argmax(env_db > -40)) / 100
+resultat["paragraphes"][ids[0]][0] = round(min(resultat["paragraphes"][ids[0]][0], premier_son), 2)
 
 with open(sortie, "w", encoding="utf-8") as f:
     f.write(ecrire_json(resultat))

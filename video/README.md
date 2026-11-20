@@ -1,6 +1,6 @@
 # Vidéo de présentation — Les Soins de Béa
 
-Vidéo publicitaire (1920 × 1080, 30 i/s, 1 min 21) réalisée avec [Remotion](https://www.remotion.dev), dans le style du
+Vidéo publicitaire (1920 × 1080, 30 i/s, 1 min 55) réalisée avec [Remotion](https://www.remotion.dev), dans le style du
 site (vert eucalyptus, terracotta, lin et or, une couleur par univers, polices Fraunces et Nunito Sans, emblème lotus)
 et montée sur la voix off ElevenLabs : chaque scène commence et s'arrête au rythme des phrases.
 
