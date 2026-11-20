@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { ArrowRight, Baby, Clock, Eye, Leaf, Sparkles } from "lucide-react";
-import type { Category, CategoryId, Service } from "@/lib/content";
+import { ArrowRight, Baby, Clock, Eye, Globe2, Leaf, Sparkles } from "lucide-react";
+import { canBeRemote, modesOf, type Category, type CategoryId, type Service } from "@/lib/content";
 
 const icons = { leaf: Leaf, sparkles: Sparkles, baby: Baby, eye: Eye };
 
@@ -26,10 +26,25 @@ export function CategoryBadge({ category, className = "size-14" }: { category: C
   );
 }
 
+/** Pastille « à distance » (visio / téléphone, partout en France). */
+export function RemoteBadge({ service, className = "" }: { service: Service; className?: string }) {
+  if (!canBeRemote(service)) return null;
+  return (
+    <span
+      className={`inline-flex items-center gap-1 whitespace-nowrap rounded-full bg-lavender-soft px-2.5 py-0.5 text-xs font-semibold text-lavender ${className}`}
+      title="En visio ou par téléphone, partout en France"
+    >
+      <Globe2 className="size-3" aria-hidden />
+      {modesOf(service).includes("cabinet") ? "Aussi à distance" : "À distance"}
+    </span>
+  );
+}
+
 export function ServiceCard({ service }: { service: Service }) {
   const bookable = service.durationMinutes !== null;
   return (
     <article className="card group flex h-full flex-col p-6 transition-all duration-300 hover:-translate-y-1 hover:shadow-soft">
+      <RemoteBadge service={service} className="mb-3 self-start" />
       <h3 className="text-[1.45rem]">{service.name}</h3>
       <p className="mt-2 flex-1 text-[0.95rem] text-ink-soft">{service.description}</p>
       <div className="mt-6 flex items-center justify-between gap-3 border-t border-line pt-4">
@@ -71,7 +86,12 @@ export function ServiceLine({ service }: { service: Service }) {
         href={href}
         className="group flex items-baseline gap-3 rounded-lg py-2 text-[0.95rem] transition-colors hover:text-forest"
       >
-        <span className="font-semibold">{service.name}</span>
+        <span className="font-semibold">
+          {service.name}
+          {canBeRemote(service) && (
+            <Globe2 className="ml-1.5 inline size-3.5 align-[-2px] text-lavender" aria-label="(aussi à distance)" />
+          )}
+        </span>
         <span className="mb-1 flex-1 border-b border-dotted border-ink-soft/30" aria-hidden />
         <span className="whitespace-nowrap text-sm text-ink-soft">{service.durationLabel}</span>
         <span className="w-16 whitespace-nowrap text-right font-serif text-lg text-clay">{service.price}</span>

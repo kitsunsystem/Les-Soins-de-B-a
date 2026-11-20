@@ -99,7 +99,7 @@ export function CtaBand({
       <Reveal className="relative overflow-hidden rounded-[2.5rem] bg-forest px-6 py-16 text-center text-linen md:px-16 md:py-20">
         <Botanical className="pointer-events-none absolute -left-8 -top-10 h-72 text-linen/10" />
         <Botanical className="pointer-events-none absolute -bottom-14 -right-6 h-72 rotate-180 text-gold/20" />
-        <p className="eyebrow !text-gold">Sur rendez-vous uniquement</p>
+        <p className="eyebrow !text-gold">Sur rendez-vous · {site.city} et partout en France à distance</p>
         <h2 className="mx-auto mt-4 max-w-2xl text-[2.3rem] !text-linen md:text-[3rem]">{title}</h2>
         <p className="mx-auto mt-5 max-w-xl text-lg text-linen/80">{text}</p>
         <div className="mt-9 flex flex-col items-center justify-center gap-3 sm:flex-row">

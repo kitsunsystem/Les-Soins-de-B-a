@@ -22,6 +22,19 @@ export default function ConfidentialitePage() {
           du rendez-vous, message facultatif.
         </li>
         <li>
+          <strong>Fiche d&apos;admission</strong> (remplie en ligne avant la première séance) : identité, date de
+          naissance, coordonnées, profession, motif de consultation, hygiène de vie, et des{" "}
+          <strong>informations de santé</strong> (traitement en cours, opération récente, allergies, grossesse,
+          pathologie suivie, contre-indications).
+        </li>
+        <li>
+          <strong>Suivi des séances</strong> : date, soin réalisé, observations et conseils de la praticienne.
+        </li>
+        <li>
+          <strong>Acompte éventuel</strong> : montant et référence du paiement. Les données de carte bancaire sont
+          saisies directement chez le prestataire de paiement et ne transitent jamais par ce site.
+        </li>
+        <li>
           <strong>Formulaire de contact</strong> : nom, prénom, email, téléphone (facultatif), objet et message.
         </li>
       </ul>
@@ -30,14 +43,19 @@ export default function ConfidentialitePage() {
         suivi) consultable uniquement par la praticienne, dans un espace protégé par mot de passe.
       </p>
       <p>
-        Merci de ne transmettre que les informations de santé utiles à l&apos;adaptation de la séance (grossesse,
-        contre-indication…). Elles sont traitées de manière strictement confidentielle.
+        Les informations de santé sont des données sensibles (article 9 du RGPD). Elles ne sont recueillies
+        qu&apos;avec votre <strong>consentement explicite</strong>, donné en cochant la case prévue sur la fiche
+        d&apos;admission, et uniquement pour adapter les séances et écarter toute contre-indication. Elles ne sont
+        jamais envoyées par email : seule la praticienne peut les consulter, dans son espace sécurisé. Vous pouvez
+        retirer ce consentement à tout moment en demandant l&apos;effacement de votre fiche.
       </p>
 
       <h2>Finalités et base légale</h2>
       <p>Les données sont utilisées exclusivement pour :</p>
       <ul>
         <li>gérer vos rendez-vous (confirmation, rappel la veille, annulation) — exécution de la prestation ;</li>
+        <li>adapter les séances à votre situation (fiche d&apos;admission, suivi) — votre consentement explicite ;</li>
+        <li>gérer les acomptes éventuels — exécution de la prestation ;</li>
         <li>répondre à vos demandes de contact — votre consentement ;</li>
         <li>vous envoyer les informations demandées (cartes cadeaux, formations).</li>
       </ul>
@@ -50,6 +68,10 @@ export default function ConfidentialitePage() {
           hébergées dans l&apos;Union européenne.
         </li>
         <li>
+          <strong>Stripe</strong> (Stripe Payments Europe, Ltd., Irlande) : paiement en ligne des acomptes, le cas
+          échéant. Stripe reçoit votre email, le montant et les données de paiement que vous saisissez sur sa page.
+        </li>
+        <li>
           <strong>Hébergement du site et de la base de données</strong> : Cloudflare, Inc. (Cloudflare Workers et
           D1), dans le cadre de clauses contractuelles conformes au RGPD.
         </li>
@@ -57,8 +79,9 @@ export default function ConfidentialitePage() {
 
       <h2>Durée de conservation</h2>
       <p>
-        Les données sont conservées pendant 3 ans maximum après le dernier contact ou le dernier rendez-vous, puis
-        supprimées.
+        Les données (fiche client, fiche d&apos;admission, suivi des séances) sont conservées pendant 3 ans maximum
+        après le dernier contact ou le dernier rendez-vous, puis supprimées. Les justificatifs de paiement sont
+        conservés selon les durées légales comptables.
       </p>
 
       <h2>Vos droits (RGPD)</h2>

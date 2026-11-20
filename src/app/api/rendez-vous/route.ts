@@ -7,7 +7,7 @@ import { bookingSchema, firstError } from "@/lib/validation";
 export const dynamic = "force-dynamic";
 
 export async function POST(request: Request) {
-  if (!rateLimit(`booking:${clientIp(request.headers)}`, 5, 10 * 60_000)) {
+  if (!rateLimit(`booking:${clientIp(request.headers)}`, 6, 10 * 60_000)) {
     return NextResponse.json({ error: "Trop de demandes. Merci de réessayer dans quelques minutes." }, { status: 429 });
   }
   const body = await request.json().catch(() => null);
@@ -16,12 +16,18 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: firstError(parsed.error) }, { status: 400 });
   }
   try {
-    const appt = await createBooking(parsed.data);
+    const result = await createBooking(parsed.data);
+    if (result.kind === "deposit_required") {
+      return NextResponse.json({ depositRequired: true, amount: result.amount, online: result.online });
+    }
+    if (result.kind === "payment") return NextResponse.json({ paymentUrl: result.url });
     return NextResponse.json({
       ok: true,
-      status: appt.status,
-      date: parisDateStr(appt.startsAt),
-      time: parisTimeStr(appt.startsAt),
+      status: result.appt.status,
+      date: parisDateStr(result.appt.startsAt),
+      time: parisTimeStr(result.appt.startsAt),
+      deposit: result.appt.depositStatus === "manual" ? result.appt.depositCents / 100 : 0,
+      admissionUrl: result.admissionUrl,
     });
   } catch (e) {
     if (e instanceof BookingError) {

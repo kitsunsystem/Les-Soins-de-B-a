@@ -15,7 +15,14 @@ export type Service = {
   /** Durée réservée dans l'agenda, en minutes. null = sur demande uniquement. */
   durationMinutes: number | null;
   price: string;
+  /** Lieux possibles : au cabinet et/ou à distance (visio, téléphone). Par défaut : cabinet uniquement. */
+  modes?: ServiceMode[];
 };
+
+export type ServiceMode = "cabinet" | "distance";
+
+export const modesOf = (s: Service): ServiceMode[] => s.modes ?? ["cabinet"];
+export const canBeRemote = (s: Service) => modesOf(s).includes("distance");
 
 export type Category = {
   id: CategoryId;
@@ -66,7 +73,7 @@ export const categories: Category[] = [
     icon: "eye",
     summary: "Oracle, tarot, médiumnité",
     intro:
-      "Des séances de guidance pour celles et ceux qui cherchent des réponses, du sens, ou souhaitent retrouver le lien avec un être cher.",
+      "Des séances de guidance pour celles et ceux qui cherchent des réponses, du sens, ou souhaitent retrouver le lien avec un être cher. Au cabinet, ou à distance par visio ou téléphone, où que vous soyez en France.",
     idealFor: "éclairer un questionnement, traverser un deuil, trouver du sens",
   },
 ];
@@ -203,6 +210,7 @@ export const services: Service[] = [
     durationLabel: "variable",
     durationMinutes: null,
     price: "30 à 60 €",
+    modes: ["distance"],
   },
   // Femmes enceintes & Bébés
   {
@@ -225,6 +233,17 @@ export const services: Service[] = [
   },
   // Guidance
   {
+    id: "guidance-complete",
+    category: "guidance",
+    name: "Consultation de guidance (1 h)",
+    description:
+      "Une heure pour faire le point sur plusieurs thèmes et toutes vos questions (amour, travail, famille, choix de vie…) : tirage d'oracle et de tarot, enrichi des ressentis et messages reçus en médiumnité. Idéale à distance, depuis chez vous.",
+    durationLabel: "1h",
+    durationMinutes: 60,
+    price: "60 €",
+    modes: ["cabinet", "distance"],
+  },
+  {
     id: "oracle-tarot",
     category: "guidance",
     name: "Tirage Oracle / Tarot",
@@ -233,6 +252,7 @@ export const services: Service[] = [
     durationLabel: "30 min",
     durationMinutes: 30,
     price: "30 €",
+    modes: ["cabinet", "distance"],
   },
   {
     id: "mediumnite",
@@ -243,8 +263,22 @@ export const services: Service[] = [
     durationLabel: "sur demande",
     durationMinutes: null,
     price: "sur devis",
+    modes: ["cabinet", "distance"],
   },
 ];
+
+/** Offre à distance, mise en avant sur le site. */
+export const distanceOffer = {
+  title: "Partout en France, à distance",
+  intro:
+    "Pas besoin d'habiter Perpignan : la guidance, les tirages et le magnétisme se pratiquent aussi à distance. Béatrice vous appelle ou vous retrouve en visio, à l'heure de votre rendez-vous, où que vous soyez.",
+  points: [
+    "Consultation de guidance d'une heure : plusieurs thèmes, toutes vos questions, tirage et médiumnité — 60 €",
+    "Tirage oracle ou tarot de 30 minutes — 30 €",
+    "Magnétisme à distance à partir d'une photo récente, sur demande",
+    "Par visio ou par téléphone, au choix, réservation en ligne 24 h/24",
+  ],
+};
 
 /** Objets proposés dans le formulaire de contact (clé utilisable dans l'URL : /contact?objet=cadeau). */
 export const contactSubjects = {
@@ -275,7 +309,7 @@ export const guidanceNote =
   "Les séances de guidance se déroulent dans un cadre d'écoute et de partage. Elles ne se substituent à aucun suivi médical ou psychologique, et ne constituent pas un engagement de résultat. Chaque personne est accueillie avec bienveillance, sans jugement, et toujours dans le respect de son rythme et de sa sensibilité.";
 
 export const bientotDisponible = {
-  title: "Bientôt disponible : les bottes de récupération",
+  title: "Bientôt disponible : la pressothérapie (bottes de récupération)",
   text: "Compression pneumatique bien-être : un nouveau service bientôt disponible au cabinet pour compléter vos soins toniques et de récupération. Un moment de détente apprécié après l'effort, pour une sensation de légèreté dans les jambes.",
 };
 
@@ -330,7 +364,15 @@ export const testimonials: Testimonial[] = [
 export const faq: { q: string; a: string }[] = [
   {
     q: "Comment prendre rendez-vous ?",
-    a: "Directement en ligne depuis la page « Prendre rendez-vous » : choisissez votre soin, un créneau disponible, et laissez vos coordonnées. Vous recevez un email de confirmation. Vous pouvez aussi m'appeler au 07.62.94.79.39 ou passer par le formulaire de contact. Je reçois uniquement sur rendez-vous.",
+    a: "Directement en ligne depuis la page « Prendre rendez-vous » : choisissez votre soin, au cabinet ou à distance, un créneau disponible, et laissez vos coordonnées. Le créneau vous est réservé immédiatement et vous recevez un email récapitulatif, puis la confirmation. Vous pouvez aussi m'appeler au 07.62.94.79.39 ou passer par le formulaire de contact.",
+  },
+  {
+    q: "Les consultations à distance, comment ça marche ?",
+    a: "La guidance (consultation d'une heure, tirages, médiumnité) se pratique aussi à distance, partout en France : choisissez « À distance » lors de la réservation, puis la visio ou le téléphone. À l'heure du rendez-vous, je vous appelle ou je vous envoie le lien de la visio. Le magnétisme à distance, sur photo, se prépare sur demande. Les modalités de règlement vous sont précisées lors de la confirmation.",
+  },
+  {
+    q: "Qu'est-ce que la fiche d'admission ?",
+    a: "Avant votre première séance, je vous demande de remplir une courte fiche (coordonnées, ce qui vous amène, quelques questions de santé pour écarter toute contre-indication). Le lien vous est envoyé avec votre réservation : elle se remplit en ligne en quelques minutes et reste strictement confidentielle.",
   },
   {
     q: "Comment se déroule une première séance ?",
@@ -347,6 +389,10 @@ export const faq: { q: string; a: string }[] = [
   {
     q: "Comment annuler ou déplacer un rendez-vous ?",
     a: "Chaque email de confirmation contient un lien d'annulation. Merci de prévenir au minimum 24 h à l'avance. Pour déplacer un rendez-vous, annulez-le puis choisissez un nouveau créneau, ou appelez-moi directement.",
+  },
+  {
+    q: "Pourquoi un acompte peut-il m'être demandé ?",
+    a: "Pour respecter le temps réservé, un acompte peut être demandé à la réservation après plusieurs annulations ou absences. Il est déduit du prix de la séance, et n'est pas remboursé en cas de nouvelle annulation de votre part.",
   },
   {
     q: "À partir de quel âge pour les bébés ?",
@@ -377,6 +423,33 @@ export const faq: { q: string; a: string }[] = [
     a: "Non, en aucun cas. Mes accompagnements relèvent du bien-être et ne constituent ni un diagnostic, ni un traitement médical. Ils ne se substituent pas à une consultation médicale, à un traitement prescrit par un professionnel de santé, ni à un suivi psychologique. En cas de problème de santé, consultez toujours votre médecin traitant.",
   },
 ];
+
+/** Prestations proposées dans le journal des séances (mêmes choix que le classeur Excel). */
+export const prestationsJournal = [
+  "Réflexologie",
+  "Kinésiologie",
+  "Magnétisme",
+  "Massage",
+  "Pressothérapie",
+  "Guidance",
+  "Autre",
+] as const;
+
+/** Prestation du journal correspondant à un soin du site. */
+export function prestationOf(serviceId: string): string {
+  const s = getService(serviceId);
+  if (!s) return "Autre";
+  if (s.id.startsWith("reflexologie")) return "Réflexologie";
+  if (s.category === "guidance") return "Guidance";
+  if (s.category === "energetique") return "Magnétisme";
+  return "Massage";
+}
+
+/**
+ * Diplômes et certifications affichés sur la page « À propos ».
+ * Ajouter les scans dans public/images/diplomes/ puis une ligne par diplôme ici.
+ */
+export const diplomas: { title: string; detail: string; image: string }[] = [];
 
 export const parcours: { title: string; date: string }[] = [
   { title: "Formation en Kinésiologie", date: "novembre 2023" },

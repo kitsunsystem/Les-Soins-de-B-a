@@ -40,5 +40,45 @@ export const migrations: { name: string; statements: string[] }[] = [
       "UPDATE `appointments`\nSET `client_id` = (SELECT c.`id` FROM `clients` c WHERE c.`email` = '' AND c.`phone_key` = replace(replace(replace(replace(`appointments`.`client_phone`, ' ', ''), '.', ''), '-', ''), '+', ''))\nWHERE `client_id` IS NULL AND trim(`client_phone`) <> '' AND `service_id` <> 'blocage';",
       "UPDATE `clients`\nSET `phone_key` = CASE\n  WHEN replace(replace(replace(replace(`phone`, ' ', ''), '.', ''), '-', ''), '+', '') LIKE '33%'\n    THEN '0' || substr(replace(replace(replace(replace(`phone`, ' ', ''), '.', ''), '-', ''), '+', ''), 3)\n  ELSE replace(replace(replace(replace(`phone`, ' ', ''), '.', ''), '-', ''), '+', '')\nEND;"
     ]
+  },
+  {
+    "name": "0004_crm_excel_acompte.sql",
+    "statements": [
+      "CREATE TABLE `admissions` (\n\t`id` text PRIMARY KEY NOT NULL,\n\t`client_id` text NOT NULL,\n\t`data` text NOT NULL,\n\t`created_at` integer NOT NULL\n);",
+      "CREATE INDEX `admissions_client_idx` ON `admissions` (`client_id`);",
+      "CREATE TABLE `session_notes` (\n\t`id` text PRIMARY KEY NOT NULL,\n\t`client_id` text NOT NULL,\n\t`appointment_id` text,\n\t`date` text NOT NULL,\n\t`prestation` text DEFAULT '' NOT NULL,\n\t`duration_minutes` integer,\n\t`motive` text DEFAULT '' NOT NULL,\n\t`change_reported` integer DEFAULT false NOT NULL,\n\t`observations` text DEFAULT '' NOT NULL,\n\t`feeling` text DEFAULT '' NOT NULL,\n\t`advice` text DEFAULT '' NOT NULL,\n\t`next_session` text DEFAULT '' NOT NULL,\n\t`created_at` integer NOT NULL,\n\t`updated_at` integer NOT NULL\n);",
+      "CREATE INDEX `session_notes_client_idx` ON `session_notes` (`client_id`);",
+      "CREATE INDEX `session_notes_appointment_idx` ON `session_notes` (`appointment_id`);",
+      "ALTER TABLE `appointments` ADD `mode` text DEFAULT 'cabinet' NOT NULL;",
+      "ALTER TABLE `appointments` ADD `cancelled_by` text DEFAULT '' NOT NULL;",
+      "ALTER TABLE `appointments` ADD `deposit_cents` integer DEFAULT 0 NOT NULL;",
+      "ALTER TABLE `appointments` ADD `deposit_status` text DEFAULT '' NOT NULL;",
+      "ALTER TABLE `appointments` ADD `payment_ref` text DEFAULT '' NOT NULL;",
+      "ALTER TABLE `appointments` ADD `hold_expires_at` integer;",
+      "ALTER TABLE `clients` ADD `first_name` text DEFAULT '' NOT NULL;",
+      "ALTER TABLE `clients` ADD `last_name` text DEFAULT '' NOT NULL;",
+      "ALTER TABLE `clients` ADD `address` text DEFAULT '' NOT NULL;",
+      "ALTER TABLE `clients` ADD `profession` text DEFAULT '' NOT NULL;",
+      "ALTER TABLE `clients` ADD `how_found` text DEFAULT '' NOT NULL;",
+      "ALTER TABLE `clients` ADD `motive` text DEFAULT '' NOT NULL;",
+      "ALTER TABLE `clients` ADD `vigilance` text DEFAULT '' NOT NULL;",
+      "ALTER TABLE `clients` ADD `first_visit` text DEFAULT '' NOT NULL;",
+      "ALTER TABLE `clients` ADD `admission_received_at` integer;",
+      "ALTER TABLE `clients` ADD `consent_at` integer;",
+      "ALTER TABLE `clients` ADD `admission_token` text;",
+      "ALTER TABLE `clients` ADD `deposit_policy` text DEFAULT 'auto' NOT NULL;",
+      "CREATE UNIQUE INDEX `clients_admission_token_unique` ON `clients` (`admission_token`);",
+      "ALTER TABLE `settings` ADD `deposit_enabled` integer DEFAULT false NOT NULL;",
+      "ALTER TABLE `settings` ADD `deposit_amount` integer DEFAULT 20 NOT NULL;",
+      "ALTER TABLE `settings` ADD `deposit_threshold` integer DEFAULT 2 NOT NULL;"
+    ]
+  },
+  {
+    "name": "0005_crm_excel_backfill.sql",
+    "statements": [
+      "UPDATE `appointments` SET `cancelled_by` = 'client' WHERE `status` = 'cancelled' AND `admin_note` = 'Annulé par le client en ligne';",
+      "UPDATE `appointments` SET `cancelled_by` = 'admin' WHERE `status` = 'cancelled' AND `cancelled_by` = '';",
+      "UPDATE `clients` SET `admission_token` = lower(hex(randomblob(18))) WHERE `admission_token` IS NULL;"
+    ]
   }
 ];

@@ -12,7 +12,7 @@ export const metadata: Metadata = {
     template: "%s · Les Soins de Béa",
   },
   description:
-    "Béatrice, praticienne bien-être à Perpignan : réflexologie, kinésiologie, massages, magnétisme et guidance. Prise de rendez-vous en ligne.",
+    "Béatrice, praticienne bien-être à Perpignan : réflexologie, kinésiologie, massages, magnétisme. Guidance, tarot et médiumnité aussi à distance, en visio ou par téléphone, partout en France. Réservation en ligne.",
   applicationName: site.name,
   authors: [{ name: site.owner }],
   openGraph: {

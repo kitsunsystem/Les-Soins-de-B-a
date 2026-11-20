@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, CalendarCheck, CalendarHeart, CreditCard, HandHeart, MailCheck, MapPin, Plus, ShieldCheck, Sparkles } from "lucide-react";
+import { ArrowRight, CalendarCheck, CalendarHeart, Check, CreditCard, Globe2, HandHeart, MailCheck, Phone, Plus, ShieldCheck, Sparkles, Video } from "lucide-react";
 import { Botanical } from "@/components/brand";
 import { NextSlot } from "@/components/NextSlot";
 import { PresentationVideo } from "@/components/PresentationVideo";
@@ -8,10 +8,11 @@ import { Reveal } from "@/components/Reveal";
 import { CategoryBadge, ServiceLine, tones } from "@/components/services";
 import { Testimonials } from "@/components/Testimonials";
 import { CtaBand, SectionHeading, Stars } from "@/components/ui";
-import { categories, faq, getService, parcours, popularServiceIds, servicesByCategory, testimonials } from "@/lib/content";
+import { categories, distanceOffer, faq, getService, parcours, popularServiceIds, servicesByCategory, testimonials } from "@/lib/content";
 import { presentationVideo as video, site } from "@/lib/site";
 
 const popular = popularServiceIds.map((id) => getService(id)!).filter(Boolean);
+const guidance = getService("guidance-complete")!;
 
 const videoJsonLd = {
   "@context": "https://schema.org",
@@ -39,7 +40,7 @@ const steps = [
   {
     icon: HandHeart,
     title: "Je prends soin de moi",
-    text: "Un échange pour cerner mes besoins, puis le soin dans un cadre apaisant. Règlement sur place, espèces ou carte.",
+    text: "Au cabinet à Perpignan, ou depuis chez moi en visio ou par téléphone pour la guidance : un échange, puis la séance, à mon rythme.",
   },
 ];
 
@@ -52,14 +53,15 @@ export default function HomePage() {
         <div className="pointer-events-none absolute -right-32 top-40 size-[28rem] rounded-full bg-clay-soft/70 blur-3xl" aria-hidden />
         <div className="container-page relative grid items-center gap-14 pb-20 pt-10 md:pt-16 lg:grid-cols-[1.08fr_1fr] lg:gap-10 lg:pb-28">
           <div>
-            <p className="eyebrow animate-fade-up">Praticienne bien-être · {site.city}</p>
+            <p className="eyebrow animate-fade-up">Praticienne bien-être · {site.city} &amp; à distance</p>
             <h1 className="mt-5 animate-fade-up text-[2.75rem] [animation-delay:60ms] sm:text-[3.4rem] lg:text-[4.1rem]">
               Réflexologie, massages <span className="accent">&amp; magnétisme</span> à Perpignan
             </h1>
             <p className="mt-6 max-w-xl animate-fade-up text-lg text-ink-soft [animation-delay:120ms] md:text-xl">
               Béatrice vous reçoit dans son cabinet pour des soins sur mesure qui{" "}
               <strong className="font-semibold text-ink">apaisent le corps, libèrent les tensions et rééquilibrent l&apos;énergie</strong>.
-              Pour les femmes enceintes et les bébés aussi.
+              Pour les femmes enceintes et les bébés aussi.{" "}
+              <strong className="font-semibold text-ink">Guidance, tarot et médiumnité aussi à distance, partout en France.</strong>
             </p>
             <div className="mt-9 flex animate-fade-up flex-col gap-3 [animation-delay:180ms] sm:flex-row">
               <Link href="/rendez-vous" className="btn btn-primary !px-7 !py-4 text-base">
@@ -85,9 +87,9 @@ export default function HomePage() {
                 </span>
               </li>
               <li className="flex items-center gap-3">
-                <MapPin className="size-5 text-forest" aria-hidden />
+                <Globe2 className="size-5 text-forest" aria-hidden />
                 <span className="leading-tight text-ink-soft">
-                  <strong className="block text-ink">Cabinet</strong>à {site.city}
+                  <strong className="block text-ink">{site.city}</strong>& partout en France
                 </span>
               </li>
             </ul>
@@ -183,6 +185,55 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ——— À distance, partout en France ——— */}
+      <section className="pt-20 md:pt-28" aria-labelledby="titre-distance">
+        <div className="container-page">
+          <Reveal className="relative overflow-hidden rounded-[2.5rem] bg-forest-dark text-linen">
+            <Botanical className="pointer-events-none absolute -right-10 -top-12 h-80 text-lavender/20" />
+            <div className="relative grid gap-10 p-8 md:p-14 lg:grid-cols-[1.15fr_1fr] lg:items-center">
+              <div>
+                <p className="eyebrow !text-gold">Visio · Téléphone</p>
+                <h2 id="titre-distance" className="mt-3 text-[2.4rem] !text-linen md:text-[3.1rem]">
+                  {distanceOffer.title}
+                </h2>
+                <p className="mt-5 max-w-xl text-lg text-linen/80">{distanceOffer.intro}</p>
+                <ul className="mt-7 space-y-3">
+                  {distanceOffer.points.map((p) => (
+                    <li key={p} className="flex gap-3">
+                      <span className="mt-1 grid size-5 shrink-0 place-items-center rounded-full bg-gold/90 text-forest-dark">
+                        <Check className="size-3.5" aria-hidden strokeWidth={3} />
+                      </span>
+                      <span className="text-linen/90">{p}</span>
+                    </li>
+                  ))}
+                </ul>
+                <Link href="/rendez-vous?distance=1" className="link-arrow mt-8 inline-block !text-gold">
+                  Toutes les consultations à distance →
+                </Link>
+              </div>
+              <div className="rounded-[2rem] bg-linen p-7 text-ink shadow-soft md:p-9">
+                <p className="flex items-center gap-2 text-sm font-bold uppercase tracking-wider text-lavender">
+                  <Video className="size-4" aria-hidden />
+                  <Phone className="size-4" aria-hidden />
+                  En visio ou par téléphone
+                </p>
+                <h3 className="mt-3 text-[1.9rem] leading-tight">{guidance.name}</h3>
+                <p className="mt-3 text-ink-soft">{guidance.description}</p>
+                <p className="mt-5 flex items-baseline gap-3">
+                  <span className="font-serif text-5xl leading-none text-clay">{guidance.price}</span>
+                  <span className="text-sm font-semibold text-ink-soft">{guidance.durationLabel} · tous les thèmes</span>
+                </p>
+                <Link href={`/rendez-vous?soin=${guidance.id}&distance=1`} className="btn btn-primary mt-7 w-full justify-center">
+                  <CalendarHeart className="size-4" aria-hidden />
+                  Réserver ma consultation
+                </Link>
+                <p className="mt-3 text-center text-xs text-ink-soft">Réservation en ligne 24 h/24 · où que vous soyez en France</p>
+              </div>
+            </div>
+          </Reveal>
+        </div>
+      </section>
+
       {/* ——— Les 4 univers ——— */}
       <section className="py-20 md:py-28">
         <div className="container-page">
@@ -252,7 +303,10 @@ export default function HomePage() {
           </ol>
           <p className="mt-12 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm text-ink-soft">
             <span className="flex items-center gap-2">
-              <CreditCard className="size-4 text-forest" aria-hidden /> Espèces ou carte bancaire
+              <CreditCard className="size-4 text-forest" aria-hidden /> Au cabinet : espèces ou carte bancaire
+            </span>
+            <span className="flex items-center gap-2">
+              <Globe2 className="size-4 text-forest" aria-hidden /> Guidance à distance partout en France
             </span>
             <span className="flex items-center gap-2">
               <ShieldCheck className="size-4 text-forest" aria-hidden /> Annulation gratuite jusqu&apos;à 24 h avant

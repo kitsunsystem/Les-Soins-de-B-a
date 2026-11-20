@@ -14,7 +14,7 @@ export function TopBar() {
         <p className="flex items-center gap-5">
           <span className="flex items-center gap-1.5">
             <MapPin className="size-3.5 text-gold" aria-hidden />
-            Cabinet de soins bien-être à {site.city}
+            Cabinet à {site.city} · guidance à distance partout en France
           </span>
           <span className="flex items-center gap-1.5">
             <Clock className="size-3.5 text-gold" aria-hidden />

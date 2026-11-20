@@ -12,6 +12,14 @@ refait à partir de l'ancienne version Lovable, avec en plus :
   chaque réservation, rendez-vous ajouté ou message de contact (retrouvée par email ou téléphone) ;
   historique complet (rendez-vous passés et à venir, annulations, absences, messages), notes privées,
   date de naissance, statistiques, recherche, export Excel/CSV, suppression RGPD.
+- **Au cabinet ou à distance** : les consultations de guidance (dont la consultation d'1 h à 60 €) se
+  réservent en visio ou par téléphone, partout en France ; le mode est choisi à la réservation.
+- **Fiche d'admission en ligne** (reprise de la fiche papier) : lien envoyé à la première réservation, réponses
+  rangées dans la fiche client, points de vigilance signalés dans l'agenda. Aucune donnée de santé par email.
+- **Acompte après annulations répétées** (réglable : seuil, montant) : payé par carte via Stripe si configuré,
+  sinon noté « à demander ». Non remboursé si la personne annule, remboursé si Béa annule ou refuse.
+- **Fiches clients façon classeur Excel** (annuaire + journal des séances), avec **import du classeur**
+  « Suivi clientes » et export CSV des deux feuilles.
 - **Annulation en ligne** par le client (lien dans l'email, jusqu'à 24 h avant).
 - Formulaire de contact (envoyé par Brevo), pages légales, SEO (métadonnées, sitemap, données structurées),
   responsive, accessible, sans cookie de suivi.
@@ -56,6 +64,8 @@ Worker `les-soins-de-bea` → **Paramètres → Variables et secrets** :
 | `SESSION_SECRET` | Secret | Chaîne aléatoire ≥ 32 caractères (`openssl rand -base64 32`) |
 | `BREVO_API_KEY` | Secret | Clé API Brevo |
 | `CRON_SECRET` | Secret | Chaîne aléatoire : active les rappels envoyés la veille |
+| `STRIPE_SECRET_KEY` | Secret | Facultatif : clé secrète Stripe (`sk_live_…`) pour l'acompte payé en ligne |
+| `STRIPE_WEBHOOK_SECRET` | Secret | Facultatif : secret du webhook Stripe (`whsec_…`) |
 
 Les variables saisies ici sont conservées lors des déploiements (`keep_vars` dans `wrangler.jsonc`).
 
@@ -68,6 +78,20 @@ Sur https://app.brevo.com :
 - *SMTP & API → Clés API* → créer une clé API ;
 - si les emails ne partent pas, vérifier *Sécurité → IP autorisées* : les IP de Cloudflare changent, il faut
   désactiver le blocage des IP inconnues.
+
+### 3 bis. Stripe (facultatif, acomptes en ligne)
+
+Sans Stripe, l'acompte reste possible : la réservation est enregistrée avec la mention « acompte à demander »
+et Béa le récupère elle-même. Pour le paiement par carte en ligne :
+
+1. Créer un compte sur https://dashboard.stripe.com et l'activer (IBAN, pièce d'identité).
+2. *Développeurs → Clés API* : copier la **clé secrète** dans `STRIPE_SECRET_KEY`.
+3. *Développeurs → Webhooks → Ajouter un point de terminaison* : URL `https://<votre-domaine>/api/stripe/webhook`,
+   événements `checkout.session.completed` et `checkout.session.expired`. Copier le **secret de signature**
+   dans `STRIPE_WEBHOOK_SECRET`.
+
+Le créneau est retenu 30 minutes le temps du paiement. Les remboursements (annulation ou refus par Béa) sont
+automatiques.
 
 ### 4. Nom de domaine
 
@@ -110,10 +134,24 @@ Après une modification de `src/lib/db/schema.ts` : `npm run db:generate` (crée
   habituels* annule l'exception.
 - **Ajouter un rendez-vous ou bloquer un créneau** : pour un rendez-vous pris par téléphone, ou une
   indisponibilité ponctuelle (le créneau disparaît de la réservation en ligne).
-- **Clients** : liste de toutes les personnes avec leurs séances, dernière visite et prochain rendez-vous ;
-  recherche par nom, email ou téléphone ; export Excel. Chaque fiche montre l'historique complet, les soins
-  préférés, le montant estimé, et permet d'écrire des **notes privées** (préférences, grossesse,
-  précautions…), d'ajouter un rendez-vous, de marquer une **absence** ou de supprimer la fiche (RGPD).
+- **Clients** : liste de toutes les personnes avec leurs séances, dernière visite, prochain rendez-vous et
+  fiche d'admission reçue ou non ; recherche par nom, email ou téléphone. Chaque fiche reprend les colonnes de
+  l'annuaire Excel (nom, prénom, naissance, adresse, profession, comment elle vous a connue, motif, points de
+  vigilance, 1re venue, notes), l'historique complet, les soins préférés et le montant estimé.
+- **Journal des séances** (sur chaque fiche, comme la feuille « Séances ») : date, prestation, durée, motif,
+  observations, ressenti, conseils, prochaine séance. Depuis l'agenda, un rendez-vous passé propose
+  directement *Compte-rendu de séance*, pré-rempli.
+- **Fiche d'admission** : envoyée automatiquement à la première réservation en ligne ; sur la fiche client,
+  bouton *Envoyer le lien par email* ou *Copier* (pour la transmettre par SMS). Les réponses s'affichent dans
+  la fiche, les contre-indications apparaissent en rouge sur les rendez-vous.
+- **Importer le classeur Excel** (page Clients) : choisir le fichier « Suivi clientes » (.xlsx). L'annuaire
+  crée ou complète les fiches (aucun doublon : même email, téléphone ou nom), le journal des séances
+  s'ajoute à l'historique. Le fichier est lu dans le navigateur ; on peut le réimporter sans créer de doublon.
+  **Exporter** : annuaire ou journal des séances, au format CSV (ouvrable dans Excel).
+- **Acompte** : dans *Horaires & réglages*, activer l'acompte, choisir le nombre d'annulations/absences qui le
+  déclenche et son montant. Sur une fiche client, on peut aussi l'imposer ou en dispenser la personne. Lors
+  d'une annulation dans l'agenda, préciser *qui annule* : le client (compte pour l'acompte, acompte conservé)
+  ou vous (acompte remboursé).
 - **Horaires & réglages** : horaires de chaque jour de la semaine (plusieurs plages possibles), fermeture
   d'une période (congés), intervalle entre créneaux, pause entre deux soins, délai minimum de réservation,
   horizon de réservation, confirmation automatique, suspension de la réservation, message d'information.
@@ -121,7 +159,8 @@ Après une modification de `src/lib/db/schema.ts` : `npm run db:generate` (crée
 ## Modifier le contenu
 
 - `src/lib/content.ts` : soins, durées, tarifs (utilisés à la fois par le site et par la réservation),
-  témoignages, FAQ, formations.
+  témoignages, FAQ, formations, offre à distance, **diplômes** (ajouter les scans dans
+  `public/images/diplomes/` puis une ligne par diplôme dans `diplomas` : la galerie apparaît sur *À propos*).
 - `src/lib/site.ts` : téléphone, email, réseaux sociaux, domaine.
 - `public/images/` : photos (format WebP).
 

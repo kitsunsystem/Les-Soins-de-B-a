@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Gift } from "lucide-react";
+import { Gift, Globe2 } from "lucide-react";
 import { Reveal } from "@/components/Reveal";
-import { CategoryBadge } from "@/components/services";
+import { CategoryBadge, RemoteBadge } from "@/components/services";
 import { CtaBand, Disclaimer, PageHero } from "@/components/ui";
 import { categories, servicesByCategory } from "@/lib/content";
 import { site } from "@/lib/site";
@@ -10,7 +10,7 @@ import { site } from "@/lib/site";
 export const metadata: Metadata = {
   title: "Tarifs des soins",
   description:
-    "Tarifs des soins bien-être de Béa à Perpignan : réflexologie dès 30 €, massages, magnétisme, guidance. Règlement en espèces ou carte bancaire.",
+    "Tarifs des soins bien-être de Béa à Perpignan : réflexologie dès 30 €, massages, magnétisme. Consultation de guidance d'une heure à 60 €, aussi à distance partout en France.",
   alternates: { canonical: "/tarifs" },
 };
 
@@ -20,7 +20,15 @@ export default function TarifsPage() {
       <PageHero
         eyebrow="Investir en vous"
         title="Tarifs"
-        intro={`Sur rendez-vous uniquement. Règlement en fin de séance : ${site.payment.toLowerCase()}.`}
+        intro={
+          <>
+            Sur rendez-vous uniquement. Au cabinet, règlement en fin de séance : {site.payment.toLowerCase()}.
+            <span className="mt-3 flex items-center justify-center gap-2 text-base font-semibold text-lavender">
+              <Globe2 className="size-4" aria-hidden />
+              Guidance, tarot et médiumnité aussi à distance, partout en France
+            </span>
+          </>
+        }
       />
       <section className="pb-20">
         <div className="container-page grid gap-6 lg:grid-cols-2">
@@ -50,6 +58,7 @@ export default function TarifsPage() {
                         ) : (
                           s.name
                         )}
+                        <RemoteBadge service={s} className="ml-2 align-middle" />
                       </th>
                       <td className="whitespace-nowrap py-3 pr-3 text-right text-ink-soft">{s.durationLabel}</td>
                       <td className="whitespace-nowrap py-3 text-right font-serif text-xl text-clay">{s.price}</td>

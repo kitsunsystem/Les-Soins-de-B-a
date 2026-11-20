@@ -2,7 +2,7 @@
 
 import { useActionState, useRef, useState } from "react";
 import { Loader2, Plus } from "lucide-react";
-import { bookableServices, categories } from "@/lib/content";
+import { bookableServices, canBeRemote, categories, services } from "@/lib/content";
 import { addAppointmentAction, type ActionState } from "../actions";
 
 export type ClientOption = { id: string; name: string; email: string; phone: string };
@@ -32,6 +32,8 @@ export function AddAppointmentForm({
   const [picked, setPicked] = useState<ClientOption | null>(null);
   const detailsRef = useRef<HTMLDetailsElement>(null);
   const blocked = serviceId === "blocage";
+  const svc = services.find((x) => x.id === serviceId);
+  const remoteOnly = svc ? !svc.modes?.includes("cabinet") && canBeRemote(svc) : false;
 
   const [state, action, pending] = useActionState(async (prev: ActionState, fd: FormData) => {
     const res = await addAppointmentAction(prev, fd);
@@ -129,6 +131,19 @@ export function AddAppointmentForm({
               />
             </div>
           </div>
+
+          {!blocked && svc && canBeRemote(svc) && (
+            <div>
+              <label htmlFor={`${idp}-mode`} className="label text-xs">
+                Lieu de la séance
+              </label>
+              <select key={serviceId} id={`${idp}-mode`} name="mode" defaultValue={remoteOnly ? "visio" : "cabinet"} className="field !py-1.5 text-sm">
+                {!remoteOnly && <option value="cabinet">Au cabinet</option>}
+                <option value="visio">À distance — visio</option>
+                <option value="telephone">À distance — téléphone</option>
+              </select>
+            </div>
+          )}
 
           {!blocked && !client && (
             <div className="space-y-3 rounded-xl bg-sand/50 p-3">

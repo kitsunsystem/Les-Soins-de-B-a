@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { Mail, MessageSquare, Phone, UserRound } from "lucide-react";
-import type { Appointment } from "@/lib/db/schema";
+import { AlertTriangle, FileWarning, Mail, MapPin, MessageSquare, NotebookPen, Phone, UserRound, Video } from "lucide-react";
+import type { Appointment, Client } from "@/lib/db/schema";
 import { formatDateStr, parisDateStr, parisTimeStr } from "@/lib/time";
 import { attendedAction, cancelAction, confirmAction, declineAction, noShowAction } from "../actions";
 
@@ -10,14 +10,51 @@ const STATUS: Record<Appointment["status"], { label: string; cls: string }> = {
   declined: { label: "Refusé", cls: "bg-line text-ink-soft" },
   cancelled: { label: "Annulé", cls: "bg-line text-ink-soft" },
   no_show: { label: "Absent(e)", cls: "bg-clay-soft text-clay-dark" },
+  awaiting_payment: { label: "Paiement de l'acompte en cours", cls: "bg-lavender-soft text-lavender" },
+  expired: { label: "Acompte non réglé — libéré", cls: "bg-line text-ink-soft" },
 };
 
-export function AppointmentCard({ appt: a, showDate = false }: { appt: Appointment; showDate?: boolean }) {
+const MODE = {
+  cabinet: { label: "Cabinet", icon: MapPin },
+  visio: { label: "Visio", icon: Video },
+  telephone: { label: "Téléphone", icon: Phone },
+} as const;
+
+function DepositBadge({ a }: { a: Appointment }) {
+  if (!a.depositStatus) return null;
+  const amount = `${a.depositCents / 100} €`;
+  const map: Record<string, [string, string]> = {
+    paid: [`Acompte payé ${amount}`, "bg-forest-soft text-forest"],
+    awaiting: [`Acompte ${amount} en attente`, "bg-lavender-soft text-lavender"],
+    manual: [`Acompte ${amount} à demander`, "bg-gold/15 text-[#7a5d22]"],
+    refunded: [`Acompte ${amount} remboursé`, "bg-line text-ink-soft"],
+  };
+  const [label, cls] = map[a.depositStatus] ?? [a.depositStatus, "bg-line text-ink-soft"];
+  return <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${cls}`}>{label}</span>;
+}
+
+export function AppointmentCard({
+  appt: a,
+  showDate = false,
+  client,
+  hasNote = false,
+}: {
+  appt: Appointment;
+  showDate?: boolean;
+  /** Fiche du client, pour signaler les points de vigilance et la fiche d'admission manquante. */
+  client?: Pick<Client, "id" | "vigilance" | "admissionReceivedAt">;
+  /** Un compte-rendu existe déjà dans le journal pour ce rendez-vous. */
+  hasNote?: boolean;
+}) {
   const past = a.endsAt < new Date();
   const s = a.status === "confirmed" && past ? { label: "Honoré", cls: "bg-forest-soft text-forest" } : STATUS[a.status];
-  const inactive = a.status === "declined" || a.status === "cancelled" || a.status === "no_show";
+  const inactive = ["declined", "cancelled", "no_show", "expired"].includes(a.status);
   const blocked = a.serviceId === "blocage";
   const day = parisDateStr(a.startsAt);
+  const mode = MODE[a.mode] ?? MODE.cabinet;
+  const vigilance =
+    client?.vigilance && !/^aucune/i.test(client.vigilance.trim()) ? client.vigilance : "";
+  const active = !inactive && !blocked;
 
   return (
     <article className={`rounded-2xl border border-line bg-white p-4 text-sm ${inactive ? "opacity-60" : ""}`}>
@@ -42,11 +79,39 @@ export function AppointmentCard({ appt: a, showDate = false }: { appt: Appointme
               <p className="text-ink">{a.clientName}</p>
             ))}
         </div>
-        <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${s.cls}`}>
-          {s.label}
-          {a.source === "admin" && !blocked ? " · ajouté par vous" : ""}
-        </span>
+        <div className="flex flex-wrap justify-end gap-1.5">
+          {!blocked && (
+            <span className="flex items-center gap-1 rounded-full bg-sand px-2.5 py-1 text-xs font-semibold text-ink-soft">
+              <mode.icon className="size-3" aria-hidden />
+              {mode.label}
+            </span>
+          )}
+          <DepositBadge a={a} />
+          <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${s.cls}`}>
+            {s.label}
+            {a.source === "admin" && !blocked ? " · ajouté par vous" : ""}
+          </span>
+        </div>
       </div>
+
+      {active && (vigilance || (client && !client.admissionReceivedAt)) && (
+        <div className="mt-2 space-y-1">
+          {vigilance && (
+            <p className="flex gap-2 rounded-xl bg-clay-soft p-2.5 text-clay-dark">
+              <AlertTriangle className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+              <span>
+                <strong>Points de vigilance :</strong> {vigilance}
+              </span>
+            </p>
+          )}
+          {client && !client.admissionReceivedAt && (
+            <p className="flex items-center gap-2 text-xs font-semibold text-[#7a5d22]">
+              <FileWarning className="size-3.5" aria-hidden />
+              Fiche d&apos;admission pas encore reçue
+            </p>
+          )}
+        </div>
+      )}
 
       {(a.clientPhone || a.clientEmail) && (
         <p className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-ink-soft">
@@ -71,6 +136,11 @@ export function AppointmentCard({ appt: a, showDate = false }: { appt: Appointme
         </p>
       )}
       {a.adminNote && <p className="mt-2 text-xs text-ink-soft">Note : {a.adminNote}</p>}
+      {a.status === "cancelled" && a.cancelledBy && (
+        <p className="mt-1 text-xs text-ink-soft">
+          Annulé {a.cancelledBy === "client" ? "par le client (compté pour l'acompte)" : "par vous"}
+        </p>
+      )}
 
       {a.status === "pending" && (
         <div className="mt-3 flex flex-wrap items-start gap-2">
@@ -88,6 +158,9 @@ export function AppointmentCard({ appt: a, showDate = false }: { appt: Appointme
                 Message pour le client (facultatif)
               </label>
               <textarea id={`r-${a.id}`} name="reason" rows={2} className="field text-sm" placeholder="Je vous propose plutôt…" />
+              {a.depositStatus === "paid" && (
+                <p className="text-xs text-ink-soft">L&apos;acompte payé en ligne sera remboursé automatiquement.</p>
+              )}
               <button type="submit" className="btn btn-outline !px-4 !py-1.5 text-xs">
                 Refuser et prévenir par email
               </button>
@@ -97,12 +170,23 @@ export function AppointmentCard({ appt: a, showDate = false }: { appt: Appointme
       )}
 
       {a.status === "confirmed" && past && !blocked && (
-        <form action={noShowAction} className="mt-3">
-          <input type="hidden" name="id" value={a.id} />
-          <button type="submit" className="text-xs text-ink-soft underline-offset-2 hover:text-clay-dark hover:underline">
-            Marquer absent(e)
-          </button>
-        </form>
+        <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2">
+          {a.clientId && (
+            <Link
+              href={`/admin/clients/${a.clientId}?compte-rendu=${a.id}#journal`}
+              className="btn btn-outline !px-3 !py-1.5 text-xs"
+            >
+              <NotebookPen className="size-3.5" aria-hidden />
+              {hasNote ? "Voir le compte-rendu" : "Compte-rendu de séance"}
+            </Link>
+          )}
+          <form action={noShowAction}>
+            <input type="hidden" name="id" value={a.id} />
+            <button type="submit" className="text-xs text-ink-soft underline-offset-2 hover:text-clay-dark hover:underline">
+              Marquer absent(e)
+            </button>
+          </form>
+        </div>
       )}
       {a.status === "no_show" && (
         <form action={attendedAction} className="mt-3">
@@ -113,13 +197,26 @@ export function AppointmentCard({ appt: a, showDate = false }: { appt: Appointme
         </form>
       )}
 
-      {a.status === "confirmed" && !past && (
+      {(a.status === "confirmed" || a.status === "pending") && !past && (
         <details className="mt-3">
           <summary className="cursor-pointer text-xs text-ink-soft underline-offset-2 hover:text-forest hover:underline">
             {blocked ? "Débloquer ce créneau" : "Annuler ce rendez-vous…"}
           </summary>
           <form action={cancelAction} className="mt-2 space-y-2 rounded-xl border border-line p-3">
             <input type="hidden" name="id" value={a.id} />
+            {!blocked && (
+              <fieldset className="space-y-1 text-xs">
+                <legend className="font-semibold">Qui annule ?</legend>
+                <label className="flex items-center gap-2">
+                  <input type="radio" name="by" value="client" defaultChecked className="accent-forest" />
+                  Le client me l&apos;a demandé (compte pour l&apos;acompte{a.depositStatus === "paid" ? ", acompte conservé" : ""})
+                </label>
+                <label className="flex items-center gap-2">
+                  <input type="radio" name="by" value="admin" className="accent-forest" />
+                  C&apos;est moi qui annule{a.depositStatus === "paid" ? " (acompte remboursé)" : ""}
+                </label>
+              </fieldset>
+            )}
             {!blocked && a.clientEmail && (
               <>
                 <textarea name="reason" rows={2} className="field text-sm" placeholder="Message pour le client (facultatif)" />

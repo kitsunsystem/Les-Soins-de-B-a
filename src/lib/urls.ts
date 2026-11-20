@@ -22,3 +22,4 @@ export async function getBaseUrl(): Promise<string> {
 
 export const cancelPath = (token: string) => `/rendez-vous/annulation?token=${encodeURIComponent(token)}`;
 export const adminDayPath = (date: string) => `/admin?jour=${date}`;
+export const admissionPath = (token: string) => `/fiche-admission/${token}`;
