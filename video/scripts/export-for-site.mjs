@@ -24,6 +24,7 @@ ffmpeg(
 ffmpeg("-ss", "9.5", "-i", source, "-frames:v", "1", "-vf", "scale=1600:-2", "-q:v", "3", `${dir}/les-soins-de-bea-vignette.jpg`);
 
 execFileSync("node", ["scripts/generate-captions.mjs", `${dir}/les-soins-de-bea.fr.vtt`], { stdio: "inherit" });
+execFileSync("node", ["scripts/video-sizes.mjs"], { cwd: "..", stdio: "inherit" });
 
 const mo = (f) => (statSync(f).size / 1024 / 1024).toFixed(1);
 console.log(`[site] vidéo ${mo(`${dir}/les-soins-de-bea.mp4`)} Mo, vignette ${mo(`${dir}/les-soins-de-bea-vignette.jpg`)} Mo → ${dir}`);

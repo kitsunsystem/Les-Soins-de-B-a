@@ -45,19 +45,18 @@ export function PresentationVideo({
             sizes="(max-width: 1024px) 100vw, 760px"
             className="object-cover transition-transform duration-700 group-hover:scale-[1.03]"
           />
-          <span className="absolute inset-0 bg-gradient-to-t from-forest-dark/70 via-forest-dark/5 to-transparent" aria-hidden />
           <span
-            className="absolute left-1/2 top-1/2 grid size-20 -translate-x-1/2 -translate-y-1/2 place-items-center rounded-full bg-linen/95 text-forest shadow-soft transition-transform duration-300 group-hover:scale-110 md:size-24"
+            className="absolute bottom-3 left-3 flex items-center gap-2.5 rounded-full bg-forest py-1.5 pl-1.5 pr-4 text-linen shadow-soft transition-transform duration-300 group-hover:scale-[1.04] sm:bottom-5 sm:left-5 sm:gap-3 sm:py-2 sm:pl-2 sm:pr-5"
             aria-hidden
           >
-            <span className="absolute inset-0 animate-ping rounded-full bg-linen/40 [animation-duration:2.4s]" />
-            <Play className="relative ml-1 size-8 md:size-9" fill="currentColor" />
-          </span>
-          <span className="absolute bottom-5 left-6 right-6 text-linen md:bottom-7 md:left-8" aria-hidden>
-            <span className="block text-[0.7rem] font-bold uppercase tracking-[0.18em] text-gold">
-              Vidéo · {duration} · sous-titrée
+            <span className="relative grid size-8 place-items-center rounded-full bg-linen text-forest sm:size-11">
+              <span className="absolute inset-0 animate-ping rounded-full bg-linen/50 [animation-duration:2.4s]" />
+              <Play className="relative ml-0.5 size-4 sm:size-5" fill="currentColor" />
             </span>
-            <span className="mt-1 block font-serif text-xl md:text-2xl">{title}</span>
+            <span className="leading-tight">
+              <span className="block text-[0.8rem] font-bold sm:text-base">Voir la vidéo</span>
+              <span className="block text-[0.72rem] text-linen/75 max-sm:hidden">{duration} · sous-titrée</span>
+            </span>
           </span>
         </button>
       )}

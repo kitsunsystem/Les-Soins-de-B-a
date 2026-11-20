@@ -7,7 +7,12 @@
   "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
   "assets": {
     "directory": ".open-next/assets",
-    "binding": "ASSETS"
+    "binding": "ASSETS",
+    // Les vidéos passent par worker.ts, qui gère la lecture par plages d'octets (indispensable pour Safari).
+    "run_worker_first": ["/videos/*"],
+    // Exigé par OpenNext avec run_worker_first : fichiers servis à leur chemin exact, comme Next.js.
+    "html_handling": "none",
+    "not_found_handling": "none"
   },
   "services": [
     {

@@ -164,4 +164,8 @@ Next.js 16 (App Router) · React 19 · Tailwind CSS 4 · OpenNext pour Cloudflar
 - Les pages publiques sont pré-générées et servies depuis les assets statiques du Worker.
 - CRM : tables `clients` et `contact_messages`, rattachement automatique (email en minuscules, téléphone
   normalisé au format national).
+- Vidéos (`public/videos`) : servies par `worker.ts` en réponses partielles (« Range », 206), indispensables
+  pour la lecture sur Safari/iPhone et l'avance rapide — les fichiers statiques de Cloudflare ne les gèrent pas.
+  Leur taille est relevée à chaque build dans `video-sizes.json` (`scripts/video-sizes.mjs`). Un fichier vidéo
+  doit rester sous 25 Mo (limite des fichiers statiques de Cloudflare).
 - `worker.ts` ajoute au Worker d'OpenNext une tâche planifiée quotidienne (rappels, `triggers.crons`).
