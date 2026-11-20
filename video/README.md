@@ -1,45 +1,48 @@
 # Vidéo de présentation — Les Soins de Béa
 
-Vidéo publicitaire (1920 × 1080, 30 i/s, environ 1 min 07) réalisée avec [Remotion](https://www.remotion.dev),
-dans le même style que le site : palette crème / rose / or / sauge, polices Cormorant Garamond, Montserrat et
-Dancing Script, fond aquarelle à feuillages, ornement doré, cartes arrondies et apparitions en fondu.
+Vidéo publicitaire (1920 × 1080, 30 i/s, 1 min 21) réalisée avec [Remotion](https://www.remotion.dev), dans le style du
+site (vert eucalyptus, terracotta, lin et or, une couleur par univers, polices Fraunces et Nunito Sans, emblème lotus)
+et montée sur la voix off ElevenLabs : chaque scène commence et s'arrête au rythme des phrases.
 
-## Déroulé
+## Déroulé (calé sur la voix off)
 
-| Scène | Contenu |
+| Voix off | À l'écran |
 | --- | --- |
-| Ouverture | Accroche (« Et si vous preniez enfin un moment pour vous ? »), puis l'accueil du site : « Bienvenue — Les Soins de Béa » |
-| Béatrice | « Une rencontre, un soin, un chemin » avec l'illustration aquarelle |
-| Les 4 univers | Les cartes de l'accueil |
-| Corps & Détente, Énergétique, Femmes enceintes & Bébés, Guidance | Tous les soins avec durées et tarifs |
-| Formations | Magnétisme et Flamme Violette |
-| Pourquoi me consulter | Les trois engagements de l'accueil |
-| Mon cabinet | Les photos de la page À propos |
-| Livre d'or | Trois extraits de témoignages |
-| Réservation | Démonstration animée de la prise de rendez-vous en ligne |
-| Cartes cadeaux | L'encadré de la page Tarifs |
-| Fin | « Offrez-vous un moment de bien-être », site, téléphone, cabinet à Perpignan |
+| « Stress, tensions… Et si vous preniez enfin un moment rien qu'à vous ? » | Accroche |
+| « Bienvenue aux Soins de Béa, à Perpignan. » | Emblème lotus, nom, devise |
+| « Béatrice vous reçoit pour des soins sur mesure… » | Haut de la page d'accueil (titre, preuves, photo en arche) |
+| « Sensible aux énergies depuis l'adolescence… » | « Qui suis-je ? » |
+| « Quatre univers de soins, une même attention. » | Les 4 cartes colorées |
+| Corps, énergie, futures mamans, guidance | Les 4 univers de la page Soins, avec tous les tarifs |
+| « Béatrice transmet aussi son savoir… » | Formations |
+| « Son cabinet est un espace pensé pour votre détente. » | Photos du cabinet |
+| « Celles qui l'ont rencontrée en parlent… » | Livre d'or (la carte de Léa s'avance pendant sa citation) |
+| « Réservez en ligne… Béatrice vous confirme… » | Les 3 étapes et la démonstration de réservation |
+| « Envie de faire plaisir ? » | Cartes cadeaux |
+| « Les Soins de Béa, à Perpignan. Réservez sur… » | Bandeau final (site puis téléphone mis en valeur quand ils sont prononcés) |
 
 ## Commandes
 
 ```bash
 cd video
 npm install
-npm run studio    # aperçu interactif dans le navigateur (http://localhost:3000)
+npm run studio    # aperçu interactif dans le navigateur
 npm run render    # fichier final : out/les-soins-de-bea.mp4
 ```
 
 ## Modifier la vidéo
 
-- **Soins, tarifs, témoignages, téléphone, adresse du site** : repris automatiquement de `../src/lib/content.ts`
-  et `../src/lib/site.ts`. Après une modification du site, relancer `npm run render`.
-- **Domaine affiché à la fin** : `url` dans `../src/lib/site.ts` (actuellement le domaine par défaut du site).
+- **Soins, tarifs, « idéal pour », témoignages, téléphone, adresse du site** : repris automatiquement de
+  `../src/lib/content.ts` et `../src/lib/site.ts`. Après une modification du site, relancer `npm run render`.
+- **Domaine affiché à la fin** : `url` dans `../src/lib/site.ts`.
+- **Voix off** : texte et réglages dans `voix-off.md`, fichier dans `public/voix-off.mp3`. Après une nouvelle
+  génération, remplacer le fichier et mettre à jour les repères (début et fin de chaque paragraphe) dans
+  `src/voix-off.ts` : les scènes se recalent toutes seules.
 - **Textes propres à la vidéo** (accroche, extraits du livre d'or, démonstration de réservation) : `src/script.ts`.
-- **Ordre et durée des scènes** : `src/Presentation.tsx` (30 images = 1 seconde).
 - **Images** : lues directement dans `../public/images`.
-- **Musique** : `public/musique.mp3`, une nappe d'ambiance générée par `scripts/generate-music.py` (libre de
-  droits). Pour utiliser une autre musique, remplacer ce fichier (même nom) par un MP3 libre de droits.
-  Pour la regénérer : `npm run music` (Python 3 avec numpy, et ffmpeg).
+- **Musique** : `public/musique.mp3`, une nappe d'ambiance générée par `scripts/generate-music.py` (libre de droits),
+  baissée automatiquement sous la voix. Pour une autre musique, remplacer ce fichier (même nom) par un MP3 libre de
+  droits. Pour la regénérer : `npm run music` (Python 3 avec numpy, et ffmpeg).
 
 ## Licence Remotion
 

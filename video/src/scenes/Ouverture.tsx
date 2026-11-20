@@ -1,106 +1,102 @@
-import { AbsoluteFill, interpolate, useCurrentFrame } from "remotion";
-import { accroche, disciplines, motto, site } from "../script";
-import { colors, EASE_IN_OUT, fonts } from "../theme";
-import { clamp, Eyebrow, FadeUp, GoldDust, Ornament, SweepReveal, Watercolor, WordsUp } from "../ui";
+import { AbsoluteFill, interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
+import { accroche, devise, site } from "../script";
+import { colors, EASE_IN_OUT, EASE_OUT, fonts, titre } from "../theme";
+import { Accent, clamp, FadeUp, FondLin, LogoBadge, Ornament, typo, useAppear, WordsUp } from "../ui";
 
-/** Image où l'accroche s'efface et où la marque apparaît. */
-export const MARQUE = 118;
-
-/** Accroche, puis l'accueil du site : « Bienvenue — Les Soins de Béa ». */
-export const Ouverture: React.FC<{ duration: number }> = ({ duration }) => {
+/**
+ * Accroche, puis la marque. Les repères (images de la scène) viennent de la voix off :
+ * « Stress… », « Et si vous preniez… », « Bienvenue aux Soins de Béa ».
+ */
+export const Ouverture: React.FC<{ duration: number; stress: number; question: number; marque: number }> = ({
+  stress,
+  question,
+  marque,
+}) => {
   const frame = useCurrentFrame();
-  const sortie = interpolate(frame, [MARQUE - 16, MARQUE + 4], [1, 0], { ...clamp, easing: EASE_IN_OUT });
+  const { fps } = useVideoConfig();
+  const sortie = interpolate(frame, [marque - 16, marque - 4], [1, 0], { ...clamp, easing: EASE_IN_OUT });
+  const rameaux = interpolate(frame, [0, 50], [0, 1], { ...clamp, easing: EASE_OUT });
+
+  const pastille = spring({ frame: frame - (marque - 6), fps, config: { damping: 15, stiffness: 140 } });
+  const trace = interpolate(frame, [marque - 4, marque + 22], [0, 1], { ...clamp, easing: EASE_IN_OUT });
+  const nom = useAppear(marque + 2, 30);
+  const masque = `linear-gradient(90deg, #000 ${-25 + nom * 150 - 25}%, transparent ${-25 + nom * 150}%)`;
 
   return (
     <AbsoluteFill>
-      <Watercolor duration={duration} zoom={[1.12, 1.03]} />
-      <GoldDust count={30} seed="ouverture" />
+      <FondLin trace={rameaux} />
 
-      {/* Accroche */}
-      <AbsoluteFill
-        style={{
-          justifyContent: "center",
-          alignItems: "center",
-          textAlign: "center",
-          opacity: sortie,
-          transform: `translateY(${(1 - sortie) * -30}px)`,
-        }}
-      >
-        <FadeUp delay={6} duration={30}>
-          <div style={{ fontFamily: fonts.serif, fontStyle: "italic", fontSize: 60, color: colors.inkSoft }}>
-            {accroche.intro}
-          </div>
-        </FadeUp>
-        <div
+      {frame < marque && (
+        <AbsoluteFill
           style={{
-            marginTop: 30,
-            fontFamily: fonts.serif,
-            fontWeight: 500,
-            fontSize: 112,
-            lineHeight: 1.12,
-            color: colors.ink,
+            justifyContent: "center",
+            alignItems: "center",
+            textAlign: "center",
+            opacity: sortie,
+            transform: `translateY(${(1 - sortie) * -26}px)`,
           }}
         >
-          <WordsUp text={accroche.ligne1} delay={34} stagger={4} />
-          <br />
-          <span style={{ color: colors.roseDeep, fontStyle: "italic" }}>
-            <WordsUp text={accroche.ligne2} delay={54} stagger={4} />
-          </span>
-        </div>
-      </AbsoluteFill>
-
-      {/* Marque */}
-      {frame >= MARQUE - 2 && (
-        <AbsoluteFill style={{ justifyContent: "center", alignItems: "center", textAlign: "center" }}>
-          <FadeUp delay={MARQUE} duration={30}>
-            <Eyebrow size={68}>Bienvenue</Eyebrow>
-          </FadeUp>
-          <SweepReveal delay={MARQUE + 8} duration={46}>
+          <FadeUp delay={stress - 4} duration={22}>
             <div
               style={{
-                marginTop: 6,
-                fontFamily: fonts.serif,
-                fontWeight: 500,
-                fontSize: 188,
-                lineHeight: 1.05,
-                color: colors.ink,
-              }}
-            >
-              {site.name}
-            </div>
-          </SweepReveal>
-          <FadeUp delay={MARQUE + 24}>
-            <div
-              style={{
-                marginTop: 40,
-                fontFamily: fonts.sans,
-                fontWeight: 500,
-                fontSize: 25,
-                letterSpacing: "0.3em",
-                textTransform: "uppercase",
+                ...titre,
+                fontStyle: "italic",
+                fontWeight: 380,
+                fontSize: 64,
                 color: colors.inkSoft,
               }}
             >
-              {site.tagline}
+              {typo(accroche.intro)}
             </div>
           </FadeUp>
-          <FadeUp delay={MARQUE + 30}>
-            <div style={{ marginTop: 18, fontFamily: fonts.sans, fontStyle: "italic", fontSize: 29, color: colors.inkSoft }}>
-              {disciplines}
-            </div>
-          </FadeUp>
-          <Ornament delay={MARQUE + 36} lineWidth={96} style={{ marginTop: 46 }} />
-          <FadeUp delay={MARQUE + 44} duration={32}>
+          <div style={{ ...titre, marginTop: 34, fontSize: 118, color: colors.ink }}>
+            <WordsUp text={accroche.ligne1} delay={question - 4} stagger={3} />
+            <br />
+            <Accent>
+              <WordsUp text={accroche.ligne2} delay={question + 11} stagger={3} />
+            </Accent>
+          </div>
+        </AbsoluteFill>
+      )}
+
+      {frame >= marque - 8 && (
+        <AbsoluteFill style={{ justifyContent: "center", alignItems: "center", textAlign: "center" }}>
+          <div style={{ transform: `scale(${pastille})`, opacity: Math.min(1, pastille * 1.4) }}>
+            <LogoBadge size={150} trace={trace} />
+          </div>
+          <div
+            style={{
+              ...titre,
+              marginTop: 34,
+              fontSize: 168,
+              lineHeight: 1.05,
+              color: colors.ink,
+              WebkitMaskImage: masque,
+              maskImage: masque,
+              transform: `translateY(${(1 - nom) * 20}px)`,
+            }}
+          >
+            {site.name}
+          </div>
+          <FadeUp delay={marque + 10} distance={14}>
             <div
               style={{
-                marginTop: 46,
-                fontFamily: fonts.serif,
-                fontStyle: "italic",
-                fontSize: 56,
-                color: colors.roseDeep,
+                marginTop: 26,
+                fontFamily: fonts.sans,
+                fontSize: 27,
+                fontWeight: 750,
+                letterSpacing: "0.24em",
+                textTransform: "uppercase",
+                color: colors.clay,
               }}
             >
-              {motto}
+              Bien-être · {site.city}
+            </div>
+          </FadeUp>
+          <Ornament delay={marque + 14} style={{ marginTop: 40 }} />
+          <FadeUp delay={marque + 20} duration={22}>
+            <div style={{ ...titre, marginTop: 38, fontStyle: "italic", fontWeight: 380, fontSize: 52, color: colors.forest }}>
+              {typo(devise)}
             </div>
           </FadeUp>
         </AbsoluteFill>

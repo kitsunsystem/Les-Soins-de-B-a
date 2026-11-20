@@ -18,9 +18,10 @@ import wave
 import numpy as np
 
 SR = 44100
-DUREE = float(sys.argv[2]) if len(sys.argv) > 2 else 67.4  # durée de la vidéo (2021 images à 30 i/s)
-MARQUE = 118 / 30  # apparition de « Les Soins de Béa »
-FINAL = (1821 + 12) / 30  # apparition du plan final (milieu du fondu qui le précède)
+# Repères de la vidéo (secondes), alignés sur la voix off (voir src/voix-off.ts : la voix démarre à 0,3 s).
+DUREE = float(sys.argv[2]) if len(sys.argv) > 2 else 80.7  # durée de la vidéo
+MARQUE = 0.3 + 8.15  # « Bienvenue aux Soins de Béa »
+FINAL = 0.3 + 68.47  # plan final : « Les Soins de Béa, à Perpignan »
 rng = np.random.default_rng(7)
 
 N = int(SR * (DUREE + 0.1))

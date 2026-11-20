@@ -1,87 +1,58 @@
 import { AbsoluteFill, Img, interpolate, useCurrentFrame } from "remotion";
 import { images } from "../assets";
+import { pastillesFormations } from "../script";
 import { colors, shadows } from "../theme";
-import { Body, clamp, Eyebrow, FadeUp, Pill, SoftBlobs, Title, useAppear } from "../ui";
+import { Accent, Body, clamp, Eyebrow, FadeUp, FondLin, Pill, Title, useAppear } from "../ui";
 
-const pastilles = ["Réflexologie", "Kinésiologie", "Massages", "Magnétisme", "Guidance"];
-
-/** Section « Bienvenue dans mon univers » de l'accueil : l'illustration aquarelle et la présentation. */
+/** Section « Qui suis-je ? » de l'accueil. */
 export const Beatrice: React.FC<{ duration: number }> = ({ duration }) => {
   const frame = useCurrentFrame();
-  const img = useAppear(2, 36);
-  const zoom = interpolate(frame, [0, duration], [1.0, 1.07], clamp);
+  const img = useAppear(0, 24);
+  const zoom = interpolate(frame, [0, duration], [1.0, 1.06], clamp);
 
   return (
-    <AbsoluteFill style={{ background: colors.cream }}>
-      <SoftBlobs intensity={0.6} sauge={false} />
+    <AbsoluteFill>
+      <FondLin rameaux={false} intensite={0.7} />
       <AbsoluteFill style={{ flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 120 }}>
-        <div
-          style={{
-            position: "relative",
-            width: 630,
-            height: 575,
-            opacity: img,
-            transform: `translateY(${(1 - img) * 44}px)`,
-          }}
-        >
+        <div style={{ position: "relative", width: 620, height: 566, opacity: img, transform: `translateY(${(1 - img) * 34}px)` }}>
           <div
             style={{
               position: "absolute",
-              inset: -30,
+              inset: -22,
               borderRadius: 54,
-              background: colors.roseSoft,
-              transform: `rotate(${-2.2 * img}deg)`,
+              background: colors.claySoft,
+              transform: `rotate(${-3 * img}deg)`,
             }}
           />
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              borderRadius: 46,
-              overflow: "hidden",
-              boxShadow: shadows.soft,
-            }}
-          >
+          <div style={{ position: "absolute", inset: 0, borderRadius: 50, overflow: "hidden", boxShadow: shadows.soft }}>
             <Img
               src={images.welcome}
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                transform: `scale(${zoom})`,
-                transformOrigin: "50% 6%",
-              }}
+              style={{ width: "100%", height: "100%", objectFit: "cover", transform: `scale(${zoom})`, transformOrigin: "50% 6%" }}
             />
           </div>
         </div>
 
-        <div style={{ width: 880 }}>
-          <FadeUp delay={12}>
-            <Eyebrow>Bienvenue dans mon univers</Eyebrow>
+        <div style={{ width: 900 }}>
+          <FadeUp delay={2} distance={14}>
+            <Eyebrow>Qui suis-je ?</Eyebrow>
           </FadeUp>
-          <FadeUp delay={18}>
-            <Title size={92} style={{ marginTop: 8 }}>
-              Une rencontre,
+          <FadeUp delay={5}>
+            <Title size={88} style={{ marginTop: 22 }}>
+              Béatrice,
               <br />
-              un soin, un chemin
+              <Accent>à l’écoute de votre équilibre</Accent>
             </Title>
           </FadeUp>
-          <FadeUp delay={28}>
-            <Body style={{ marginTop: 38 }}>
-              Je suis <strong style={{ color: colors.ink, fontWeight: 500 }}>Béatrice</strong>, praticienne bien-être à
-              Perpignan. Mon approche est holistique&nbsp;: elle relie le corps, l’énergie et l’esprit.
+          <FadeUp delay={10}>
+            <Body style={{ marginTop: 32 }}>
+              Sensible aux énergies depuis l’adolescence, elle a fait du magnétisme le cœur de sa pratique, qu’elle enrichit
+              de réflexologie, de kinésiologie et de massages bien-être.
             </Body>
           </FadeUp>
-          <FadeUp delay={36}>
-            <Body style={{ marginTop: 22 }}>
-              Je vous accueille dans un cadre doux et apaisant, pour un accompagnement personnalisé, à votre rythme et à
-              votre écoute.
-            </Body>
-          </FadeUp>
-          <div style={{ marginTop: 44, display: "flex", gap: 12 }}>
-            {pastilles.map((p, i) => (
-              <FadeUp key={p} delay={50 + i * 5} distance={20}>
-                <Pill size={20}>{p}</Pill>
+          <div style={{ marginTop: 36, display: "flex", flexWrap: "wrap", gap: 12 }}>
+            {pastillesFormations.map((p, i) => (
+              <FadeUp key={p} delay={14 + i * 2} distance={14}>
+                <Pill size={21}>{p}</Pill>
               </FadeUp>
             ))}
           </div>

@@ -1,8 +1,16 @@
-// Textes de la vidéo. Les soins, durées, tarifs et coordonnées viennent directement du site
-// (src/lib/content.ts et src/lib/site.ts) : une mise à jour du site se retrouve dans la vidéo au prochain rendu.
+// Textes affichés à l'écran. Soins, tarifs, « idéal pour », témoignages, formations et coordonnées viennent
+// directement du site (src/lib/content.ts, src/lib/site.ts) ; les titres reprennent ceux des nouvelles pages.
 import type { LucideIcon } from "lucide-react";
 import { Baby, Eye, Leaf, Sparkles } from "lucide-react";
-import { categories, formations, services, testimonials, type Category, type CategoryId } from "../../src/lib/content";
+import {
+  categories,
+  formations,
+  parcours,
+  services,
+  testimonials,
+  type Category,
+  type CategoryId,
+} from "../../src/lib/content";
 import { site } from "../../src/lib/site";
 
 export { categories, formations, services, site };
@@ -14,50 +22,36 @@ export const categoryIcons: Record<Category["icon"], LucideIcon> = { leaf: Leaf,
 export const accroche = {
   intro: "Stress, tensions, fatigue du quotidien…",
   ligne1: "Et si vous preniez enfin",
-  ligne2: `un moment pour vous${NBSP}?`,
+  ligne2: `un moment rien qu'à vous${NBSP}?`,
 };
 
-export const disciplines = "Réflexologie · Kinésiologie · Massages · Magnétisme · Guidance";
+export const devise = `«${NBSP}${site.motto}${NBSP}»`;
 
-export const motto = `«${NBSP}${site.motto}${NBSP}»`;
+/** Prix le plus bas et durée la plus courte de la carte (les « preuves » de l'accueil). */
+const prix = services
+  .map((s) => s.price.match(/\d+/)?.[0])
+  .filter((p): p is string => Boolean(p))
+  .map(Number);
+const durees = services.map((s) => s.durationMinutes).filter((d): d is number => d !== null);
+export const preuves = { prixMin: Math.min(...prix), dureeMin: Math.min(...durees) };
 
-/** Descriptions courtes affichées sous certains soins (les autres textes viennent du site). */
-export const descriptionsCourtes: Partial<Record<string, string>> = {
-  "massage-energetique": "Libération des blocages énergétiques par l'imposition des mains et le massage.",
-  "soin-complet": "L'expérience la plus aboutie : massage viscéral, réflexologie, bien-être et énergétique.",
-  "magnetisme-distance": "Accompagnement énergétique à distance, à partir d'une photo récente.",
-  "massage-prenatal": "Un moment de détente et de reconnexion, adapté à chaque trimestre.",
-  "atelier-massage-bebe": "Je vous transmets les gestes pour masser votre bébé et renforcer le lien.",
-  "oracle-tarot": "Amour, travail, famille, choix de vie : un tirage personnalisé selon votre demande.",
-  mediumnite: "Guidance, accompagnement autour d'un deuil, questionnement spirituel.",
-};
+/** Les formations suivies, comme les pastilles de l'accueil. */
+export const pastillesFormations = parcours.map((f) => f.title.replace("Formation en ", "").replace("Formation ", ""));
 
-/** Catégories pour lesquelles on affiche la description sous chaque soin (peu de lignes). */
-export const avecDescriptions: CategoryId[] = ["energetique", "femmes-bebes", "guidance"];
-
-export const raisons = [
-  {
-    title: "Une approche holistique",
-    text: "J'intègre le magnétisme, la kinésiologie et la réflexologie dans chaque soin pour un accompagnement complet.",
-  },
-  {
-    title: "Une écoute attentive",
-    text: "Toute ma bienveillance et mon attention, au service de votre sérénité.",
-  },
-  {
-    title: "Un cadre de confiance",
-    text: "Un cabinet chaleureux à Perpignan, où chaque personne est accueillie avec bienveillance et écoute.",
-  },
+/** Les trois étapes de l'accueil, en version courte pour la vidéo. */
+export const etapes = [
+  { titre: "Je réserve en ligne", texte: "Un soin, un créneau libre, 24 h/24, sans créer de compte." },
+  { titre: "Béatrice confirme", texte: "Email récapitulatif, puis confirmation à ajouter à l'agenda." },
+  { titre: "Je prends soin de moi", texte: "Règlement sur place, espèces ou carte." },
 ];
 
 /**
- * Extraits du livre d'or : chaque extrait est un passage exact (début du message) du témoignage publié
- * sur le site (src/lib/content.ts). Le rendu s'arrête si un extrait ne correspond plus au texte du site.
+ * Témoignages : passages exacts (début des messages) du livre d'or publié sur le site.
+ * Le rendu s'arrête si un extrait ne correspond plus au texte du site.
  */
 const extraits: Record<string, string> = {
+  Val: "Merci d'être là. Merci pour le bien-être que vous m'avez procuré, vous êtes une vraie fée.",
   Léa: "Un moment suspendu, d'évasion, de liberté. Des sensations, chaque fois plus uniques, singulières et intenses.",
-  Céline:
-    "Béa est à l'écoute et est très douce. Elle vise juste et cible tout de suite les points de tension et les problématiques.",
   Sarah: "Un grand merci pour ce moment de bien-être et d'échange. Tu es une pépite avec des mains et un cœur en or",
 };
 
@@ -71,7 +65,6 @@ export const temoignages = Object.entries(extraits).map(([name, extrait]) => {
 });
 
 export const reservation = {
-  avantages: ["Sans création de compte", "Confirmation et rappel par email", "Annulation en ligne jusqu'à 24 h avant"],
   /** Soins proposés à l'étape 1 de la démonstration (le premier est celui qui est réservé). */
   groupes: [
     {
@@ -91,6 +84,3 @@ export const cadeau = {
 
 /** Domaine affiché à la fin (repris de site.url). */
 export const domaine = site.url.replace(/^https?:\/\//, "").replace(/\/$/, "");
-
-export const avertissement =
-  "Pratiques de bien-être : elles ne se substituent pas à une consultation ou à un traitement médical.";
