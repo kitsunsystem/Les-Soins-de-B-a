@@ -394,6 +394,6 @@ export const formations: { title: string; text: string }[] = [
   },
   {
     title: "Formation Flamme Violette (niveau II)",
-    text: "Utiliser et enseigner la flamme violette, purificatrice de l'énergie de Saint-Germain.",
+    text: "Utiliser et enseigner la Flamme Violette, purificatrice de l'énergie de Saint-Germain.",
   },
 ];

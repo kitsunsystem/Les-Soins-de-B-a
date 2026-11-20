@@ -20,12 +20,9 @@ const NBSP = " ";
 export const categoryIcons: Record<Category["icon"], LucideIcon> = { leaf: Leaf, sparkles: Sparkles, baby: Baby, eye: Eye };
 
 export const accroche = {
-  intro: "Stress, tensions, fatigue du quotidien…",
   ligne1: "Et si vous preniez enfin",
   ligne2: `un moment rien qu'à vous${NBSP}?`,
 };
-
-export const devise = `«${NBSP}${site.motto}${NBSP}»`;
 
 /** Prix le plus bas et durée la plus courte de la carte (les « preuves » de l'accueil). */
 const prix = services
@@ -82,5 +79,5 @@ export const cadeau = {
   note: "Valables 12 mois",
 };
 
-/** Domaine affiché à la fin (repris de site.url). */
-export const domaine = site.url.replace(/^https?:\/\//, "").replace(/\/$/, "");
+/** Domaine affiché à la fin (repris de site.url), sans « www. », comme dans la voix off. */
+export const domaine = site.url.replace(/^https?:\/\/(www\.)?/, "").replace(/\/$/, "");

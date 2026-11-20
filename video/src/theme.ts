@@ -28,10 +28,10 @@ export const colors = {
 
 /** Une couleur par univers de soins (src/components/services.tsx, `tones`). */
 export const tones: Record<CategoryId, { soft: string; text: string; solid: string; rgbSoft: string }> = {
-  corps: { soft: colors.sageSoft, text: colors.forest, solid: colors.forest, rgbSoft: "214, 228, 214" },
-  energetique: { soft: colors.amberSoft, text: "#87601c", solid: colors.gold, rgbSoft: "243, 225, 186" },
-  "femmes-bebes": { soft: colors.blushSoft, text: colors.clayDark, solid: colors.clay, rgbSoft: "244, 214, 205" },
-  guidance: { soft: colors.lavenderSoft, text: colors.lavender, solid: colors.lavender, rgbSoft: "222, 213, 238" },
+  corps: { soft: colors.sageSoft, text: colors.forest, solid: colors.forest, rgbSoft: "230, 238, 230" },
+  energetique: { soft: colors.amberSoft, text: "#87601c", solid: "#87601c", rgbSoft: "247, 236, 214" },
+  "femmes-bebes": { soft: colors.blushSoft, text: colors.clayDark, solid: colors.clay, rgbSoft: "248, 231, 226" },
+  guidance: { soft: colors.lavenderSoft, text: colors.lavender, solid: colors.lavender, rgbSoft: "236, 231, 244" },
 };
 
 // Mêmes polices que le site : Fraunces « soft » pour les titres, Nunito Sans pour le texte.

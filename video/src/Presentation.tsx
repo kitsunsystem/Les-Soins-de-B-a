@@ -14,7 +14,7 @@ import { Temoignages } from "./scenes/Temoignages";
 import { Univers } from "./scenes/Univers";
 import { colors, FPS } from "./theme";
 import { clamp, Fondu } from "./ui";
-import { coupeApres, coupeAvant, DEBUT_VOIX, DUREE_VIDEO, DUREE_VOIX, FICHIER_VOIX, paragraphes, reperes, t } from "./voix-off";
+import { coupeApres, coupeAvant, DEBUT_VOIX, DUREE_VIDEO, DUREE_VOIX, FICHIER_VOIX, paragraphes, reperes, reperesSoins, t } from "./voix-off";
 
 /** Secondes → images. */
 const f = (secondes: number) => Math.round(secondes * FPS);
@@ -35,7 +35,15 @@ const scenes: Scene[] = [
     de: 0,
     a: coupeApres("marque"),
     rendu: (d) => (
-      <Ouverture duration={d} stress={f(t(reperes.stress))} question={f(t(reperes.question))} marque={f(t(paragraphes.marque[0]))} />
+      <Ouverture
+        duration={d}
+        stress={f(t(reperes.stress))}
+        tensions={f(t(reperes.tensions))}
+        fatigue={f(t(reperes.fatigue))}
+        question={f(t(reperes.question))}
+        moment={f(t(reperes.moment))}
+        marque={f(t(paragraphes.marque[0]))}
+      />
     ),
   },
   { id: "accueil", de: coupeAvant("accueil"), a: coupeApres("accueil"), rendu: (d) => <Accueil duration={d} /> },
@@ -49,16 +57,35 @@ const scenes: Scene[] = [
       <Soins
         duration={d}
         changements={[f(coupeAvant("energetique")) - debut, f(coupeAvant("femmes-bebes")) - debut, f(coupeAvant("guidance")) - debut]}
+        reperes={Object.fromEntries(Object.entries(reperesSoins).map(([id, s]) => [id, f(t(s)) - debut]))}
       />
     ),
   },
-  { id: "formations", de: coupeAvant("formations"), a: coupeApres("formations"), rendu: (d) => <Formations duration={d} /> },
+  {
+    id: "formations",
+    de: coupeAvant("formations"),
+    a: coupeApres("formations"),
+    rendu: (d, debut) => (
+      <Formations duration={d} reperes={[f(t(reperes.formationMagnetisme)) - debut, f(t(reperes.flammeViolette)) - debut]} />
+    ),
+  },
   { id: "cabinet", de: coupeAvant("cabinet"), a: coupeApres("cabinet"), rendu: (d) => <Cabinet duration={d} /> },
   {
     id: "temoignages",
     de: coupeAvant("temoignages"),
     a: coupeApres("temoignages"),
-    rendu: (d, debut) => <Temoignages duration={d} citation={f(t(reperes.citationLea)) - debut} auteur="Léa" />,
+    rendu: (d, debut) => (
+      <Temoignages
+        duration={d}
+        auteur="Léa"
+        lecture={[
+          f(t(reperes.citationLea)) - debut,
+          f(t(reperes.evasion)) - debut,
+          f(t(reperes.liberte)) - debut,
+          f(t(reperes.ecritLea)) - debut,
+        ]}
+      />
+    ),
   },
   {
     id: "reservation",
@@ -71,7 +98,14 @@ const scenes: Scene[] = [
     id: "final",
     de: coupeAvant("final"),
     a: DUREE_VIDEO,
-    rendu: (d, debut) => <Final duration={d} site={f(t(reperes.site)) - debut} telephone={f(t(reperes.telephone)) - debut} />,
+    rendu: (d, debut) => (
+      <Final
+        duration={d}
+        site={f(t(reperes.site)) - debut}
+        telephone={f(t(reperes.telephone)) - debut}
+        paires={reperes.paires.map((s) => f(t(s)) - debut)}
+      />
+    ),
   },
 ];
 
@@ -94,7 +128,8 @@ export const Presentation: React.FC<{ audio: boolean }> = ({ audio }) => {
         const duree = f(s.a) - debut;
         return (
           <Sequence key={s.id} from={debut} durationInFrames={duree} name={s.id}>
-            <Fondu duration={duree} entree={i > 0} sortie={i < scenes.length - 1}>
+            {/* La scène des univers a sa propre poussée, panneau par panneau. */}
+            <Fondu duration={duree} entree={i > 0} sortie={i < scenes.length - 1} poussee={s.id !== "soins"}>
               {s.rendu(duree, debut)}
             </Fondu>
           </Sequence>

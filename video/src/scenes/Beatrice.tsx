@@ -34,13 +34,11 @@ export const Beatrice: React.FC<{ duration: number }> = ({ duration }) => {
 
         <div style={{ width: 900 }}>
           <FadeUp delay={2} distance={14}>
-            <Eyebrow>Qui suis-je ?</Eyebrow>
+            <Eyebrow>Votre praticienne</Eyebrow>
           </FadeUp>
           <FadeUp delay={5}>
             <Title size={88} style={{ marginTop: 22 }}>
-              Béatrice,
-              <br />
-              <Accent>à l’écoute de votre équilibre</Accent>
+              Béatrice, <Accent>à l’écoute de votre équilibre</Accent>
             </Title>
           </FadeUp>
           <FadeUp delay={10}>

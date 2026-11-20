@@ -73,11 +73,25 @@ export function WordsUp({ text, delay = 0, stagger = 3, duration = 18 }: { text:
  * Enveloppe d'une scène : fondu d'entrée, puis fondu de sortie vers le fond lin.
  * Les deux fondus ne se chevauchent pas : le texte de deux scènes n'est jamais superposé.
  */
-export function Fondu({ duration, entree = true, sortie = true, children }: { duration: number; entree?: boolean; sortie?: boolean; children: ReactNode }) {
+export function Fondu({
+  duration,
+  entree = true,
+  sortie = true,
+  poussee = true,
+  children,
+}: {
+  duration: number;
+  entree?: boolean;
+  sortie?: boolean;
+  /** Très lent zoom avant sur toute la scène, pour qu'aucun plan ne paraisse figé. */
+  poussee?: boolean;
+  children: ReactNode;
+}) {
   const frame = useCurrentFrame();
   const opIn = entree ? interpolate(frame, [0, FONDU], [0, 1], { ...clamp, easing: EASE_IN_OUT }) : 1;
   const opOut = sortie ? interpolate(frame, [duration - FONDU, duration], [1, 0], { ...clamp, easing: EASE_IN_OUT }) : 1;
-  return <AbsoluteFill style={{ opacity: Math.min(opIn, opOut) }}>{children}</AbsoluteFill>;
+  const zoom = poussee ? interpolate(frame, [0, duration], [1, 1.035], clamp) : 1;
+  return <AbsoluteFill style={{ opacity: Math.min(opIn, opOut), transform: `scale(${zoom})` }}>{children}</AbsoluteFill>;
 }
 
 /** Emblème du site : un lotus surmonté d'un point de lumière. `trace` dessine le trait de 0 à 1. */

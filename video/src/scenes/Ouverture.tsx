@@ -1,17 +1,24 @@
 import { AbsoluteFill, interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
-import { accroche, devise, site } from "../script";
+import { accroche, site } from "../script";
 import { colors, EASE_IN_OUT, EASE_OUT, fonts, titre } from "../theme";
 import { Accent, clamp, FadeUp, FondLin, LogoBadge, Ornament, typo, useAppear, WordsUp } from "../ui";
 
+/** « Stress, » / « tensions, » / « fatigue du quotidien… » : chaque mot apparaît quand la voix le dit. */
+const FRAGMENTS_ACCROCHE = ["Stress,", "tensions,", "fatigue du quotidien…"];
+
 /**
  * Accroche, puis la marque. Les repères (images de la scène) viennent de la voix off :
- * « Stress… », « Et si vous preniez… », « Bienvenue aux Soins de Béa ».
+ * « Stress », « tensions », « fatigue », « Et si vous preniez… », « un moment… », « Bienvenue aux Soins de Béa ».
  */
-export const Ouverture: React.FC<{ duration: number; stress: number; question: number; marque: number }> = ({
-  stress,
-  question,
-  marque,
-}) => {
+export const Ouverture: React.FC<{
+  duration: number;
+  stress: number;
+  tensions: number;
+  fatigue: number;
+  question: number;
+  moment: number;
+  marque: number;
+}> = ({ stress, tensions, fatigue, question, moment, marque }) => {
   const frame = useCurrentFrame();
   const { fps } = useVideoConfig();
   const sortie = interpolate(frame, [marque - 16, marque - 4], [1, 0], { ...clamp, easing: EASE_IN_OUT });
@@ -20,6 +27,8 @@ export const Ouverture: React.FC<{ duration: number; stress: number; question: n
   const pastille = spring({ frame: frame - (marque - 6), fps, config: { damping: 15, stiffness: 140 } });
   const trace = interpolate(frame, [marque - 4, marque + 22], [0, 1], { ...clamp, easing: EASE_IN_OUT });
   const nom = useAppear(marque + 2, 30);
+  const avance = interpolate(frame, [stress, marque], [1, 1.04], clamp);
+  const delais = [stress - 4, tensions - 4, fatigue - 4];
   const masque = `linear-gradient(90deg, #000 ${-25 + nom * 150 - 25}%, transparent ${-25 + nom * 150}%)`;
 
   return (
@@ -33,27 +42,21 @@ export const Ouverture: React.FC<{ duration: number; stress: number; question: n
             alignItems: "center",
             textAlign: "center",
             opacity: sortie,
-            transform: `translateY(${(1 - sortie) * -26}px)`,
+            transform: `translateY(${(1 - sortie) * -26}px) scale(${avance})`,
           }}
         >
-          <FadeUp delay={stress - 4} duration={22}>
-            <div
-              style={{
-                ...titre,
-                fontStyle: "italic",
-                fontWeight: 380,
-                fontSize: 64,
-                color: colors.inkSoft,
-              }}
-            >
-              {typo(accroche.intro)}
-            </div>
-          </FadeUp>
+          <div style={{ display: "flex", gap: 18, ...titre, fontStyle: "italic", fontWeight: 380, fontSize: 64, color: colors.inkSoft }}>
+            {FRAGMENTS_ACCROCHE.map((mot, i) => (
+              <FadeUp key={mot} delay={delais[i]} duration={16} distance={20}>
+                {typo(mot)}
+              </FadeUp>
+            ))}
+          </div>
           <div style={{ ...titre, marginTop: 34, fontSize: 118, color: colors.ink }}>
             <WordsUp text={accroche.ligne1} delay={question - 4} stagger={3} />
             <br />
             <Accent>
-              <WordsUp text={accroche.ligne2} delay={question + 11} stagger={3} />
+              <WordsUp text={accroche.ligne2} delay={moment - 4} stagger={5} duration={12} />
             </Accent>
           </div>
         </AbsoluteFill>
@@ -94,11 +97,6 @@ export const Ouverture: React.FC<{ duration: number; stress: number; question: n
             </div>
           </FadeUp>
           <Ornament delay={marque + 14} style={{ marginTop: 40 }} />
-          <FadeUp delay={marque + 20} duration={22}>
-            <div style={{ ...titre, marginTop: 38, fontStyle: "italic", fontWeight: 380, fontSize: 52, color: colors.forest }}>
-              {typo(devise)}
-            </div>
-          </FadeUp>
         </AbsoluteFill>
       )}
     </AbsoluteFill>

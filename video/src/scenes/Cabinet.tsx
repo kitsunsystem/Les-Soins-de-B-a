@@ -19,7 +19,7 @@ export const Cabinet: React.FC<{ duration: number }> = ({ duration }) => {
       <FondLin rameaux={false} sable />
       <AbsoluteFill style={{ alignItems: "center", justifyContent: "center" }}>
         <SectionHeading
-          eyebrow="Mon cabinet"
+          eyebrow="Le cabinet"
           title={
             <>
               Un espace pensé pour <Accent>votre détente</Accent>
@@ -36,7 +36,7 @@ export const Cabinet: React.FC<{ duration: number }> = ({ duration }) => {
                   style={{
                     width: 520,
                     height: p.arche ? 580 : 520,
-                    borderRadius: p.arche ? "9999px 9999px 40px 40px" : 32,
+                    borderRadius: p.arche ? "260px 260px 40px 40px" : 32,
                     overflow: "hidden",
                     boxShadow: shadows.card,
                   }}

@@ -71,7 +71,7 @@ export const Accueil: React.FC<{ duration: number }> = ({ duration }) => {
               width: 600,
               height: 750,
               overflow: "hidden",
-              borderRadius: "9999px 9999px 42px 42px",
+              borderRadius: "300px 300px 42px 42px",
               boxShadow: shadows.soft,
               opacity: photo,
               transform: `translateY(${(1 - photo) * 40}px)`,
@@ -126,7 +126,7 @@ export const Accueil: React.FC<{ duration: number }> = ({ duration }) => {
               <CalendarCheck size={30} strokeWidth={1.7} />
             </div>
             <div style={{ lineHeight: 1.25 }}>
-              <div style={{ fontFamily: fonts.sans, fontSize: 15, fontWeight: 750, letterSpacing: "0.14em", textTransform: "uppercase", color: colors.clay }}>
+              <div style={{ fontFamily: fonts.sans, fontSize: 17, fontWeight: 750, letterSpacing: "0.14em", textTransform: "uppercase", color: colors.clay }}>
                 Sur rendez-vous
               </div>
               <div style={{ marginTop: 6, fontFamily: fonts.sans, fontSize: 25, fontWeight: 650, color: colors.ink }}>

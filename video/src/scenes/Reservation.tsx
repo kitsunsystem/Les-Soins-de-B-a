@@ -53,7 +53,7 @@ const pression = (frame: number, clic: number) => interpolate(frame, [clic - 4, 
  * « Votre séance en 3 étapes » et la démonstration de la prise de rendez-vous en ligne.
  * La confirmation apparaît quand la voix dit « Béatrice vous confirme votre rendez-vous » (`confirmation`).
  */
-export const Reservation: React.FC<{ duration: number; confirmation: number }> = ({ duration, confirmation }) => {
+export const Reservation: React.FC<{ duration: number; confirmation: number }> = ({ confirmation }) => {
   const frame = useCurrentFrame();
   const T = {
     clicSoin: 28,
@@ -67,7 +67,7 @@ export const Reservation: React.FC<{ duration: number; confirmation: number }> =
   const phase1 = interpolate(frame, [T.etape2 - 6, T.etape2 + 1], [1, 0], clamp);
   const phase2 = interpolate(frame, [T.etape2 - 1, T.etape2 + 6, T.confirmation - 4, T.confirmation + 2], [0, 1, 1, 0], clamp);
   const phase3 = interpolate(frame, [T.confirmation, T.confirmation + 12], [0, 1], { ...clamp, easing: EASE_OUT });
-  const etapeActive = frame < T.confirmation ? 0 : frame < Math.min(duration - 30, T.confirmation + 40) ? 1 : 2;
+  const etapeActive = frame < T.confirmation ? 0 : 1;
 
   return (
     <AbsoluteFill>
@@ -342,7 +342,7 @@ function ResumeSoin() {
       }}
     >
       <div>
-        <div style={{ fontFamily: fonts.sans, fontSize: 14, fontWeight: 750, letterSpacing: "0.16em", textTransform: "uppercase", color: colors.inkSoft }}>Soin choisi</div>
+        <div style={{ fontFamily: fonts.sans, fontSize: 17, fontWeight: 750, letterSpacing: "0.16em", textTransform: "uppercase", color: colors.inkSoft }}>Soin choisi</div>
         <div style={{ ...titre, fontSize: 31, color: colors.ink }}>{s.name}</div>
       </div>
       <div style={{ fontFamily: fonts.sans, fontSize: 21, color: colors.inkSoft }}>
@@ -376,7 +376,7 @@ function Calendrier({ frame, clic }: { frame: number; clic: number }) {
       </div>
       <div style={{ position: "absolute", left: CAL.pad, top: 72, display: "flex", gap: CAL.gap }}>
         {["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"].map((d) => (
-          <div key={d} style={{ width: CAL.cell, textAlign: "center", fontFamily: fonts.sans, fontSize: 14, fontWeight: 650, letterSpacing: "0.08em", textTransform: "uppercase", color: colors.inkSoft }}>
+          <div key={d} style={{ width: CAL.cell, textAlign: "center", fontFamily: fonts.sans, fontSize: 17, fontWeight: 650, letterSpacing: "0.08em", textTransform: "uppercase", color: colors.inkSoft }}>
             {d}
           </div>
         ))}
@@ -442,7 +442,7 @@ function Creneaux({ frame, clicJour, clicHeure }: { frame: number; clicJour: num
         <div style={{ ...titre, position: "absolute", left: 24, top: 20, fontSize: 29, color: colors.ink }}>Mardi 8 décembre</div>
         {groupes.map((g) => (
           <div key={g.label}>
-            <div style={{ position: "absolute", left: 24, top: g.y - HEURES.y, fontFamily: fonts.sans, fontSize: 14, fontWeight: 750, letterSpacing: "0.16em", textTransform: "uppercase", color: colors.inkSoft }}>
+            <div style={{ position: "absolute", left: 24, top: g.y - HEURES.y, fontFamily: fonts.sans, fontSize: 17, fontWeight: 750, letterSpacing: "0.16em", textTransform: "uppercase", color: colors.inkSoft }}>
               {g.label}
             </div>
             {g.heures.map((h, j) => {

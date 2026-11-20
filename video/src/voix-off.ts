@@ -49,13 +49,36 @@ export const paragraphes: Record<IdParagraphe, [number, number]> = {
 
 /** Mots-clés à l'intérieur des paragraphes, pour synchroniser l'image (secondes dans le fichier de voix). */
 export const reperes = {
-  stress: 0.78,
+  stress: 0.75,
+  tensions: 1.73,
+  fatigue: 2.6,
   question: 4.95,
+  moment: 6.51,
+  formationMagnetisme: 46.01,
+  flammeViolette: 47.4,
   citationLea: 54.62,
+  evasion: 56.05,
+  liberte: 56.98,
+  ecritLea: 57.96,
   confirmation: 62.32,
   site: 70.56,
   telephone: 73.26,
+  /** « zéro sept », « soixante-deux », « quatre-vingt-quatorze », « soixante-dix-neuf », « trente-neuf ». */
+  paires: [73.49, 74.34, 75.19, 76.3, 77.37],
 } as const;
+
+/** Moment où la voix nomme chaque soin (ou groupe de soins) dans les univers. */
+export const reperesSoins: Record<string, number> = {
+  reflexologie: 24.9,
+  massages: 25.85,
+  "massage-energetique": 30.45,
+  "soin-complet": 31.74,
+  "magnetisme-distance": 33.2,
+  "massage-prenatal": 37.01,
+  "atelier-massage-bebe": 37.95,
+  "oracle-tarot": 41.47,
+  mediumnite: 42.77,
+};
 
 const ordre = Object.keys(paragraphes) as IdParagraphe[];
 
