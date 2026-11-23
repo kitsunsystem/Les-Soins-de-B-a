@@ -6,8 +6,8 @@ Nappe douce en fa majeur (Fa maj9 → Ré m9 → Si♭ maj9 → Do add9), basse 
 de carillon, bol chantant sur l'apparition du nom et sur le plan final, réverbération par convolution.
 
 Les repères (durée, apparition du nom, plan final) sont lus dans src/voix-off.json et src/montage.json (début de la
-voix, tenue finale, silences insérés), comme la vidéo. Un carillon discret accompagne les certificats de Béatrice,
-montrés pendant le silence inséré.
+voix, tenue finale, silences insérés), comme la vidéo. Dans un silence inséré sans voix, le carillon se tait ; celui des
+certificats porte la voix des certificats, la musique y reste donc comme sous la voix.
 
 Usage : python3 scripts/generate-music.py public/musique.mp3
 Dépendances : numpy, et ffmpeg pour l'encodage MP3.
@@ -34,18 +34,19 @@ _silences = []
 for _id, _duree in _montage["silences"].items():
     _suivant = _ordre[_ordre.index(_id) + 1]
     _point = math.floor((_voix["paragraphes"][_id][1] + _voix["paragraphes"][_suivant][0]) / 2 * FPS + 0.5) / FPS
-    _silences.append((_point, math.floor(_duree * FPS + 0.5) / FPS))
+    _silences.append((_point, math.floor(_duree * FPS + 0.5) / FPS, _id))
 
 
 def video(s):
     """Seconde de la vidéo correspondant à une seconde de la voix (t() dans src/voix-off.ts)."""
-    return _montage["debutVoix"] + s + sum(d for p, d in _silences if s >= p)
+    return _montage["debutVoix"] + s + sum(d for p, d, _ in _silences if s >= p)
 
 
 DUREE = video(_voix["duree"]) + _montage["tenueFinale"]  # durée de la vidéo
 MARQUE = video(_voix["paragraphes"]["marque"][0])  # « Bienvenue aux Soins de Béa »
 FINAL = video(_voix["paragraphes"]["final"][0])  # plan final : « Les Soins de Béa, à Perpignan »
-PAUSES = [(video(p) - d, video(p)) for p, d in _silences]  # images sans voix (certificats de Béatrice) : début, fin
+# Silences sans voix (images seules) : début, fin. Le silence des certificats porte la voix des certificats.
+PAUSES = [(video(p) - d, video(p)) for p, d, i in _silences if i != _montage.get("voixCertificats", {}).get("apres")]
 rng = np.random.default_rng(7)
 
 N = int(SR * (DUREE + 0.1))
@@ -172,16 +173,6 @@ for k, (nom, debut, fin) in enumerate(plan[:-1]):
 # Accord final égrené
 for i, m in enumerate([65, 69, 72, 76, 79]):
     cloche(hz(m + 12), FINAL + 0.35 + i * 0.32, 0.07, 0.25 + 0.12 * i)
-
-# Certificats de Béatrice (silence de la voix) : une note de carillon chaque fois qu'un certificat arrive au centre du
-# carrousel, en gamme pentatonique montante. Même rythme que src/scenes/Diplomes.tsx : premier certificat à l'image 12,
-# puis la scène partagée également entre les certificats, fondu de sortie de 7 images compris.
-N_CERTIFICATS = 6  # nombre de certificats (`certificats` dans src/script.ts)
-for debut_pause, fin_pause in PAUSES:
-    images = round((fin_pause - debut_pause) * FPS)
-    pas_images = (images - 12 - 7) // N_CERTIFICATS
-    for i, m in enumerate([72, 74, 76, 79, 81, 84][:N_CERTIFICATS]):
-        cloche(hz(m + 12), debut_pause + (12 + i * pas_images) / FPS, 0.05, 0.35 + 0.3 * (i % 2))
 
 # --- Bol chantant ---------------------------------------------------------------------------
 def bol(f0, debut, amp):

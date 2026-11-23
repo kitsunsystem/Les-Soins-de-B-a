@@ -14,7 +14,22 @@ import { Temoignages } from "./scenes/Temoignages";
 import { Univers } from "./scenes/Univers";
 import { colors, FPS } from "./theme";
 import { clamp, Fondu } from "./ui";
-import { coupeApres, coupeAvant, DUREE_VIDEO, DUREE_VOIX, FICHIER_VOIX, paragraphes, reperes, silenceApres, silences, t, type NomRepere } from "./voix-off";
+import {
+  coupeApres,
+  coupeAvant,
+  DUREE_VIDEO,
+  DUREE_VOIX,
+  FICHIER_VOIX,
+  FICHIER_VOIX_CERTIFICATS,
+  paragraphes,
+  reperes,
+  silenceApres,
+  silences,
+  silencesSansVoix,
+  t,
+  voixCertificats,
+  type NomRepere,
+} from "./voix-off";
 
 /** Secondes → images. */
 const f = (secondes: number) => Math.round(secondes * FPS);
@@ -30,8 +45,13 @@ type Scene = {
   rendu: (duree: number, debut: number) => ReactNode;
 };
 
-/** Silence inséré dans la voix après la présentation de Béatrice : ses certificats, sans voix (src/montage.json). */
+/**
+ * Silence inséré dans la voix principale après la présentation de Béatrice (src/montage.json) : ses certificats, sur
+ * la voix des certificats. Chaque certificat arrive au centre quand cette voix le nomme.
+ */
 const pauseCertificats = silenceApres("beatrice");
+/** Repère de la voix des certificats → image de la scène qui commence à l'image `debut`. */
+const rc = (nom: keyof typeof voixCertificats.reperes, debut: number) => f(voixCertificats.video(voixCertificats.reperes[nom])) - debut;
 
 // Chaque scène commence et finit au milieu des silences de la voix off (voir src/voix-off.ts).
 const scenes: Scene[] = [
@@ -53,7 +73,24 @@ const scenes: Scene[] = [
   },
   { id: "accueil", de: coupeAvant("accueil"), a: coupeApres("accueil"), rendu: (d) => <Accueil duration={d} /> },
   { id: "beatrice", de: coupeAvant("beatrice"), a: pauseCertificats?.de ?? coupeApres("beatrice"), rendu: (d) => <Beatrice duration={d} /> },
-  ...(pauseCertificats ? [{ id: "diplomes", de: pauseCertificats.de, a: pauseCertificats.a, rendu: (d: number) => <Diplomes duration={d} /> }] : []),
+  ...(pauseCertificats
+    ? [
+        {
+          id: "diplomes",
+          de: pauseCertificats.de,
+          a: pauseCertificats.a,
+          rendu: (d: number, debut: number) => (
+            <Diplomes
+              duration={d}
+              annonce={rc("certSix", debut)}
+              arrivees={(["certMagnetisme", "certReflexologie", "certMassage", "certKinesiologie", "certLithotherapie", "certFlammeViolette"] as const).map(
+                (nom) => rc(nom, debut),
+              )}
+            />
+          ),
+        },
+      ]
+    : []),
   { id: "univers", de: coupeAvant("univers"), a: coupeApres("univers"), rendu: (d) => <Univers duration={d} /> },
   {
     id: "soins",
@@ -134,8 +171,8 @@ const VOLUME_VOIX = 1.12;
 const MUSIQUE_SOUS_VOIX = 0.175;
 const MUSIQUE_SEULE = 0.355;
 /**
- * Pendant un silence inséré (images sans voix, 12,5 s pour les certificats), la musique remonte pour porter le passage
- * (environ 7 LU sous la voix), puis redescend avant que la voix reprenne.
+ * Pendant un silence inséré sans voix (images seules), la musique remonte pour porter le passage (environ 7 LU sous la
+ * voix), puis redescend avant que la voix reprenne. Le silence des certificats, lui, porte la voix des certificats.
  */
 const MUSIQUE_PAUSE = 0.45;
 
@@ -151,10 +188,10 @@ function volumeMusique(image: number) {
     [0, MUSIQUE_SOUS_VOIX, MUSIQUE_SOUS_VOIX, MUSIQUE_SEULE, MUSIQUE_SEULE, 0],
     clamp,
   );
-  // Silences insérés : la musique remonte un peu le temps des images sans voix.
+  // Silences insérés sans voix : la musique remonte le temps des images seules.
   const pause = Math.max(
     0,
-    ...silences.map((p) => {
+    ...silencesSansVoix.map((p) => {
       const fin = t(p.point);
       const debut = fin - p.duree;
       return interpolate(s, [debut + 0.05, debut + 1.0, fin - 1.0, fin - 0.15], [0, 1, 1, 0], clamp);
@@ -196,6 +233,9 @@ export const Presentation: React.FC<{ audio: boolean }> = ({ audio }) => {
               <Html5Audio src={staticFile(FICHIER_VOIX)} volume={VOLUME_VOIX} trimBefore={f(m.debut)} />
             </Sequence>
           ))}
+          <Sequence from={f(voixCertificats.debutFichier)} name="voix des certificats">
+            <Html5Audio src={staticFile(FICHIER_VOIX_CERTIFICATS)} volume={VOLUME_VOIX} />
+          </Sequence>
           <Html5Audio src={staticFile("musique.mp3")} volume={volumeMusique} />
         </>
       )}

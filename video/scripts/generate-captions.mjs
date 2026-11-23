@@ -1,5 +1,6 @@
 // Génère les sous-titres WebVTT de la vidéo à partir du texte annoté de la voix off (voix-off-reperes.txt, le même
-// texte que voix-off.md) et des instants mesurés (src/voix-off.json, produit par scripts/caler-voix.py).
+// texte que voix-off.md) et des instants mesurés (src/voix-off.json, produit par scripts/caler-voix.py), ainsi que de
+// la voix des certificats (voix-certificats-reperes.txt, src/voix-certificats.json), placée comme dans la vidéo.
 // Usage : npm run captions
 //
 // Chaque réplique commence quand la voix en dit le premier mot : on interpole entre les repères mesurés (début et
@@ -16,26 +17,42 @@ const FPS = 30;
 const ordre = Object.keys(paragraphes);
 const silences = Object.entries(montage.silences).map(([id, d]) => {
   const suivant = ordre[ordre.indexOf(id) + 1];
-  return { point: Math.round(((paragraphes[id][1] + paragraphes[suivant][0]) / 2) * FPS) / FPS, duree: Math.round(d * FPS) / FPS };
+  return { id, point: Math.round(((paragraphes[id][1] + paragraphes[suivant][0]) / 2) * FPS) / FPS, duree: Math.round(d * FPS) / FPS };
 });
 /** Seconde de la vidéo correspondant à une seconde de la voix. */
 const video = (s) => montage.debutVoix + s + silences.reduce((acc, x) => acc + (s >= x.point ? x.duree : 0), 0);
+// Voix des certificats : jouée dans le silence inséré après « apres », sa parole commençant « avant » secondes après le
+// début de ce silence (même calcul que voixCertificats dans src/voix-off.ts).
+const certificats = JSON.parse(readFileSync("src/voix-certificats.json", "utf8"));
+const silenceCertificats = silences.find((x) => x.id === montage.voixCertificats.apres);
+const debutFichierCertificats =
+  Math.round((video(silenceCertificats.point) - silenceCertificats.duree + montage.voixCertificats.avant - certificats.paragraphes.certificats[0]) * FPS) / FPS;
+const videoCertificats = (s) => debutFichierCertificats + s;
 // Le plan final reste à l'écran après la dernière phrase : la dernière réplique aussi.
 const finVideo = video(duree) + montage.tenueFinale;
 
 // Texte annoté : « identifiant | texte », [balises] d'expression, {repère} devant les mots.
-const lignes = readFileSync("voix-off-reperes.txt", "utf8")
-  .split("\n")
-  .filter((l) => l.trim() && !l.startsWith("#"));
+const annote = (fichier) =>
+  readFileSync(fichier, "utf8")
+    .split("\n")
+    .filter((l) => l.trim() && !l.startsWith("#"));
+const lignes = annote("voix-off-reperes.txt");
+const lignesCertificats = annote("voix-certificats-reperes.txt");
 
-// Contrôle : le texte annoté doit rester celui de voix-off.md (le texte réellement envoyé à ElevenLabs).
+// Contrôle : les textes annotés doivent rester ceux de voix-off.md (les textes réellement envoyés à ElevenLabs) :
+// premier bloc de code pour la voix principale, second pour la voix des certificats.
 const md = readFileSync("voix-off.md", "utf8");
-const bloc = md.slice(md.indexOf("```") + 3, md.lastIndexOf("```"));
+const blocs = md.split("```").filter((_, i) => i % 2 === 1);
 const nettoie = (t) => t.replace(/\[[^\]]*\]/g, " ").replace(/\{[^}]*\}/g, "").replace(/\s+/g, " ").trim();
-const textesMd = bloc.split("\n").map(nettoie).filter(Boolean);
-const textesAnnotes = lignes.map((l) => nettoie(l.split(" | ")[1]));
-if (textesMd.join("\n") !== textesAnnotes.join("\n")) {
-  throw new Error("voix-off-reperes.txt ne correspond plus au texte de voix-off.md : reportez la modification.");
+for (const [bloc, lignesAnnotees, fichier] of [
+  [blocs[0], lignes, "voix-off-reperes.txt"],
+  [blocs[1], lignesCertificats, "voix-certificats-reperes.txt"],
+]) {
+  const textesMd = (bloc ?? "").split("\n").map(nettoie).filter(Boolean);
+  const textesAnnotes = lignesAnnotees.map((l) => nettoie(l.split(" | ")[1]));
+  if (textesMd.join("\n") !== textesAnnotes.join("\n")) {
+    throw new Error(`${fichier} ne correspond plus au texte de voix-off.md : reportez la modification.`);
+  }
 }
 
 // La fin est prononcée « en toutes lettres » pour la voix : on affiche l'écriture habituelle.
@@ -67,10 +84,10 @@ const stamp = (s) => {
   return `${h}:${m}:${sec}.${String(ms % 1000).padStart(3, "0")}`;
 };
 
-/** Texte prononcé d'un paragraphe et ses ancres [position dans le texte, instant dans la voix]. */
-function lire(ligne) {
+/** Texte prononcé d'un paragraphe et ses ancres [position dans le texte, instant dans sa voix]. */
+function lire(ligne, donnees = { paragraphes, reperes }) {
   const [id, brut] = ligne.split(" | ");
-  const [debut, fin] = paragraphes[id];
+  const [debut, fin] = donnees.paragraphes[id];
   const noms = [];
   const marque = brut
     .replace(/\[[^\]]*\]/g, " ")
@@ -84,8 +101,8 @@ function lire(ligne) {
   const ancres = [[0, debut]];
   for (const c of marque) {
     if (c === "\u0001") {
-      const t = reperes[noms[ancres.length - 1]];
-      if (t === undefined) throw new Error(`Repère « ${noms[ancres.length - 1]} » absent de src/voix-off.json`);
+      const t = donnees.reperes[noms[ancres.length - 1]];
+      if (t === undefined) throw new Error(`Repère « ${noms[ancres.length - 1]} » absent des instants mesurés (relancer scripts/caler-voix.py)`);
       ancres.push([texte.length, t]);
     } else texte += c;
   }
@@ -141,16 +158,22 @@ function decoupe(texte) {
 }
 
 const repliques = [];
-for (const ligne of lignes) {
-  const { texte, ancres, fin } = lire(ligne);
-  const morceaux = decoupe(texte);
-  morceaux.forEach(([a, b], i) => {
-    const debut = instant(ancres, a);
-    const finMorceau = i + 1 < morceaux.length ? instant(ancres, morceaux[i + 1][0]) : fin;
-    const phrase = display(texte.slice(a, b).trim().replace(/,$/, ""));
-    repliques.push([video(debut), video(finMorceau), phrase]);
-  });
+for (const [lignesVoix, donnees, versVideo] of [
+  [lignes, { paragraphes, reperes }, video],
+  [lignesCertificats, certificats, videoCertificats],
+]) {
+  for (const ligne of lignesVoix) {
+    const { texte, ancres, fin } = lire(ligne, donnees);
+    const morceaux = decoupe(texte);
+    morceaux.forEach(([a, b], i) => {
+      const debut = instant(ancres, a);
+      const finMorceau = i + 1 < morceaux.length ? instant(ancres, morceaux[i + 1][0]) : fin;
+      const phrase = display(texte.slice(a, b).trim().replace(/,$/, ""));
+      repliques.push([versVideo(debut), versVideo(finMorceau), phrase]);
+    });
+  }
 }
+repliques.sort((x, y) => x[0] - y[0]);
 // Chaque réplique reste au moins 1,2 s (dans la limite de la suivante) ; la dernière, jusqu'à la fin de la vidéo.
 repliques.forEach((r, i) => {
   const suivante = repliques[i + 1]?.[0] ?? finVideo;

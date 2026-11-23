@@ -1,0 +1,15 @@
+{
+  "duree": 13.949,
+  "paragraphes": {
+    "certificats": [0.12, 13.74]
+  },
+  "reperes": {
+    "certSix": 3.48,
+    "certMagnetisme": 5.26,
+    "certReflexologie": 6.67,
+    "certMassage": 8.23,
+    "certKinesiologie": 9.71,
+    "certLithotherapie": 11.1,
+    "certFlammeViolette": 12.92
+  }
+}

@@ -28,8 +28,8 @@ export const presentationVideo = {
   src: "/videos/les-soins-de-bea.mp4",
   poster: "/videos/les-soins-de-bea-vignette.jpg",
   captions: "/videos/les-soins-de-bea.fr.vtt",
-  duration: "2 min 07",
-  isoDuration: "PT2M7S",
+  duration: "2 min 09",
+  isoDuration: "PT2M9S",
   uploadDate: "2026-11-23",
 } as const;
 

@@ -1,0 +1,3 @@
+# Texte annoté de la voix des certificats (public/voix-certificats.mp3), même format que voix-off-reperes.txt ; même texte
+# que la seconde partie de voix-off.md. Chaque repère {…} amène un certificat au centre quand la voix le nomme.
+certificats | [confident] Formée auprès d'organismes spécialisés, Béatrice a obtenu {certSix}six certifications : [short pause] [calm] {certMagnetisme}magnétisme, [short pause] {certReflexologie}réflexologie, [short pause] {certMassage}massage bien-être, [short pause] {certKinesiologie}kinésiologie, [short pause] {certLithotherapie}lithothérapie, [short pause] et {certFlammeViolette}Flamme Violette.

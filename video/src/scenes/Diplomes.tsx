@@ -2,39 +2,44 @@ import { GraduationCap } from "lucide-react";
 import { AbsoluteFill, Img, interpolate, interpolateColors, useCurrentFrame } from "remotion";
 import { diplomes } from "../assets";
 import { certificats } from "../script";
-import { colors, EASE_IN_OUT, EASE_OUT, FONDU, fonts, shadows, titre } from "../theme";
+import { colors, EASE_IN_OUT, EASE_OUT, fonts, shadows, titre } from "../theme";
 import { Accent, clamp, Eyebrow, FadeUp, FondLin, Title } from "../ui";
 
-/** Largeur du certificat au centre ; écart entre deux certificats du carrousel. */
+/** Vue rapprochée : largeur du certificat au centre, écart entre deux certificats. */
 const LARGEUR = 820;
 const ECART = 760;
-/** Images : premier certificat en place, durée d'un glissement vers le certificat suivant. */
-const DEBUT = 12;
-const GLISSE = 18;
+/** Vue d'ensemble (les six en rang) : écart et échelle des certificats. */
+const ECART_ENSEMBLE = 306;
+const ECHELLE_ENSEMBLE = 0.36;
+/** Images : passage à la vue rapprochée autour de « magnétisme », glissement autour de chaque nom suivant. */
+const ZOOM_AVANT = 16;
+const ZOOM_APRES = 8;
+const GLISSE_AVANT = 10;
+const GLISSE_APRES = 6;
 
 /**
- * Nombre d'images pendant lesquelles chaque certificat est au centre : la scène est partagée également, le dernier
- * restant jusqu'au fondu de sortie. Même calcul dans scripts/generate-music.py (une note de carillon par certificat).
+ * Les certificats de Béatrice, sur la voix des certificats : « Formée auprès d'organismes spécialisés, Béatrice a obtenu
+ * six certifications » montre les six en rang (`annonce` : image de « six ») ; sur « magnétisme », la vue se rapproche
+ * du premier, puis chaque certificat arrive au centre, en grand, quand la voix le nomme (`arrivees` : images de la
+ * scène), avec son intitulé et son année ; les voisins restent visibles en retrait, des points indiquent la progression.
  */
-const pas = (duree: number, n: number) => Math.floor((duree - DEBUT - FONDU) / n);
-/** Image où le certificat i arrive au centre. */
-const auCentre = (i: number, p: number) => DEBUT + i * p;
-
-/**
- * Les certificats de Béatrice, un par un, pendant un silence de la voix après sa présentation : un carrousel amène
- * chaque feuille au centre, en grand (le magnétisme d'abord), avec son intitulé et son année ; les voisines restent
- * visibles en retrait, et des points indiquent la progression.
- */
-export const Diplomes: React.FC<{ duration: number }> = ({ duration }) => {
+export const Diplomes: React.FC<{ duration: number; annonce: number; arrivees: number[] }> = ({ annonce, arrivees }) => {
   const frame = useCurrentFrame();
   const n = certificats.length;
-  const p = pas(duration, n);
-  // Position du carrousel : 0 sur le premier certificat, 1 sur le deuxième… (glissements adoucis).
-  let position = 0;
+  // 0 : vue d'ensemble ; 1 : vue rapprochée, un certificat au centre.
+  const rapproche = interpolate(frame, [arrivees[0] - ZOOM_AVANT, arrivees[0] + ZOOM_APRES], [0, 1], { ...clamp, easing: EASE_IN_OUT });
+  // Certificat au centre du carrousel : 0, puis un après l'autre quand la voix les nomme (glissements adoucis).
+  let rang = 0;
   for (let k = 1; k < n; k++) {
-    position += interpolate(frame, [auCentre(k, p) - GLISSE, auCentre(k, p)], [0, 1], { ...clamp, easing: EASE_IN_OUT });
+    rang += interpolate(frame, [arrivees[k] - GLISSE_AVANT, arrivees[k] + GLISSE_APRES], [0, 1], { ...clamp, easing: EASE_IN_OUT });
   }
-  const entree = interpolate(frame, [0, DEBUT], [0, 1], { ...clamp, easing: EASE_OUT });
+  // Position sur l'écran : le milieu du rang en vue d'ensemble, puis le certificat en cours. Tailles, intitulés et points
+  // suivent `rang` : pendant le rapprochement, seul le premier certificat grandit, sans que les autres grossissent au passage.
+  const position = ((n - 1) / 2) * (1 - rapproche) + rang;
+  const ecart = ECART_ENSEMBLE + (ECART - ECART_ENSEMBLE) * rapproche;
+  const entree = interpolate(frame, [0, 14], [0, 1], { ...clamp, easing: EASE_OUT });
+  // « 6 certifications » sous le rang, pendant que la voix le dit, jusqu'au rapprochement.
+  const six = interpolate(frame, [annonce - 3, annonce + 6, arrivees[0] - ZOOM_AVANT, arrivees[0] - ZOOM_AVANT + 8], [0, 1, 1, 0], clamp);
 
   return (
     <AbsoluteFill>
@@ -51,15 +56,19 @@ export const Diplomes: React.FC<{ duration: number }> = ({ duration }) => {
         </FadeUp>
       </div>
 
-      {/* Carrousel : la feuille au centre en grand, les voisines plus petites et estompées. */}
       {certificats.map((c, i) => {
         const d = i - position;
-        const ecart = Math.abs(d);
-        if (ecart > 2.4) return null;
-        const echelle = interpolate(ecart, [0, 1, 2], [1, 0.6, 0.42], clamp);
-        const opacite = interpolate(ecart, [0, 1, 1.8, 2.4], [1, 0.55, 0.15, 0], clamp) * entree;
-        // Reflet : une bande de lumière glisse sur la feuille pendant qu'elle est au centre.
-        const reflet = interpolate(frame, [auCentre(i, p) + 4, auCentre(i, p) + 34], [-0.25, 1.25], clamp);
+        const e = Math.abs(i - rang);
+        // Arrivée en rang au début de la scène, l'un après l'autre.
+        const apparition = interpolate(frame, [4 + 3 * i, 18 + 3 * i], [0, 1], { ...clamp, easing: EASE_OUT });
+        const echelleProche = interpolate(e, [0, 1, 2], [1, 0.6, 0.42], clamp);
+        const echelle = ECHELLE_ENSEMBLE + (echelleProche - ECHELLE_ENSEMBLE) * rapproche;
+        const opaciteProche = interpolate(e, [0, 1, 1.8, 2.4], [1, 0.55, 0.15, 0], clamp);
+        const opacite = (1 + (opaciteProche - 1) * rapproche) * apparition;
+        if (opacite <= 0.002) return null;
+        const arrivee = arrivees[i] ?? 0;
+        // Reflet : une bande de lumière glisse sur la feuille quand elle arrive au centre.
+        const reflet = interpolate(frame, [arrivee + 6, arrivee + 36], [-0.25, 1.25], clamp);
         return (
           <div
             key={c.image}
@@ -68,8 +77,8 @@ export const Diplomes: React.FC<{ duration: number }> = ({ duration }) => {
               left: 960 - LARGEUR / 2,
               top: 535,
               width: LARGEUR,
-              zIndex: 100 - Math.round(ecart * 10),
-              transform: `translate(${d * ECART}px, -50%) translateY(${(1 - entree) * 36}px) scale(${echelle})`,
+              zIndex: 100 - Math.round(e * 10),
+              transform: `translate(${d * ecart}px, -50%) translateY(${(1 - apparition) * 30}px) scale(${echelle})`,
               opacity: opacite,
             }}
           >
@@ -79,7 +88,7 @@ export const Diplomes: React.FC<{ duration: number }> = ({ duration }) => {
                 borderRadius: 8,
                 overflow: "hidden",
                 border: "1px solid rgba(230, 221, 208, 0.9)",
-                boxShadow: ecart < 0.5 ? shadows.soft : shadows.card,
+                boxShadow: e < 0.5 && rapproche > 0.5 ? shadows.soft : shadows.card,
               }}
             >
               <Img src={diplomes[c.image]} style={{ display: "block", width: "100%" }} />
@@ -98,10 +107,32 @@ export const Diplomes: React.FC<{ duration: number }> = ({ duration }) => {
         );
       })}
 
-      {/* Intitulé du certificat au centre : il change avec la feuille. */}
-      <div style={{ position: "absolute", top: 846, left: 0, right: 0, height: 60, opacity: entree }}>
+      {/* « 6 certifications », juste sous le rang, pendant que la voix le dit. */}
+      {six > 0 && (
+        <div
+          style={{
+            position: "absolute",
+            top: 690,
+            left: 0,
+            right: 0,
+            height: 60,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 16,
+            opacity: six,
+            transform: `translateY(${(1 - six) * 12}px)`,
+          }}
+        >
+          <GraduationCap size={34} strokeWidth={1.5} color={colors.forest} />
+          <span style={{ ...titre, fontSize: 44, color: colors.ink }}>6 certifications</span>
+        </div>
+      )}
+
+      {/* Sous la feuille au centre : son intitulé, qui change avec la feuille. */}
+      <div style={{ position: "absolute", top: 846, left: 0, right: 0, height: 60 }}>
         {certificats.map((c, i) => {
-          const v = interpolate(Math.abs(i - position), [0, 0.35], [1, 0], clamp);
+          const v = interpolate(Math.abs(i - rang), [0, 0.35], [1, 0], clamp) * interpolate(rapproche, [0.6, 1], [0, 1], clamp);
           if (v <= 0) return null;
           return (
             <div
@@ -125,11 +156,11 @@ export const Diplomes: React.FC<{ duration: number }> = ({ duration }) => {
         })}
       </div>
 
-      {/* Progression : un point par certificat. */}
-      <div style={{ position: "absolute", top: 928, left: 0, right: 0, display: "flex", justifyContent: "center", gap: 10, opacity: entree }}>
+      {/* Progression : un point par certificat (en vue rapprochée). */}
+      <div style={{ position: "absolute", top: 928, left: 0, right: 0, display: "flex", justifyContent: "center", gap: 10, opacity: rapproche }}>
         {certificats.map((c, i) => {
           // Pendant un glissement, les deux points se partagent la pastille : la rangée garde sa largeur.
-          const actif = interpolate(Math.abs(i - position), [0, 1], [1, 0], clamp);
+          const actif = interpolate(Math.abs(i - rang), [0, 1], [1, 0], clamp);
           return (
             <div
               key={c.image}

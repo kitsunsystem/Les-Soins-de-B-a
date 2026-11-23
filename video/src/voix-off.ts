@@ -4,6 +4,7 @@
 // Les réglages du montage (début de la voix, tenue du plan final, silences insérés) sont dans montage.json.
 import montage from "./montage.json";
 import { FPS } from "./theme";
+import donneesCertificats from "./voix-certificats.json";
 import donnees from "./voix-off.json";
 
 export const FICHIER_VOIX = "voix-off.mp3";
@@ -132,6 +133,42 @@ export function silenceApres(id: IdParagraphe) {
   const s = silences.find((x) => x.id === id);
   return s && { de: t(s.point) - s.duree, a: t(s.point) };
 }
+
+/**
+ * Voix des certificats (générée à part sur ElevenLabs, même voix) : jouée dans le silence inséré après le paragraphe
+ * « apres » de montage.json, sa parole commençant « avant » secondes après le début de ce silence. Ses instants
+ * viennent de voix-certificats.json (scripts/caler-voix.py sur public/voix-certificats.mp3 et voix-certificats-reperes.txt).
+ */
+export const FICHIER_VOIX_CERTIFICATS = "voix-certificats.mp3";
+const NOMS_CERTIFICATS = [
+  "certSix",
+  "certMagnetisme",
+  "certReflexologie",
+  "certMassage",
+  "certKinesiologie",
+  "certLithotherapie",
+  "certFlammeViolette",
+] as const;
+export const voixCertificats = (() => {
+  const reglage = montage.voixCertificats;
+  const silence = silenceApres(reglage.apres as IdParagraphe);
+  if (!silence) throw new Error(`montage.json : aucun silence après « ${reglage.apres} » pour la voix des certificats.`);
+  const sourceReperesCertificats: Record<string, number> = donneesCertificats.reperes;
+  for (const nom of NOMS_CERTIFICATS) {
+    if (typeof sourceReperesCertificats[nom] !== "number") throw new Error(`Repère « ${nom} » absent de voix-certificats.json : relancer scripts/caler-voix.py.`);
+  }
+  const [debutParole, finParole] = donneesCertificats.paragraphes.certificats;
+  // Le fichier démarre (calé sur une image) de sorte que la parole commence `avant` secondes après le début du silence.
+  const debutFichier = Math.round((silence.de + reglage.avant - debutParole) * FPS) / FPS;
+  const video = (s: number) => debutFichier + s;
+  if (video(finParole) > silence.a - 0.2) {
+    throw new Error("La voix des certificats déborde du silence inséré : allonger « silences » dans montage.json.");
+  }
+  return { debutFichier, video, reperes: sourceReperesCertificats as Record<(typeof NOMS_CERTIFICATS)[number], number> };
+})();
+
+/** Silences sans voix (la musique y remonte) : ceux où la voix des certificats n'est pas jouée. */
+export const silencesSansVoix = silences.filter((s) => s.id !== montage.voixCertificats.apres);
 
 /**
  * Prolongation (s) de certaines scènes au-delà du milieu du silence qui suit : la voix enchaîne déjà sur la scène

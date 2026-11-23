@@ -9,8 +9,8 @@ première version, « v4 » d'après le nom du fichier). Les balises entre croch
 comprend (Eleven v3 ou plus récent) : les modèles plus anciens les liraient à voix haute. Bien écouter le numéro de
 téléphone (« soixante-dix-neuf » ne doit pas devenir « soixante-neuf »).
 
-Après une nouvelle génération : remplacer `public/voix-off.mp3`, puis mettre à jour les repères de
-`src/voix-off.ts` (début et fin de chaque paragraphe, mots-clés) ; la vidéo se recale toute seule.
+Après une nouvelle génération : remplacer `public/voix-off.mp3`, puis lancer le calage (`npm run caler`, voir
+README.md) ; la vidéo se recale toute seule.
 
 ```
 [sighs] Stress, tensions, fatigue du quotidien… [short pause] [softly] Et si vous preniez enfin un moment rien qu'à vous ?
@@ -42,4 +42,15 @@ Après une nouvelle génération : remplacer `public/voix-off.mp3`, puis mettre 
 [playful] Envie de faire plaisir ? [cheerfully] Offrez une carte cadeau, du montant de votre choix, valable un an.
 
 [happy] Les Soins de Béa, à Perpignan. [short pause] [deliberate] Réservez sur les soins de béa point f r, [short pause] [slowly] ou au zéro sept, soixante-deux, quatre-vingt-quatorze, soixante-dix-neuf, trente-neuf. [long pause] [softly] Prenez soin de vous.
+```
+
+## Voix des certificats (générée à part)
+
+Même voix et mêmes réglages, ce paragraphe seul. Il est joué pendant les certificats de Béatrice, après « …le cœur
+de sa pratique » (silence inséré de `src/montage.json`) ; chaque certificat arrive au centre quand la voix le nomme.
+Fichier : `public/voix-certificats.mp3`, normalisé comme la voix principale. Calage :
+`python3 scripts/caler-voix.py <dossier-du-modèle> public/voix-certificats.mp3 voix-certificats-reperes.txt src/voix-certificats.json`.
+
+```
+[confident] Formée auprès d'organismes spécialisés, Béatrice a obtenu six certifications : [short pause] [calm] magnétisme, [short pause] réflexologie, [short pause] massage bien-être, [short pause] kinésiologie, [short pause] lithothérapie, [short pause] et Flamme Violette.
 ```
