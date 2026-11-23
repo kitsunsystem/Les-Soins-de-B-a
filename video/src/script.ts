@@ -35,6 +35,28 @@ export const preuves = { prixMin: Math.min(...prix), dureeMin: Math.min(...duree
 /** Les formations suivies, comme les pastilles de l'accueil. */
 export const pastillesFormations = parcours.map((f) => f.title.replace("Formation en ", "").replace("Formation ", ""));
 
+/**
+ * Certificats de Béatrice, dans l'ordre où ils apparaissent : le magnétisme d'abord (« le cœur de sa pratique »,
+ * dit la voix juste avant). Intitulés et années repris du parcours du site ; `image` : fichier de public/images/diplomes.
+ */
+const CERTIFICATS = [
+  { motCle: "Magnétisme", image: "magnetisme" },
+  { motCle: "Réflexologie", image: "reflexologie" },
+  { motCle: "Massage Bien-Être", image: "massage-bien-etre" },
+  { motCle: "Kinésiologie", image: "kinesiologie" },
+  { motCle: "Lithothérapie", image: "lithotherapie" },
+  { motCle: "Flamme Violette", image: "flamme-violette" },
+] as const;
+export const certificats = CERTIFICATS.map(({ motCle, image }) => {
+  const formation = parcours.find((p) => p.title.includes(motCle));
+  if (!formation) throw new Error(`La formation « ${motCle} » n'est plus dans le parcours du site.`);
+  return {
+    titre: formation.title.replace("Formation en ", "").replace("Formation ", ""),
+    annee: formation.date.match(/\d{4}/)?.[0] ?? "",
+    image,
+  };
+});
+
 /** Les trois étapes de l'accueil, en version courte pour la vidéo. */
 export const etapes = [
   { titre: "Je réserve en ligne", texte: "Un soin, un créneau libre, 24 h/24, sans créer de compte." },

@@ -4,6 +4,7 @@ import { Accueil } from "./scenes/Accueil";
 import { Beatrice } from "./scenes/Beatrice";
 import { Cabinet } from "./scenes/Cabinet";
 import { Cadeau } from "./scenes/Cadeau";
+import { Diplomes } from "./scenes/Diplomes";
 import { Final } from "./scenes/Final";
 import { Formations } from "./scenes/Formations";
 import { Ouverture } from "./scenes/Ouverture";
@@ -13,7 +14,7 @@ import { Temoignages } from "./scenes/Temoignages";
 import { Univers } from "./scenes/Univers";
 import { colors, FPS } from "./theme";
 import { clamp, Fondu } from "./ui";
-import { coupeApres, coupeAvant, DEBUT_VOIX, DUREE_VIDEO, DUREE_VOIX, FICHIER_VOIX, paragraphes, reperes, t, type NomRepere } from "./voix-off";
+import { coupeApres, coupeAvant, DUREE_VIDEO, DUREE_VOIX, FICHIER_VOIX, paragraphes, reperes, silenceApres, silences, t, type NomRepere } from "./voix-off";
 
 /** Secondes → images. */
 const f = (secondes: number) => Math.round(secondes * FPS);
@@ -28,6 +29,9 @@ type Scene = {
   /** `debut` : image de début de la scène dans la vidéo, pour convertir les repères de la voix. */
   rendu: (duree: number, debut: number) => ReactNode;
 };
+
+/** Silence inséré dans la voix après la présentation de Béatrice : ses certificats, sans voix (src/montage.json). */
+const pauseCertificats = silenceApres("beatrice");
 
 // Chaque scène commence et finit au milieu des silences de la voix off (voir src/voix-off.ts).
 const scenes: Scene[] = [
@@ -48,7 +52,8 @@ const scenes: Scene[] = [
     ),
   },
   { id: "accueil", de: coupeAvant("accueil"), a: coupeApres("accueil"), rendu: (d) => <Accueil duration={d} /> },
-  { id: "beatrice", de: coupeAvant("beatrice"), a: coupeApres("beatrice"), rendu: (d) => <Beatrice duration={d} /> },
+  { id: "beatrice", de: coupeAvant("beatrice"), a: pauseCertificats?.de ?? coupeApres("beatrice"), rendu: (d) => <Beatrice duration={d} /> },
+  ...(pauseCertificats ? [{ id: "diplomes", de: pauseCertificats.de, a: pauseCertificats.a, rendu: (d: number) => <Diplomes duration={d} /> }] : []),
   { id: "univers", de: coupeAvant("univers"), a: coupeApres("univers"), rendu: (d) => <Univers duration={d} /> },
   {
     id: "soins",
@@ -128,6 +133,8 @@ export const DUREE_TOTALE = f(DUREE_VIDEO);
 const VOLUME_VOIX = 1.12;
 const MUSIQUE_SOUS_VOIX = 0.175;
 const MUSIQUE_SEULE = 0.355;
+/** Pendant un silence inséré (images sans voix), la musique remonte un peu, puis redescend avant que la voix reprenne. */
+const MUSIQUE_PAUSE = 0.3;
 
 /** Musique d'ambiance : discrète sous la voix, un peu plus présente une fois la voix terminée. */
 function volumeMusique(image: number) {
@@ -135,13 +142,29 @@ function volumeMusique(image: number) {
   const finVoix = t(DUREE_VOIX);
   const remontee = finVoix + 0.6;
   const fondu = Math.max(remontee + 0.1, DUREE_VIDEO - 1.2);
-  return interpolate(
+  const base = interpolate(
     s,
     [0, 0.5, finVoix - 0.1, remontee, fondu, Math.max(fondu + 0.1, DUREE_VIDEO)],
     [0, MUSIQUE_SOUS_VOIX, MUSIQUE_SOUS_VOIX, MUSIQUE_SEULE, MUSIQUE_SEULE, 0],
     clamp,
   );
+  // Silences insérés : la musique remonte un peu le temps des images sans voix.
+  const pause = Math.max(
+    0,
+    ...silences.map((p) => {
+      const fin = t(p.point);
+      const debut = fin - p.duree;
+      return interpolate(s, [debut + 0.05, debut + 0.6, fin - 0.6, fin - 0.05], [0, 1, 1, 0], clamp);
+    }),
+  );
+  return base + (MUSIQUE_PAUSE - MUSIQUE_SOUS_VOIX) * pause;
 }
+
+/**
+ * La voix, en morceaux séparés par les silences insérés : chaque morceau garde son calage (voir t dans voix-off.ts).
+ * Les coupes tombent au milieu des blancs de la voix, calées sur des images.
+ */
+const morceauxVoix = [0, ...silences.map((s) => s.point)].map((debut, i, points) => ({ debut, fin: points[i + 1] as number | undefined }));
 
 export const Presentation: React.FC<{ audio: boolean }> = ({ audio }) => {
   return (
@@ -160,9 +183,16 @@ export const Presentation: React.FC<{ audio: boolean }> = ({ audio }) => {
       })}
       {audio && (
         <>
-          <Sequence from={f(DEBUT_VOIX)} name="voix off">
-            <Html5Audio src={staticFile(FICHIER_VOIX)} volume={VOLUME_VOIX} />
-          </Sequence>
+          {morceauxVoix.map((m, i) => (
+            <Sequence
+              key={m.debut}
+              from={f(t(m.debut))}
+              durationInFrames={m.fin === undefined ? undefined : f(m.fin) - f(m.debut)}
+              name={`voix off ${i + 1}`}
+            >
+              <Html5Audio src={staticFile(FICHIER_VOIX)} volume={VOLUME_VOIX} trimBefore={f(m.debut)} />
+            </Sequence>
+          ))}
           <Html5Audio src={staticFile("musique.mp3")} volume={volumeMusique} />
         </>
       )}

@@ -10,10 +10,18 @@ import { dirname } from "node:path";
 const out = process.argv[2] ?? "../public/videos/les-soins-de-bea.fr.vtt";
 
 const { duree, paragraphes, reperes } = JSON.parse(readFileSync("src/voix-off.json", "utf8"));
-const reglages = readFileSync("src/voix-off.ts", "utf8");
-const offset = Number(reglages.match(/DEBUT_VOIX\s*=\s*([\d.]+)/)[1]);
+const montage = JSON.parse(readFileSync("src/montage.json", "utf8"));
+const FPS = 30;
+// Silences insérés dans la voix (images sans voix) : même calcul que t() dans src/voix-off.ts.
+const ordre = Object.keys(paragraphes);
+const silences = Object.entries(montage.silences).map(([id, d]) => {
+  const suivant = ordre[ordre.indexOf(id) + 1];
+  return { point: Math.round(((paragraphes[id][1] + paragraphes[suivant][0]) / 2) * FPS) / FPS, duree: Math.round(d * FPS) / FPS };
+});
+/** Seconde de la vidéo correspondant à une seconde de la voix. */
+const video = (s) => montage.debutVoix + s + silences.reduce((acc, x) => acc + (s >= x.point ? x.duree : 0), 0);
 // Le plan final reste à l'écran après la dernière phrase : la dernière réplique aussi.
-const finVideo = offset + duree + Number(reglages.match(/TENUE_FINALE\s*=\s*([\d.]+)/)[1]);
+const finVideo = video(duree) + montage.tenueFinale;
 
 // Texte annoté : « identifiant | texte », [balises] d'expression, {repère} devant les mots.
 const lignes = readFileSync("voix-off-reperes.txt", "utf8")
@@ -140,7 +148,7 @@ for (const ligne of lignes) {
     const debut = instant(ancres, a);
     const finMorceau = i + 1 < morceaux.length ? instant(ancres, morceaux[i + 1][0]) : fin;
     const phrase = display(texte.slice(a, b).trim().replace(/,$/, ""));
-    repliques.push([debut + offset, finMorceau + offset, phrase]);
+    repliques.push([video(debut), video(finMorceau), phrase]);
   });
 }
 // Chaque réplique reste au moins 1,2 s (dans la limite de la suivante) ; la dernière, jusqu'à la fin de la vidéo.

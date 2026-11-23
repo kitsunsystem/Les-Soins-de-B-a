@@ -5,7 +5,9 @@ Musique d'ambiance de la vidéo, générée par calcul (libre de droits).
 Nappe douce en fa majeur (Fa maj9 → Ré m9 → Si♭ maj9 → Do add9), basse feutrée, petites notes
 de carillon, bol chantant sur l'apparition du nom et sur le plan final, réverbération par convolution.
 
-Les repères (durée, apparition du nom, plan final) sont lus dans src/voix-off.json, comme la vidéo.
+Les repères (durée, apparition du nom, plan final) sont lus dans src/voix-off.json et src/montage.json (début de la
+voix, tenue finale, silences insérés), comme la vidéo. Un carillon discret accompagne les certificats de Béatrice,
+montrés pendant le silence inséré.
 
 Usage : python3 scripts/generate-music.py public/musique.mp3
 Dépendances : numpy, et ffmpeg pour l'encodage MP3.
@@ -21,12 +23,29 @@ import wave
 import numpy as np
 
 SR = 44100
-# Repères de la vidéo (secondes), alignés sur la voix off (voir src/voix-off.ts : la voix démarre à 0,3 s et le
-# plan final reste 2,2 s après la dernière phrase).
-_voix = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "src", "voix-off.json"), encoding="utf-8"))
-DUREE = 0.3 + _voix["duree"] + 2.2  # durée de la vidéo
-MARQUE = 0.3 + _voix["paragraphes"]["marque"][0]  # « Bienvenue aux Soins de Béa »
-FINAL = 0.3 + _voix["paragraphes"]["final"][0]  # plan final : « Les Soins de Béa, à Perpignan »
+FPS = 30  # images par seconde de la vidéo (src/theme.ts)
+# Repères de la vidéo (secondes), alignés sur la voix off comme dans src/voix-off.ts.
+_src = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "src")
+_voix = json.load(open(os.path.join(_src, "voix-off.json"), encoding="utf-8"))
+_montage = json.load(open(os.path.join(_src, "montage.json"), encoding="utf-8"))
+_ordre = list(_voix["paragraphes"])
+# Silences insérés dans la voix : (instant dans la voix, durée), calés sur des images comme dans la vidéo.
+_silences = []
+for _id, _duree in _montage["silences"].items():
+    _suivant = _ordre[_ordre.index(_id) + 1]
+    _point = math.floor((_voix["paragraphes"][_id][1] + _voix["paragraphes"][_suivant][0]) / 2 * FPS + 0.5) / FPS
+    _silences.append((_point, math.floor(_duree * FPS + 0.5) / FPS))
+
+
+def video(s):
+    """Seconde de la vidéo correspondant à une seconde de la voix (t() dans src/voix-off.ts)."""
+    return _montage["debutVoix"] + s + sum(d for p, d in _silences if s >= p)
+
+
+DUREE = video(_voix["duree"]) + _montage["tenueFinale"]  # durée de la vidéo
+MARQUE = video(_voix["paragraphes"]["marque"][0])  # « Bienvenue aux Soins de Béa »
+FINAL = video(_voix["paragraphes"]["final"][0])  # plan final : « Les Soins de Béa, à Perpignan »
+PAUSES = [video(p) - d for p, d in _silences]  # début des images sans voix (certificats de Béatrice)
 rng = np.random.default_rng(7)
 
 N = int(SR * (DUREE + 0.1))
@@ -148,6 +167,11 @@ for k, (nom, debut, fin) in enumerate(plan[:-1]):
 # Accord final égrené
 for i, m in enumerate([65, 69, 72, 76, 79]):
     cloche(hz(m + 12), FINAL + 0.35 + i * 0.32, 0.07, 0.25 + 0.12 * i)
+
+# Certificats de Béatrice (silence de la voix) : trois notes montantes pendant que les feuilles se posent.
+for debut_pause in PAUSES:
+    for i, m in enumerate([72, 76, 79]):
+        cloche(hz(m + 12), debut_pause + 0.45 + i * 0.3, 0.06, 0.35 + 0.15 * i)
 
 # --- Bol chantant ---------------------------------------------------------------------------
 def bol(f0, debut, amp):

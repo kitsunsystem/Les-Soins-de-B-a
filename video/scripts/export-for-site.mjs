@@ -22,7 +22,8 @@ ffmpeg(
 
 // Vignette : le plan « Bienvenue aux Soins de Béa », un peu après que la voix dit le nom (la voix démarre à 0,3 s).
 const marque = JSON.parse(readFileSync("src/voix-off.json", "utf8")).paragraphes.marque[0];
-ffmpeg("-ss", (0.3 + marque + 1.05).toFixed(2), "-i", source, "-frames:v", "1", "-vf", "scale=1600:-2", "-q:v", "3", `${dir}/les-soins-de-bea-vignette.jpg`);
+const { debutVoix } = JSON.parse(readFileSync("src/montage.json", "utf8"));
+ffmpeg("-ss", (debutVoix + marque + 1.05).toFixed(2), "-i", source, "-frames:v", "1", "-vf", "scale=1600:-2", "-q:v", "3", `${dir}/les-soins-de-bea-vignette.jpg`);
 
 execFileSync("node", ["scripts/generate-captions.mjs", `${dir}/les-soins-de-bea.fr.vtt`], { stdio: "inherit" });
 execFileSync("node", ["scripts/video-sizes.mjs"], { cwd: "..", stdio: "inherit" });

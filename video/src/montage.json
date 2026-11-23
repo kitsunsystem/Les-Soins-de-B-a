@@ -1,0 +1,8 @@
+{
+  "note": "Réglages du montage, lus par la vidéo (src/voix-off.ts), la musique (scripts/generate-music.py) et les sous-titres (scripts/generate-captions.mjs). debutVoix : la voix démarre un peu après la première image ; tenueFinale : le plan final reste à l'écran après la dernière phrase ; silences : secondes de silence insérées dans la voix après un paragraphe (au milieu du blanc qui le suit), pour des images sans voix.",
+  "debutVoix": 0.3,
+  "tenueFinale": 2.2,
+  "silences": {
+    "beatrice": 4.0
+  }
+}
