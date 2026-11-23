@@ -171,7 +171,7 @@ La vidéo est intégrée à la page d'accueil (section « En vidéo », sous-tit
 commandes flottante, progression terracotta, volume, sous-titres dans la typographie du site, plein écran,
 raccourcis clavier (Espace/K, ←/→, M, C, F) et écran de fin « Prendre rendez-vous ». Après une modification : `cd video && npm run render && npm run site`.
 
-Le dossier `video/` contient une vidéo publicitaire de 1 min 59 avec voix off (Remotion, 1920 × 1080), dans le
+Le dossier `video/` contient une vidéo publicitaire de 2 min 07 avec voix off (Remotion, 1920 × 1080), dans le
 style du site. Elle reprend automatiquement les soins, tarifs, témoignages et coordonnées de `src/lib/`. Projet
 indépendant du site (ses dépendances ne sont pas installées ni déployées avec lui) : voir `video/README.md`.
 

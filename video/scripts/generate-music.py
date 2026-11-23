@@ -164,7 +164,8 @@ for k, (nom, debut, fin) in enumerate(plan[:-1]):
         quand = debut + i * pas + rng.uniform(0, 0.03)
         amp, pan = 0.075 + 0.015 * rng.random(), 0.25 + 0.5 * rng.random()
         # Pendant une pause, seul le carillon des certificats sonne (les tirages restent faits : le reste ne bouge pas).
-        if any(a - 0.2 <= quand <= b for a, b in PAUSES):
+        # (marge avant la pause : une cloche résonne plus d'une demi-seconde)
+        if any(a - 0.6 <= quand <= b for a, b in PAUSES):
             continue
         cloche(hz(aigus[idx]), quand, amp, pan)
 
@@ -172,10 +173,15 @@ for k, (nom, debut, fin) in enumerate(plan[:-1]):
 for i, m in enumerate([65, 69, 72, 76, 79]):
     cloche(hz(m + 12), FINAL + 0.35 + i * 0.32, 0.07, 0.25 + 0.12 * i)
 
-# Certificats de Béatrice (silence de la voix) : trois notes montantes pendant que les feuilles se posent.
-for debut_pause, _ in PAUSES:
-    for i, m in enumerate([72, 76, 79]):
-        cloche(hz(m + 12), debut_pause + 0.45 + i * 0.3, 0.06, 0.35 + 0.15 * i)
+# Certificats de Béatrice (silence de la voix) : une note de carillon chaque fois qu'un certificat arrive au centre du
+# carrousel, en gamme pentatonique montante. Même rythme que src/scenes/Diplomes.tsx : premier certificat à l'image 12,
+# puis la scène partagée également entre les certificats, fondu de sortie de 7 images compris.
+N_CERTIFICATS = 6  # nombre de certificats (`certificats` dans src/script.ts)
+for debut_pause, fin_pause in PAUSES:
+    images = round((fin_pause - debut_pause) * FPS)
+    pas_images = (images - 12 - 7) // N_CERTIFICATS
+    for i, m in enumerate([72, 74, 76, 79, 81, 84][:N_CERTIFICATS]):
+        cloche(hz(m + 12), debut_pause + (12 + i * pas_images) / FPS, 0.05, 0.35 + 0.3 * (i % 2))
 
 # --- Bol chantant ---------------------------------------------------------------------------
 def bol(f0, debut, amp):

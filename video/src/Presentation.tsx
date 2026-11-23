@@ -133,8 +133,11 @@ export const DUREE_TOTALE = f(DUREE_VIDEO);
 const VOLUME_VOIX = 1.12;
 const MUSIQUE_SOUS_VOIX = 0.175;
 const MUSIQUE_SEULE = 0.355;
-/** Pendant un silence inséré (images sans voix), la musique remonte un peu, puis redescend avant que la voix reprenne. */
-const MUSIQUE_PAUSE = 0.3;
+/**
+ * Pendant un silence inséré (images sans voix, 12,5 s pour les certificats), la musique remonte pour porter le passage
+ * (environ 7 LU sous la voix), puis redescend avant que la voix reprenne.
+ */
+const MUSIQUE_PAUSE = 0.45;
 
 /** Musique d'ambiance : discrète sous la voix, un peu plus présente une fois la voix terminée. */
 function volumeMusique(image: number) {
@@ -154,7 +157,7 @@ function volumeMusique(image: number) {
     ...silences.map((p) => {
       const fin = t(p.point);
       const debut = fin - p.duree;
-      return interpolate(s, [debut + 0.05, debut + 0.6, fin - 0.6, fin - 0.05], [0, 1, 1, 0], clamp);
+      return interpolate(s, [debut + 0.05, debut + 1.0, fin - 1.0, fin - 0.15], [0, 1, 1, 0], clamp);
     }),
   );
   return base + (MUSIQUE_PAUSE - MUSIQUE_SOUS_VOIX) * pause;

@@ -1,6 +1,6 @@
 # Vidéo de présentation — Les Soins de Béa
 
-Vidéo publicitaire (1920 × 1080, 30 i/s, 1 min 59) réalisée avec [Remotion](https://www.remotion.dev), dans le style du
+Vidéo publicitaire (1920 × 1080, 30 i/s, 2 min 07) réalisée avec [Remotion](https://www.remotion.dev), dans le style du
 site (vert eucalyptus, terracotta, lin et or, une couleur par univers, polices Fraunces et Nunito Sans, emblème lotus)
 et montée sur la voix off ElevenLabs : chaque scène commence et s'arrête au rythme des phrases.
 
@@ -12,7 +12,7 @@ et montée sur la voix off ElevenLabs : chaque scène commence et s'arrête au r
 | « Bienvenue aux Soins de Béa, à Perpignan. » | Emblème lotus, nom, devise |
 | « Béatrice vous reçoit pour des soins sur mesure… » | Haut de la page d'accueil (titre, preuves, photo en arche) |
 | « Sensible aux énergies depuis l'adolescence… » | « Qui suis-je ? » |
-| *(4 s sans voix, musique un peu plus présente)* | Ses six certificats, posés un à un : « Formée et certifiée » |
+| *(12,5 s sans voix, musique un peu plus présente, une note de carillon par certificat)* | « Formée et certifiée » : ses six certificats un par un, en carrousel, avec intitulé et année |
 | « Quatre univers de soins, une même attention. » | Les 4 cartes colorées |
 | Corps, énergie, futures mamans, guidance | Les 4 univers de la page Soins, avec tous les tarifs ; chaque soin s'allume quand il est nommé |
 | « Magnétiseuse, Béatrice enlève aussi le feu… à distance, sur simple photo. » | Coupe de feu et magnétisme à distance (avec la mention « ne remplacent pas un avis médical ») |
@@ -69,8 +69,8 @@ Titre, durée et description affichés sur le site : `presentationVideo` dans `.
   (même blanc de papier, éclairage aplani, bords de scan retirés). Ordre et intitulés dans `src/script.ts`
   (`certificats`, intitulés et années repris du parcours du site).
 - **Montage** : `src/montage.json` — début de la voix, tenue du plan final et silences insérés dans la voix (secondes
-  ajoutées après un paragraphe, pour des images sans voix : 4 s après la présentation de Béatrice, pour ses
-  certificats). Lu par la vidéo, la musique et les sous-titres ; après une modification, relancer `npm run music`.
+  ajoutées après un paragraphe, pour des images sans voix : 12,5 s après la présentation de Béatrice, pour ses
+  certificats ; le carrousel se partage ce temps également). Lu par la vidéo, la musique et les sous-titres ; après une modification, relancer `npm run music`.
 - **Musique** : `public/musique.mp3`, une nappe d'ambiance générée par `scripts/generate-music.py` (libre de droits),
   baissée automatiquement sous la voix (niveaux dans `src/Presentation.tsx` ; le son est mixé par ffmpeg au rendu,
   vers −15,5 LUFS). Pour une autre musique, remplacer ce fichier (même nom) par un MP3 libre de droits. Pour la
