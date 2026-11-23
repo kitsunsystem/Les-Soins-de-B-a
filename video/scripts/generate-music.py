@@ -45,7 +45,7 @@ def video(s):
 DUREE = video(_voix["duree"]) + _montage["tenueFinale"]  # durée de la vidéo
 MARQUE = video(_voix["paragraphes"]["marque"][0])  # « Bienvenue aux Soins de Béa »
 FINAL = video(_voix["paragraphes"]["final"][0])  # plan final : « Les Soins de Béa, à Perpignan »
-PAUSES = [video(p) - d for p, d in _silences]  # début des images sans voix (certificats de Béatrice)
+PAUSES = [(video(p) - d, video(p)) for p, d in _silences]  # images sans voix (certificats de Béatrice) : début, fin
 rng = np.random.default_rng(7)
 
 N = int(SR * (DUREE + 0.1))
@@ -162,14 +162,18 @@ for k, (nom, debut, fin) in enumerate(plan[:-1]):
         if k < 2 and i % 2 == 1:
             continue
         quand = debut + i * pas + rng.uniform(0, 0.03)
-        cloche(hz(aigus[idx]), quand, 0.075 + 0.015 * rng.random(), 0.25 + 0.5 * rng.random())
+        amp, pan = 0.075 + 0.015 * rng.random(), 0.25 + 0.5 * rng.random()
+        # Pendant une pause, seul le carillon des certificats sonne (les tirages restent faits : le reste ne bouge pas).
+        if any(a - 0.2 <= quand <= b for a, b in PAUSES):
+            continue
+        cloche(hz(aigus[idx]), quand, amp, pan)
 
 # Accord final égrené
 for i, m in enumerate([65, 69, 72, 76, 79]):
     cloche(hz(m + 12), FINAL + 0.35 + i * 0.32, 0.07, 0.25 + 0.12 * i)
 
 # Certificats de Béatrice (silence de la voix) : trois notes montantes pendant que les feuilles se posent.
-for debut_pause in PAUSES:
+for debut_pause, _ in PAUSES:
     for i, m in enumerate([72, 76, 79]):
         cloche(hz(m + 12), debut_pause + 0.45 + i * 0.3, 0.06, 0.35 + 0.15 * i)
 

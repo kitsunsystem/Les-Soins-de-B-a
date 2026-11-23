@@ -2,7 +2,7 @@ import { GraduationCap } from "lucide-react";
 import { AbsoluteFill, Img, interpolate, spring, useCurrentFrame, useVideoConfig } from "remotion";
 import { diplomes } from "../assets";
 import { certificats } from "../script";
-import { colors, EASE_IN_OUT, fonts, shadows } from "../theme";
+import { colors, fonts, shadows } from "../theme";
 import { Accent, clamp, Eyebrow, FadeUp, FondLin, Title } from "../ui";
 
 const LARGEUR = 410;
@@ -36,8 +36,8 @@ export const Diplomes: React.FC<{ duration: number }> = () => {
           {certificats.map((c, i) => {
             const pose = spring({ frame: frame - arrivee(i), fps, config: { damping: 15, stiffness: 120 } });
             const visible = interpolate(frame, [arrivee(i), arrivee(i) + 8], [0, 1], clamp);
-            // Reflet : une bande de lumière traverse la feuille une fois qu'elle est posée.
-            const reflet = interpolate(frame, [arrivee(i) + 26, arrivee(i) + 44], [-0.4, 1.4], { ...clamp, easing: EASE_IN_OUT });
+            // Reflet : une bande de lumière glisse sur la feuille (≈ 1 s) une fois qu'elle est posée.
+            const reflet = interpolate(frame, [arrivee(i) + 24, arrivee(i) + 54], [-0.25, 1.25], clamp);
             return (
               <div key={c.image} style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14 }}>
                 <div style={{ height: 290, display: "flex", alignItems: "center" }}>
@@ -61,7 +61,7 @@ export const Diplomes: React.FC<{ duration: number }> = () => {
                         // En lumière douce : le papier reste blanc, ce sont l'encre et les sceaux qui brillent au passage.
                         background: `linear-gradient(105deg, transparent ${(reflet - 0.22) * 100}%, rgba(255, 246, 222, 0.95) ${reflet * 100}%, transparent ${(reflet + 0.22) * 100}%)`,
                         mixBlendMode: "soft-light",
-                        opacity: reflet > -0.35 && reflet < 1.35 ? 1 : 0,
+                        opacity: reflet > -0.24 && reflet < 1.24 ? 1 : 0,
                       }}
                     />
                   </div>

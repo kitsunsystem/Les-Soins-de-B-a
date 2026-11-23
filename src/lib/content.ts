@@ -455,7 +455,7 @@ export const parcours: { title: string; date: string }[] = [
   { title: "Formation en Kinésiologie", date: "novembre 2023" },
   { title: "Formation en Réflexologie", date: "novembre 2023" },
   { title: "Formation en Massage Bien-Être", date: "mai 2024" },
-  { title: "Formation en Magnétisme", date: "janvier 2022 — Formateur Jean Angius" },
+  { title: "Formation en Magnétisme", date: "janvier 2023 — Formateur Jean Angius" },
   { title: "Formation en Lithothérapie", date: "février 2023" },
   { title: "Formation Flamme Violette niveau II", date: "janvier 2022" },
 ];
