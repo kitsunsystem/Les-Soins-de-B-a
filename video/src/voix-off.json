@@ -1,5 +1,5 @@
 {
-  "duree": 111.932,
+  "duree": 111.926,
   "paragraphes": {
     "accroche": [0.09, 7.69],
     "marque": [8.22, 10.71],
@@ -60,19 +60,19 @@
     "ecritLea": 81.91,
     "citationVal": 82.8,
     "feeVal": 83.08,
-    "ajouteVal": 84.08,
+    "ajouteVal": 84.05,
     "citationSarah": 85.11,
     "mainsSarah": 85.79,
     "coeurSarah": 86.64,
     "confieSarah": 87.9,
     "confirmation": 92.3,
     "site": 101.72,
-    "telephone": 104.3,
-    "p0": 104.79,
-    "p1": 105.62,
-    "p2": 106.54,
+    "telephone": 104.29,
+    "p0": 104.76,
+    "p1": 105.65,
+    "p2": 106.56,
     "p3": 107.59,
-    "p4": 108.78,
-    "prenezSoin": 110.9
+    "p4": 108.77,
+    "prenezSoin": 110.89
   }
 }

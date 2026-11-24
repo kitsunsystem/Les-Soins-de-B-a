@@ -12,9 +12,11 @@ téléphone (« soixante-dix-neuf » ne doit pas devenir « soixante-neuf »).
 Après une nouvelle génération : remplacer `public/voix-off.mp3`, puis lancer le calage (`npm run caler`, voir
 README.md) ; la vidéo se recale toute seule.
 
-L'adresse du site, « soins béa point com » (soinsbea.com), a été enregistrée à part (même voix, réglages identiques)
-puis insérée dans le fichier actuel à la place de l'ancienne adresse en « .fr ». « les » et « de » ont été retirés
-de l'enregistrement pour coller à l'adresse. Une nouvelle génération complète doit donc bien dire « soins béa point com ».
+L'adresse du site, « soins béa point com » (soinsbea.com), vient d'un enregistrement à part fourni par la cliente
+(même voix, « les soins de béa point com ») : « les » et « de » en ont été retirés pour coller à l'adresse, puis il a
+été inséré dans le fichier actuel à la place de l'ancienne adresse en « .fr » (raccords vers 102,6 s, 102,9 s et
+104,0 s de `public/voix-off.mp3` ; « point com », dit en fin de phrase, remonté de 3 dB). Une nouvelle génération
+complète doit donc bien dire « soins béa point com ».
 
 ```
 [sighs] Stress, tensions, fatigue du quotidien… [short pause] [softly] Et si vous preniez enfin un moment rien qu'à vous ?

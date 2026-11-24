@@ -86,7 +86,7 @@ et Béa le récupère elle-même. Pour le paiement par carte en ligne :
 
 1. Créer un compte sur https://dashboard.stripe.com et l'activer (IBAN, pièce d'identité).
 2. *Développeurs → Clés API* : copier la **clé secrète** dans `STRIPE_SECRET_KEY`.
-3. *Développeurs → Webhooks → Ajouter un point de terminaison* : URL `https://<votre-domaine>/api/stripe/webhook`,
+3. *Développeurs → Webhooks → Ajouter un point de terminaison* : URL `https://soinsbea.com/api/stripe/webhook`,
    événements `checkout.session.completed` et `checkout.session.expired`. Copier le **secret de signature**
    dans `STRIPE_WEBHOOK_SECRET`.
 
@@ -182,9 +182,8 @@ cd video && npm install && npm run render   # → video/out/les-soins-de-bea.mp4
 ## À compléter avant la mise en ligne
 
 Email public, SIRET, adresse professionnelle, code APE, assureur RC Pro, médiateur de la consommation
-(pages *Mentions légales*, *Confidentialité*, *CGV* — repérés en surbrillance), liens Instagram/Facebook,
-domaine définitif. Les horaires par défaut (lun.–ven. 9h–12h30 / 14h–19h, sam. 9h–13h) sont à ajuster dans
-l'admin.
+(pages *Mentions légales*, *Confidentialité*, *CGV* — repérés en surbrillance), liens Instagram/Facebook.
+Les horaires par défaut (lun.–ven. 9h–12h30 / 14h–19h, sam. 9h–13h) sont à ajuster dans l'admin.
 
 ## Identité visuelle
 

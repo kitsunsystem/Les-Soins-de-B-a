@@ -2,7 +2,7 @@
 # Copiez ce fichier en `.dev.vars` (utilisé par `npm run preview`) ET en `.env.local` (utilisé par `npm run dev`).
 # En production, définissez-les dans Cloudflare : Workers & Pages → les-soins-de-bea → Paramètres → Variables et secrets.
 
-# URL publique du site (liens dans les emails). En production : https://www.votre-domaine.fr
+# URL publique du site (liens dans les emails). En production : https://soinsbea.com
 SITE_URL=http://localhost:3000
 
 # Espace admin (/admin) — secrets
