@@ -57,7 +57,7 @@ for (const [bloc, lignesAnnotees, fichier] of [
 
 // La fin est prononcée « en toutes lettres » pour la voix : on affiche l'écriture habituelle.
 const ECRITURES = [
-  [/les soins de béa point f r/i, "lessoinsdebea.fr"],
+  [/soins béa point com/i, "soinsbea.com"],
   // Espaces insécables : le numéro et « 24 h/24 » ne se coupent jamais en fin de ligne.
   [/zéro sept, soixante-deux, quatre-vingt-quatorze, soixante-dix-neuf, trente-neuf/i, "07\u00a062\u00a094\u00a079\u00a039"],
   [/vingt-quatre heures sur vingt-quatre/i, "24\u00a0h/24"],

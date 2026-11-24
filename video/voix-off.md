@@ -12,6 +12,10 @@ téléphone (« soixante-dix-neuf » ne doit pas devenir « soixante-neuf »).
 Après une nouvelle génération : remplacer `public/voix-off.mp3`, puis lancer le calage (`npm run caler`, voir
 README.md) ; la vidéo se recale toute seule.
 
+L'adresse du site, « soins béa point com » (soinsbea.com), a été enregistrée à part (même voix, réglages identiques)
+puis insérée dans le fichier actuel à la place de l'ancienne adresse en « .fr ». « les » et « de » ont été retirés
+de l'enregistrement pour coller à l'adresse. Une nouvelle génération complète doit donc bien dire « soins béa point com ».
+
 ```
 [sighs] Stress, tensions, fatigue du quotidien… [short pause] [softly] Et si vous preniez enfin un moment rien qu'à vous ?
 
@@ -41,7 +45,7 @@ README.md) ; la vidéo se recale toute seule.
 
 [playful] Envie de faire plaisir ? [cheerfully] Offrez une carte cadeau, du montant de votre choix, valable un an.
 
-[happy] Les Soins de Béa, à Perpignan. [short pause] [deliberate] Réservez sur les soins de béa point f r, [short pause] [slowly] ou au zéro sept, soixante-deux, quatre-vingt-quatorze, soixante-dix-neuf, trente-neuf. [long pause] [softly] Prenez soin de vous.
+[happy] Les Soins de Béa, à Perpignan. [short pause] [deliberate] Réservez sur soins béa point com, [short pause] [slowly] ou au zéro sept, soixante-deux, quatre-vingt-quatorze, soixante-dix-neuf, trente-neuf. [long pause] [softly] Prenez soin de vous.
 ```
 
 ## Voix des certificats (générée à part)

@@ -1,10 +1,11 @@
 {
-  "note": "Débuts de mots relevés au spectrogramme, là où le calage automatique tombe trop tard (sur une consonne au milieu du mot). Appliqués par scripts/caler-voix.py seulement si l'empreinte SHA-256 de public/voix-off.mp3 est celle-ci : après une nouvelle voix, ils sont ignorés.",
-  "voix": "3ef192a46f028f38d4cad9e3f046a4e2cab3e2434e8078ce55d5a5c6147c0cb8",
+  "note": "Débuts de mots relevés au spectrogramme, là où le calage automatique se trompe (sur une consonne au milieu du mot, ou dans le silence qui le précède). Appliqués par scripts/caler-voix.py seulement si l'empreinte SHA-256 de public/voix-off.mp3 est celle-ci : après une nouvelle voix, ils sont ignorés.",
+  "voix": "314509ffff7def7d48d4449faa7882405a9ed49c0dd35cb5be5ce50d0f3097a7",
   "reperes": {
     "massage-ayurvedique": 28.38,
     "feu": 37.36,
     "photo": 40.54,
-    "choix-de-vie": 52.79
+    "choix-de-vie": 52.79,
+    "p0": 104.79
   }
 }
