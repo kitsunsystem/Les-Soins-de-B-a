@@ -1,5 +1,5 @@
 {
-  "duree": 111.926,
+  "duree": 111.922,
   "paragraphes": {
     "accroche": [0.09, 7.69],
     "marque": [8.22, 10.71],
@@ -15,7 +15,7 @@
     "temoignages": [75.82, 88.5],
     "reservation": [88.8, 94.68],
     "cadeau": [95.01, 99.35],
-    "final": [99.67, 111.73]
+    "final": [99.67, 111.72]
   },
   "reperes": {
     "stress": 0.77,
@@ -60,7 +60,7 @@
     "ecritLea": 81.91,
     "citationVal": 82.8,
     "feeVal": 83.08,
-    "ajouteVal": 84.05,
+    "ajouteVal": 84.22,
     "citationSarah": 85.11,
     "mainsSarah": 85.79,
     "coeurSarah": 86.64,
@@ -68,7 +68,7 @@
     "confirmation": 92.3,
     "site": 101.72,
     "telephone": 104.29,
-    "p0": 104.76,
+    "p0": 104.75,
     "p1": 105.65,
     "p2": 106.56,
     "p3": 107.59,
