@@ -56,7 +56,7 @@ Worker `les-soins-de-bea` → **Paramètres → Variables et secrets** :
 
 | Nom | Type | Valeur |
 | --- | --- | --- |
-| `SITE_URL` | Texte | URL publique, ex. `https://www.lessoinsdebea.fr` (liens dans les emails) |
+| `SITE_URL` | Texte | URL publique : `https://soinsbea.com` (liens dans les emails) |
 | `ADMIN_EMAIL` | Texte | Adresse de Béa qui reçoit les demandes et les messages |
 | `BREVO_SENDER_EMAIL` | Texte | Adresse d'expédition vérifiée dans Brevo |
 | `BREVO_SENDER_NAME` | Texte | `Les Soins de Béa` |
