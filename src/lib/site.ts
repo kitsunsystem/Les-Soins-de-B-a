@@ -30,7 +30,7 @@ export const presentationVideo = {
   captions: "/videos/les-soins-de-bea.fr.vtt",
   duration: "2 min 09",
   isoDuration: "PT2M9S",
-  uploadDate: "2026-11-23",
+  uploadDate: "2026-11-24",
 } as const;
 
 export const nav = [
